@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
@@ -8,6 +8,7 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import NotFoundPage from './pages/NotFoundPage';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
   return (
@@ -39,7 +40,11 @@ function App() {
           <Route path="register" element={<RegisterPage />} />
           
           {/* Protected Routes */}
-          <Route path="dashboard/*" element={<DashboardPage />} />
+          <Route path="dashboard/*" element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          } />
           
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />
