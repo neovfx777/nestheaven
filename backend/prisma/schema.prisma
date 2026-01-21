@@ -1,0 +1,168 @@
+// Data source
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  USER
+  SELLER
+  ADMIN
+  MANAGER_ADMIN
+  OWNER_ADMIN
+}
+
+enum ApartmentStatus {
+  ACTIVE
+  HIDDEN
+  SOLD
+}
+
+// Models
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  passwordHash  String
+  fullName      String
+  phone         String?
+  role          UserRole      @default(USER)
+  
+  // Relations
+  sellerApartments Apartment[] @relation("SellerApartments")
+  hiddenApartments Apartment[] @relation("HiddenByUser")
+  
+  // Timestamps
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  // Indexes
+  @@index([email])
+  @@index([role])
+  
+  // Ensure only USER can self-register
+  // Other roles must be created by higher roles (enforced in application logic)
+}
+
+model Complex {
+  id            String        @id @default(cuid())
+  name          String
+  coverImage    String?       // URL to cover image
+  
+  // Relations
+  apartments    Apartment[]
+  
+  // Timestamps
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  @@index([name])
+}
+
+model Apartment {
+  id            String        @id @default(cuid())
+  
+  // Basic info
+  titleUz       String
+  titleRu       String
+  titleEn       String
+  descriptionUz String?
+  descriptionRu String?
+  descriptionEn String?
+  
+  // Pricing & specs
+  price         Float         // in USD or local currency
+  rooms         Int
+  area          Float         // square meters
+  floor         Int
+  
+  // Location
+  address       String
+  latitude      Float?
+  longitude     Float?
+  
+  // Developer info
+  developerName String
+  developerId   String?       // Could reference a Developer table if expanded
+  
+  // Complex relation (nullable as per spec)
+  complexId     String?
+  complex       Complex?      @relation(fields: [complexId], references: [id], onDelete: SetNull)
+  
+  // Status & ownership
+  status        ApartmentStatus @default(ACTIVE)
+  sellerId      String
+  seller        User           @relation("SellerApartments", fields: [sellerId], references: [id], onDelete: Cascade)
+  
+  // Hidden by admin (optional)
+  hiddenById    String?
+  hiddenBy      User?          @relation("HiddenByUser", fields: [hiddenById], references: [id], onDelete: SetNull)
+  
+  // Multi-language materials
+  materialsUz   String?
+  materialsRu   String?
+  materialsEn   String?
+  
+  // Quality & environment
+  airQualityIndex     Int?      // 1-100 scale
+  airQualitySource    String?
+  
+  // Infrastructure (structured as JSON for flexibility)
+  infrastructure      Json?     // {parking: boolean, school: boolean, metroDistance: number, ...}
+  infrastructureNoteUz String?
+  infrastructureNoteRu String?
+  infrastructureNoteEn String?
+  
+  // Investment info
+  investmentGrowthPercent Float?
+  investmentGrowthNoteUz  String?
+  investmentGrowthNoteRu  String?
+  investmentGrowthNoteEn  String?
+  
+  // Contact info (could be normalized, but keeping simple)
+  contactPhone   String
+  contactTelegram String?
+  contactWhatsapp String?
+  contactEmail   String?
+  
+  // Installment options (JSON array for flexibility)
+  installmentOptions Json?     // [{bankName: string, years: number, interest: float, downPayment: float}]
+  
+  // Timestamps
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  soldAt        DateTime?
+  hiddenAt      DateTime?
+  
+  // Indexes for filtering
+  @@index([status])
+  @@index([price])
+  @@index([rooms])
+  @@index([area])
+  @@index([complexId])
+  @@index([sellerId])
+  @@index([createdAt])
+  
+  // Composite index for location-based searches
+  @@index([latitude, longitude])
+}
+
+model ApartmentImage {
+  id            String        @id @default(cuid())
+  apartmentId   String
+  apartment     Apartment     @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  url           String
+  orderIndex    Int           @default(0)
+  captionUz     String?
+  captionRu     String?
+  captionEn     String?
+  
+  // Timestamps
+  createdAt     DateTime      @default(now())
+  
+  @@index([apartmentId, orderIndex])
+}
