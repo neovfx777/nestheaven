@@ -25,6 +25,7 @@
     "express-rate-limit": "^6.10.0"
   },
   "devDependencies": {
+    "@types/multer": "^1.4.7",
     "@types/bcrypt": "^5.0.1",
     "prisma": "^5.3.1",
     "@types/express": "^4.17.17",

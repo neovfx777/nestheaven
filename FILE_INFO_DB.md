@@ -189,7 +189,7 @@ Update it whenever files are created/edited/removed.
 - Key responsibilities: define tables/relations, migrations, enforce data integrity
 - Depends on: prisma
 - Used by: db, services, Prisma Client
-- Last change summary: created with complete schema matching SERVICE_DOC.md specifications
+- Last change summary: added ApartmentStatusLog model for auditing status changes with fromStatus, toStatus, changedBy, and reason fields
 
 ### Path: /backend/src/routes/index.ts
 - Type: source
@@ -207,16 +207,16 @@ Update it whenever files are created/edited/removed.
 - Key responsibilities: request authentication, user validation against database
 - Depends on: jwt util, database client
 - Used by: protected routes
-- Last change summary: created with authentication middleware that validates tokens and checks user existence
+- Last change summary: updated to use Prisma UserRole enum for type-safe role handling
 
 ### Path: /backend/src/middleware/roles.ts
 - Type: source
 - Purpose: role-based access control
 - Owned by: backend
-- Key responsibilities: requireRole(...) checks
-- Depends on: auth middleware
+- Key responsibilities: requireRole(...) checks, role creation permission validation
+- Depends on: auth middleware, roles utilities
 - Used by: admin/seller endpoints
-- Last change summary: planned
+- Last change summary: created with role requirement, role creation permission, and user management permission middleware
 
 ### Path: /backend/src/middleware/error.ts
 - Type: source
@@ -231,10 +231,82 @@ Update it whenever files are created/edited/removed.
 - Type: source
 - Purpose: handle image uploads (multer)
 - Owned by: backend
-- Key responsibilities: validate file type/size, store
-- Depends on: multer
+- Key responsibilities: validate file type/size, store, provide file URLs
+- Depends on: multer, express, file system
 - Used by: apartments media endpoints
-- Last change summary: planned
+- Last change summary: created with file filtering, size limits, storage configuration, and file management helpers
+
+### Path: /backend/src/modules/apartments/apartment.validators.ts
+- Type: source
+- Purpose: input validation for apartment operations
+- Owned by: backend
+- Key responsibilities: validate creation, update, and query parameters using Zod
+- Depends on: zod library
+- Used by: apartment controller
+- Last change summary: created with comprehensive validation for all apartment fields including multi-language, infrastructure, and installment options
+
+### Path: /backend/src/modules/apartments/apartment.service.ts
+- Type: source
+  Purpose: apartment business logic
+- Owned by: backend
+- Key responsibilities: CRUD operations, filtering, seller authorization, visibility rules
+- Depends on: database client, i18n utils, upload middleware
+- Used by: apartment controller
+- Last change summary: created with complete CRUD including multi-language handling, seller ownership checks, and USER visibility rules (no HIDDEN)
+
+### Path: /backend/src/modules/apartments/apartment.controller.ts
+- Type: source
+- Purpose: apartment HTTP endpoint handlers
+- Owned by: backend
+- Key responsibilities: handle create, read, update, delete, and list requests
+- Depends on: apartment service, validators, auth middleware
+- Used by: apartment routes
+- Last change summary: created with error handling, file upload processing, and role-based authorization
+
+### Path: /backend/src/modules/apartments/apartment.routes.ts
+- Type: source
+- Purpose: apartment route definitions
+- Owned by: backend
+- Key responsibilities: define public (list, detail) and protected (seller CRUD) routes
+- Depends on: apartment controller, auth middleware, roles middleware, upload middleware
+- Used by: app.ts route mounting
+- Last change summary: added status routes for individual apartment status management
+
+### Path: /backend/src/modules/apartments/status.validators.ts
+- Type: source
+- Purpose: validation for status change operations
+- Owned by: backend
+- Key responsibilities: validate status change requests, mark-as-sold data
+- Depends on: zod library, Prisma enums
+- Used by: status controller
+- Last change summary: created with schemas for status changes, mark-as-sold, and bulk operations
+
+### Path: /backend/src/modules/apartments/status.service.ts
+- Type: source
+- Purpose: status change business logic and permission validation
+- Owned by: backend
+- Key responsibilities: validate status transitions, check permissions, log changes, handle bulk operations
+- Depends on: database client, Prisma enums
+- Used by: status controller
+- Last change summary: created with complete status transition rules matching SERVICE_DOC.md specifications
+
+### Path: /backend/src/modules/apartments/status.controller.ts
+- Type: source
+- Purpose: HTTP handlers for status operations
+- Owned by: backend
+- Key responsibilities: handle status changes, mark-as-sold, history, bulk operations, transition checks
+- Depends on: status service, validators, auth middleware
+- Used by: status routes
+- Last change summary: created with endpoints for all status operations including bulk admin actions
+
+### Path: /backend/src/modules/apartments/status.routes.ts
+- Type: source
+- Purpose: route definitions for status management
+- Owned by: backend
+- Key responsibilities: define authenticated routes for status changes, history, and bulk operations
+- Depends on: status controller, auth middleware, roles middleware
+- Used by: apartment routes
+- Last change summary: created with routes for individual status changes, seller mark-as-sold, and admin bulk operations
 
 ### Path: /backend/src/modules/auth/*
 - Type: source
@@ -307,7 +379,32 @@ Update it whenever files are created/edited/removed.
 - Used by: sellers/admins (and clients optionally)
 - Last change summary: planned
 
+### Path: /backend/src/utils/roles.ts
+- Type: source
+- Purpose: role utilities and permission definitions
+- Owned by: backend
+- Key responsibilities: define role hierarchy, check permissions, validate role creation rules
+- Depends on: Prisma UserRole enum
+- Used by: roles middleware, admin modules
+- Last change summary: created with complete implementation of SERVICE_DOC.md role creation rules
 
+### Path: /backend/src/modules/admin/admin.routes.ts
+- Type: source
+- Purpose: admin management demo and permission testing endpoints
+- Owned by: backend
+- Key responsibilities: demonstrate RBAC in action, provide role information endpoints
+- Depends on: auth middleware, roles middleware, roles utilities
+- Used by: admin UI for permission checks
+- Last change summary: created with role information and permission checking endpoints
+
+### Path: /backend/src/modules/admin/admin.controller.ts
+- Type: source
+- Purpose: admin management controller (placeholder)
+- Owned by: backend
+- Key responsibilities: will handle user creation and management (to be implemented)
+- Depends on: auth middleware, roles middleware
+- Used by: admin routes
+- Last change summary: created as placeholder for user management implementation
 ### Path: /backend/src/utils/jwt.ts
 - Type: source
 - Purpose: token sign/verify helpers
@@ -322,11 +419,10 @@ Update it whenever files are created/edited/removed.
 - Type: source
 - Purpose: multi-language helpers
 - Owned by: backend
-- Key responsibilities: choose language fields, validation
+- Key responsibilities: choose language fields, validation, formatting
 - Depends on: —
 - Used by: apartments/complexes data shaping
-- Last change summary: planned
-
+- Last change summary: created with complete uz/ru/en handling, validation, and formatting utilities
 ---
 
 ## Frontend (web, planned)

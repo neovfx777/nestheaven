@@ -6,12 +6,18 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env';
 import authRoutes from './modules/auth/auth.routes';
+import adminRoutes from './modules/admin/admin.routes';
+import path from 'path';
+import apartmentRoutes from './modules/apartments/apartment.routes';
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // API routes
 app.use('/api/auth', authRoutes);
-// app.use('/api/apartments', apartmentRoutes);
-// app.use('/api/complexes', complexRoutes);
-// app.use('/api/admin', adminRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/apartments', apartmentRoutes);
+
 
 // Health check endpoint
 app.get('/health', async (req, res) => {

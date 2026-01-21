@@ -1,14 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken, extractToken } from '../utils/jwt';
 import { prisma } from '../config/db';
+import { UserRole } from '@prisma/client';
 
 export interface AuthRequest extends Request {
   user?: {
     id: string;
     email: string;
-    role: string;
+    role: UserRole; // Changed from string to UserRole
   };
 }
+
 
 export const authenticate = async (
   req: AuthRequest,
