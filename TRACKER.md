@@ -12,21 +12,13 @@
 ## IN PROGRESS
 
 
-- Implement admin moderation endpoint (hide/unhide)
+- Auth screens + token handling
 --------
 
 
 ## TODO
 
-### Backend MVP
-
-- Implement Complex CRUD (lightweight grouper)
-- Implement "other apartments in same complex" endpoint
-- Implement multi-language fields handling
-
 ### Web MVP
-- Setup React app skeleton
-- Auth screens + token handling
 - Apartment browse + detail
 - Role-based navigation (user/seller/admin/manager/owner)
 - Seller listing create/edit + upload images
@@ -54,3 +46,8 @@
 - Implement RBAC middleware (roles)
 - Implement Apartments CRUD (seller-owned)
 - Implement listing status actions (active/hidden/sold)
+- Implement admin moderation endpoint (hide/unhide)
+- Implement Complex CRUD (lightweight grouper)
+- Implement "other apartments in same complex" endpoint
+- Implement multi-language fields handling
+Setup React app skeleton

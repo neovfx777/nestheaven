@@ -9,6 +9,7 @@ import authRoutes from './modules/auth/auth.routes';
 import adminRoutes from './modules/admin/admin.routes';
 import path from 'path';
 import apartmentRoutes from './modules/apartments/apartment.routes';
+import complexRoutes from './modules/complexes/complex.routes';
 
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
@@ -17,6 +18,7 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/apartments', apartmentRoutes);
+app.use('/api/complexes', complexRoutes);
 
 
 // Health check endpoint

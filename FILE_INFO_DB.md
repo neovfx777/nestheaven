@@ -308,6 +308,51 @@ Update it whenever files are created/edited/removed.
 - Used by: apartment routes
 - Last change summary: created with routes for individual status changes, seller mark-as-sold, and admin bulk operations
 
+### Path: /backend/src/modules/complexes/complex.validators.ts
+- Type: source
+- Purpose: input validation for complex operations
+- Owned by: backend
+- Key responsibilities: validate complex creation, update, query parameters, and other-apartments queries
+- Depends on: zod library
+- Used by: complex controller
+- Last change summary: created with validation for complex CRUD and "other apartments" queries
+
+### Path: /backend/src/modules/complexes/complex.service.ts
+- Type: source
+- Purpose: complex business logic
+- Owned by: backend
+- Key responsibilities: CRUD operations for complex grouping, statistics, search
+- Depends on: database client
+- Used by: complex controller
+- Last change summary: created with lightweight complex management (name + image only) and statistics
+
+### Path: /backend/src/modules/complexes/other-apartments.service.ts
+- Type: source
+- Purpose: "other apartments in same complex" business logic
+- Owned by: backend
+- Key responsibilities: find related apartments in same complex, complex statistics
+- Depends on: database client, apartment data
+- Used by: complex controller
+- Last change summary: created with logic to find other apartments in same complex and complex statistics
+
+### Path: /backend/src/modules/complexes/complex.controller.ts
+- Type: source
+- Purpose: complex HTTP endpoint handlers
+- Owned by: backend
+- Key responsibilities: handle complex CRUD, related apartments, statistics, search
+- Depends on: complex service, other-apartments service, validators
+- Used by: complex routes
+- Last change summary: created with endpoints for complex management and "other apartments" functionality
+
+### Path: /backend/src/modules/complexes/complex.routes.ts
+- Type: source
+- Purpose: complex route definitions
+- Owned by: backend
+- Key responsibilities: define public (list, search, stats) and protected (CRUD) routes
+- Depends on: complex controller, auth middleware
+- Used by: app.ts route mounting
+- Last change summary: created with routes for complex CRUD, search, statistics, and related apartments
+
 ### Path: /backend/src/modules/auth/*
 - Type: source
 - Purpose: login/register token issuing
@@ -431,10 +476,10 @@ Update it whenever files are created/edited/removed.
 - Type: config
 - Purpose: frontend deps and scripts
 - Owned by: frontend
-- Key responsibilities: dev/build
-- Depends on: npm
-- Used by: Vite
-- Last change summary: planned
+- Key responsibilities: dev/build scripts, dependency management
+- Depends on: npm, Vite
+- Used by: Vite, React
+- Last change summary: created with React, TypeScript, Vite, Tailwind, and essential libraries (react-router, axios, zustand, react-query)
 
 ### Path: /frontend/src/main.tsx
 - Type: source
@@ -444,6 +489,50 @@ Update it whenever files are created/edited/removed.
 - Depends on: App.tsx
 - Used by: browser
 - Last change summary: planned
+### Path: /frontend/vite.config.ts
+- Type: config
+- Purpose: Vite build configuration
+- Owned by: frontend
+- Key responsibilities: development server, build optimization, proxy configuration
+- Depends on: Vite, TypeScript
+- Used by: Vite build system
+- Last change summary: created with proxy for backend API (/api → localhost:3000) and uploads
+
+### Path: /frontend/tsconfig.json
+- Type: config
+- Purpose: TypeScript configuration for frontend
+- Owned by: frontend
+- Key responsibilities: TypeScript compilation rules, path aliases
+- Depends on: TypeScript
+- Used by: TypeScript compiler, IDE
+- Last change summary: created with React JSX support, strict mode, and path aliases
+
+### Path: /frontend/src/main.tsx
+- Type: source
+- Purpose: app bootstrap
+- Owned by: frontend
+- Key responsibilities: render React app, setup providers (React Query)
+- Depends on: App.tsx, React DOM
+- Used by: browser entry point
+- Last change summary: created with React Query client setup and React Strict Mode
+
+### Path: /frontend/src/App.tsx
+- Type: source
+- Purpose: main application component with routing
+- Owned by: frontend
+- Key responsibilities: define routes, layout structure, global toast notifications
+- Depends on: react-router-dom, layout components
+- Used by: main.tsx
+- Last change summary: created with public routes (home, apartments, auth) and protected dashboard route
+
+### Path: /frontend/src/stores/authStore.ts
+- Type: source
+- Purpose: authentication state management
+- Owned by: frontend
+- Key responsibilities: manage user authentication state, token storage
+- Depends on: zustand, localStorage
+- Used by: Header, protected routes
+- Last change summary: created with login, logout, and user management using Zustand with persistence
 
 ### Path: /frontend/src/api/client.ts
 - Type: source
