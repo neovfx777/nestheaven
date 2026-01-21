@@ -72,3 +72,30 @@ action7
 - Updated backend/prisma/seed.ts with test apartments in different statuses (ACTIVE, HIDDEN)
 - Implemented status change rules: SELLER can mark ACTIVE->SOLD, ADMIN can HIDE/UNHIDE, proper validation
 - Added audit logging for all status changes with user tracking and reasons
+
+action8
+- Created backend/src/modules/complexes/complex.validators.ts with validation schemas for complex operations
+- Created backend/src/modules/complexes/complex.service.ts with CRUD operations for lightweight complex grouping
+- Created backend/src/modules/complexes/other-apartments.service.ts with "other apartments in same complex" logic
+- Created backend/src/modules/complexes/complex.controller.ts with endpoints for complex management and related apartments
+- Created backend/src/modules/complexes/complex.routes.ts with public listing and protected management routes
+- Updated backend/src/app.ts to mount complex routes at /api/complexes
+- Implemented lightweight complex grouping as per SERVICE_DOC.md: name + image container only
+- Created "other apartments in same complex" endpoint for apartment detail pages
+- Added complex statistics and search functionality
+- Implemented proper validation: cannot delete complex with linked apartments
+
+action9
+- Created frontend/package.json with React, TypeScript, Vite, and essential dependencies (react-router, axios, zustand, tailwind)
+- Created frontend/vite.config.ts with proxy configuration for backend API and uploads
+- Created frontend/tsconfig.json and tsconfig.node.json for TypeScript configuration
+- Created frontend/index.html as application entry point
+- Created frontend/src/main.tsx with React Query setup and strict mode
+- Created frontend/src/App.tsx with React Router routing structure
+- Created frontend/src/components/layout/Layout.tsx, Header.tsx with navigation
+- Created frontend/src/stores/authStore.ts with Zustand state management for authentication
+- Created Tailwind CSS configuration (tailwind.config.js, postcss.config.js) with custom theme
+- Created frontend/.env.example with frontend environment variables
+- Created frontend/index.css with Tailwind directives and custom CSS variables
+- Created frontend/src/vite-env.d.ts for Vite type definitions
+- Set up complete React frontend skeleton with routing, state management, and styling foundation
