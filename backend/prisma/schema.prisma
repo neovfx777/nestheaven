@@ -166,3 +166,21 @@ model ApartmentImage {
   
   @@index([apartmentId, orderIndex])
 }
+model ApartmentStatusLog {
+  id            String         @id @default(cuid())
+  apartmentId   String
+  apartment     Apartment      @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  fromStatus    ApartmentStatus
+  toStatus      ApartmentStatus
+  changedById   String
+  changedBy     User           @relation(fields: [changedById], references: [id], onDelete: Cascade)
+  reason        String?
+  notes         String?
+  
+  // Timestamps
+  createdAt     DateTime       @default(now())
+  
+  @@index([apartmentId])
+  @@index([changedById])
+  @@index([createdAt])
+}

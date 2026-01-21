@@ -11,8 +11,8 @@
 
 ## IN PROGRESS
 
-- Seed default users: owner admin, manager admin, admin, seller, user
 
+- Implement admin moderation endpoint (hide/unhide)
 --------
 
 
@@ -20,12 +20,6 @@
 
 ### Backend MVP
 
-
-
-- Implement RBAC middleware (roles)
-- Implement Apartments CRUD (seller-owned)
-- Implement listing status actions (active/hidden/sold)
-- Implement admin moderation endpoint (hide/unhide)
 - Implement Complex CRUD (lightweight grouper)
 - Implement "other apartments in same complex" endpoint
 - Implement multi-language fields handling
@@ -56,3 +50,7 @@
 - Setup Express app/server skeleton
 - Setup DB connection + Prisma schema
 - Implement Auth (USER register/login)
+- Seed default users: owner admin, manager admin, admin, seller, user
+- Implement RBAC middleware (roles)
+- Implement Apartments CRUD (seller-owned)
+- Implement listing status actions (active/hidden/sold)
