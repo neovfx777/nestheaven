@@ -83,17 +83,68 @@ Update it whenever files are created/edited/removed.
 - Last change summary: planned
 
 ---
+### Path: /.gitignore
+- Type: config
+- Purpose: ignore node_modules, env files, build outputs, uploads, IDE files
+- Owned by: root
+- Key responsibilities: prevent committing secrets, large artifacts, and development files
+- Depends on: tooling (Node.js, IDEs)
+- Used by: git
+- Last change summary: initial creation with standard Node.js exclusions
 
-## Backend (planned)
+### Path: /.env.example
+- Type: config
+- Purpose: example environment variables for server, database, JWT, uploads, and CORS
+- Owned by: root
+- Key responsibilities: onboarding and deployment reference; no actual secrets
+- Depends on: backend configuration needs
+- Used by: backend services, deployment scripts
+- Last change summary: initial creation with PORT, DATABASE_URL, JWT_SECRET, etc.
+
+### Path: /DEVELOPMENT_PLAN.md
+- Type: doc
+- Purpose: step-by-step build plan with 5 phases and weekly deliverables
+- Owned by: docs
+- Key responsibilities: implementation timeline, success metrics, phase breakdown
+- Depends on: SERVICE_DOC.md requirements
+- Used by: all contributors for planning and tracking
+- Last change summary: initial creation with 6-week timeline covering backend to deployment
+## Backend (created)
 
 ### Path: /backend/package.json
 - Type: config
 - Purpose: backend dependencies and scripts
 - Owned by: backend
-- Key responsibilities: start/dev/test scripts
+- Key responsibilities: start/dev/build/test scripts, dependency management
 - Depends on: npm
 - Used by: backend runtime
-- Last change summary: planned
+- Last change summary: added bcrypt for password hashing and @types/bcrypt for TypeScript
+
+### Path: /backend/prisma/seed.ts
+- Type: source
+- Purpose: database seeding for development and testing
+- Owned by: backend
+- Key responsibilities: populate database with initial users and test data
+- Depends on: prisma/schema.prisma, bcrypt for password hashing
+- Used by: development setup, testing
+- Last change summary: completed with all required user roles (owner, manager, admin, seller, user) and secure password hashing
+
+### Path: /backend/src/config/env.ts
+- Type: source
+- Purpose: load & validate env variables
+- Owned by: backend
+- Key responsibilities: ensure required env keys exist, provide typed config
+- Depends on: dotenv
+- Used by: server/app/db
+- Last change summary: previously created; now used by db.ts for DATABASE_URL validation
+### Path: /backend/tsconfig.json
+- Type: config
+- Purpose: TypeScript compiler configuration
+- Owned by: backend
+- Key responsibilities: define TypeScript compilation rules and targets
+- Depends on: TypeScript
+- Used by: TypeScript compiler during build/dev
+- Last change summary: created with ES2020 target, strict mode, CommonJS modules
 
 ### Path: /backend/src/server.ts
 - Type: source
@@ -124,21 +175,21 @@ Update it whenever files are created/edited/removed.
 
 ### Path: /backend/src/config/db.ts
 - Type: source
-- Purpose: DB client initialization (Prisma or chosen ORM)
+- Purpose: DB client initialization (Prisma ORM)
 - Owned by: backend
-- Key responsibilities: connect client, export db instance
-- Depends on: env.ts
+- Key responsibilities: connect client, export db instance, connection testing
+- Depends on: env.ts, @prisma/client
 - Used by: services/repositories
-- Last change summary: planned
+- Last change summary: created with Prisma client setup, connection testing, and health check helpers
 
 ### Path: /backend/prisma/schema.prisma
 - Type: source
-- Purpose: database schema (models: User, Apartment, Complex, etc.)
+- Purpose: database schema (models: User, Apartment, Complex, ApartmentImage)
 - Owned by: backend
-- Key responsibilities: define tables/relations, migrations
+- Key responsibilities: define tables/relations, migrations, enforce data integrity
 - Depends on: prisma
-- Used by: db, services
-- Last change summary: planned
+- Used by: db, services, Prisma Client
+- Last change summary: created with complete schema matching SERVICE_DOC.md specifications
 
 ### Path: /backend/src/routes/index.ts
 - Type: source
@@ -153,10 +204,10 @@ Update it whenever files are created/edited/removed.
 - Type: source
 - Purpose: JWT auth (verify token, attach user)
 - Owned by: backend
-- Key responsibilities: request authentication
-- Depends on: jwt util
+- Key responsibilities: request authentication, user validation against database
+- Depends on: jwt util, database client
 - Used by: protected routes
-- Last change summary: planned
+- Last change summary: created with authentication middleware that validates tokens and checks user existence
 
 ### Path: /backend/src/middleware/roles.ts
 - Type: source
@@ -193,6 +244,41 @@ Update it whenever files are created/edited/removed.
 - Depends on: user model, jwt util
 - Used by: clients
 - Last change summary: planned
+### Path: /backend/src/modules/auth/auth.validators.ts
+- Type: source
+- Purpose: input validation for authentication endpoints
+- Owned by: backend
+- Key responsibilities: validate registration and login inputs using Zod schemas
+- Depends on: zod library
+- Used by: auth controller
+- Last change summary: created with email, password, and name validation rules
+
+### Path: /backend/src/modules/auth/auth.service.ts
+- Type: source
+- Purpose: authentication business logic
+- Owned by: backend
+- Key responsibilities: user registration, login, password hashing, JWT generation
+- Depends on: database client, bcrypt, jwt utils
+- Used by: auth controller
+- Last change summary: created with registration (USER role only), login, and profile retrieval logic
+
+### Path: /backend/src/modules/auth/auth.controller.ts
+- Type: source
+- Purpose: authentication HTTP endpoint handlers
+- Owned by: backend
+- Key responsibilities: handle register, login, and profile requests
+- Depends on: auth service, validators
+- Used by: auth routes
+- Last change summary: created with error handling and response formatting for auth endpoints
+
+### Path: /backend/src/modules/auth/auth.routes.ts
+- Type: source
+- Purpose: authentication route definitions
+- Owned by: backend
+- Key responsibilities: define public (register/login) and protected (profile) routes
+- Depends on: auth controller, auth middleware
+- Used by: app.ts route mounting
+- Last change summary: created with /register, /login, and /profile routes
 
 ### Path: /backend/src/modules/admin/*
 - Type: source
@@ -221,14 +307,16 @@ Update it whenever files are created/edited/removed.
 - Used by: sellers/admins (and clients optionally)
 - Last change summary: planned
 
+
 ### Path: /backend/src/utils/jwt.ts
 - Type: source
 - Purpose: token sign/verify helpers
 - Owned by: backend
-- Key responsibilities: centralize JWT operations
-- Depends on: env secrets
+- Key responsibilities: centralize JWT operations (sign, verify, extract from headers)
+- Depends on: env secrets, jsonwebtoken library
 - Used by: auth middleware & module
-- Last change summary: planned
+- Last change summary: created with JWT signing, verification, and header extraction utilities
+
 
 ### Path: /backend/src/utils/i18n.ts
 - Type: source
