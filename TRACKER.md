@@ -50,4 +50,4 @@
 - Implement Complex CRUD (lightweight grouper)
 - Implement "other apartments in same complex" endpoint
 - Implement multi-language fields handling
-Setup React app skeleton
+-Setup React app skeleton
