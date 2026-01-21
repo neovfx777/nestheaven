@@ -516,6 +516,15 @@ Update it whenever files are created/edited/removed.
 - Used by: auth store, auth pages
 - Last change summary: created with TypeScript interfaces for all auth API responses
 
+### Path: /frontend/src/api/apartments.ts
+- Type: source
+- Purpose: apartment API functions and types
+- Owned by: frontend
+- Key responsibilities: typed API calls for apartments, complexes, filtering, and search
+- Depends on: api client
+- Used by: apartment pages, components
+- Last change summary: created with TypeScript interfaces for apartments, filtering, and paginated responses
+
 ### Path: /frontend/src/stores/authStore.ts
 - Type: source
 - Purpose: authentication state management
@@ -534,6 +543,7 @@ Update it whenever files are created/edited/removed.
 - Used by: auth pages, forms
 - Last change summary: created with loginSchema and registerSchema with password validation rules
 
+### Layout Components
 ### Path: /frontend/src/components/layout/Layout.tsx
 - Type: source
 - Purpose: main layout wrapper
@@ -541,7 +551,7 @@ Update it whenever files are created/edited/removed.
 - Key responsibilities: provide consistent layout with header and footer
 - Depends on: Header, Footer, react-router
 - Used by: App.tsx
-- Last change summary: created with header, main content area, and footer structure
+- Last change summary: added Footer component to layout structure
 
 ### Path: /frontend/src/components/layout/Header.tsx
 - Type: source
@@ -550,8 +560,18 @@ Update it whenever files are created/edited/removed.
 - Key responsibilities: logo, navigation links, auth status display
 - Depends on: auth store, react-router
 - Used by: Layout.tsx
-- Last change summary: created with responsive navigation and auth-aware UI
+- Last change summary: added complexes link to navigation
 
+### Path: /frontend/src/components/layout/Footer.tsx
+- Type: source
+- Purpose: site footer component
+- Owned by: frontend
+- Key responsibilities: display footer with links, contact info, and newsletter
+- Depends on: layout
+- Used by: Layout.tsx
+- Last change summary: created with responsive grid, social links, and contact information
+
+### Auth Components
 ### Path: /frontend/src/components/auth/ProtectedRoute.tsx
 - Type: source
 - Purpose: route protection component
@@ -570,6 +590,35 @@ Update it whenever files are created/edited/removed.
 - Used by: LoginPage, RegisterPage
 - Last change summary: created with FormInput component and shared auth form layout
 
+### Apartment Components
+### Path: /frontend/src/components/apartments/ApartmentCard.tsx
+- Type: source
+- Purpose: apartment listing card component
+- Owned by: frontend
+- Key responsibilities: display apartment preview with image, price, specs, and status
+- Depends on: apartment API types
+- Used by: ApartmentsPage
+- Last change summary: created with responsive design, status badges, and hover effects
+
+### Path: /frontend/src/components/apartments/ApartmentFilters.tsx
+- Type: source
+- Purpose: apartment filtering component
+- Owned by: frontend
+- Key responsibilities: provide advanced filtering UI for apartments
+- Depends on: apartment API, complexes data
+- Used by: ApartmentsPage
+- Last change summary: created with price range, rooms, area, complex, developer, and sort options
+
+### Path: /frontend/src/components/apartments/ApartmentGallery.tsx
+- Type: source
+- Purpose: apartment image gallery component
+- Owned by: frontend
+- Key responsibilities: display apartment images with carousel and fullscreen view
+- Depends on: apartment images data
+- Used by: ApartmentDetailPage
+- Last change summary: created with thumbnail navigation, fullscreen modal, and image counter
+
+### Pages
 ### Path: /frontend/src/pages/HomePage.tsx
 - Type: source
 - Purpose: home page
@@ -597,14 +646,32 @@ Update it whenever files are created/edited/removed.
 - Used by: App routing
 - Last change summary: created with password requirements display and terms agreement
 
-### Path: /frontend/src/pages/dashboard/DashboardPage.tsx
+### Path: /frontend/src/pages/apartments/ApartmentsPage.tsx
 - Type: source
-- Purpose: user dashboard
+- Purpose: apartment listing and browsing page
 - Owned by: frontend
-- Key responsibilities: show user-specific information and actions
-- Depends on: auth store
-- Used by: App routing (protected)
-- Last change summary: created with role-specific content and stats cards
+- Key responsibilities: display paginated apartments with filtering and search
+- Depends on: apartment API, ApartmentCard, ApartmentFilters
+- Used by: App routing
+- Last change summary: created with React Query integration, URL state management, and pagination
+
+### Path: /frontend/src/pages/apartments/ApartmentDetailPage.tsx
+- Type: source
+- Purpose: apartment detail view page
+- Owned by: frontend
+- Key responsibilities: show detailed apartment information with tabs
+- Depends on: apartment API, ApartmentGallery
+- Used by: App routing
+- Last change summary: created with multi-language support, installment calculator, and related apartments
+
+### Path: /frontend/src/pages/ComplexesPage.tsx
+- Type: source
+- Purpose: complexes listing page (placeholder)
+- Owned by: frontend
+- Key responsibilities: placeholder for future complexes browsing
+- Depends on: layout
+- Used by: App routing
+- Last change summary: created as placeholder for complexes page implementation
 
 ### Path: /frontend/src/pages/NotFoundPage.tsx
 - Type: source
@@ -615,27 +682,73 @@ Update it whenever files are created/edited/removed.
 - Used by: App routing
 - Last change summary: created with 404 message and home link
 
+### Dashboard Components
+### Path: /frontend/src/pages/dashboard/DashboardLayout.tsx
+- Type: source
+- Purpose: dashboard layout with role-based sidebar
+- Owned by: frontend
+- Key responsibilities: provide dashboard layout with navigation filtered by user role
+- Depends on: auth store, user role
+- Used by: DashboardPage
+- Last change summary: created with responsive sidebar, role-based menu filtering, and user info display
+
+### Path: /frontend/src/pages/dashboard/DashboardPage.tsx
+- Type: source
+- Purpose: main dashboard page router
+- Owned by: frontend
+- Key responsibilities: route users to appropriate dashboard based on role
+- Depends on: auth store, all dashboard components
+- Used by: App routing (protected)
+- Last change summary: updated to route users to role-specific dashboards (USER, SELLER, ADMIN, MANAGER_ADMIN, OWNER_ADMIN)
+
+### Path: /frontend/src/pages/dashboard/UserDashboard.tsx
+- Type: source
+- Purpose: USER role dashboard
+- Owned by: frontend
+- Key responsibilities: display user-specific features (favorites, saved searches, notifications)
+- Depends on: auth store
+- Used by: DashboardPage (for USER role)
+- Last change summary: created with favorites management, saved searches, and user activity tracking
+
+### Path: /frontend/src/pages/dashboard/SellerDashboard.tsx
+- Type: source
+- Purpose: SELLER role dashboard
+- Owned by: frontend
+- Key responsibilities: apartment listing management and seller analytics
+- Depends on: auth store
+- Used by: DashboardPage (for SELLER role)
+- Last change summary: created with listing management, sales analytics, and seller performance metrics
+
+### Path: /frontend/src/pages/dashboard/AdminDashboard.tsx
+- Type: source
+- Purpose: ADMIN role dashboard
+- Owned by: frontend
+- Key responsibilities: content moderation and platform management
+- Depends on: auth store
+- Used by: DashboardPage (for ADMIN role)
+- Last change summary: created with content review, flagged content management, and moderation tools
+
+### Path: /frontend/src/pages/dashboard/ManagerDashboard.tsx
+- Type: source
+- Purpose: MANAGER_ADMIN role dashboard
+- Owned by: frontend
+- Key responsibilities: admin management and platform oversight
+- Depends on: auth store
+- Used by: DashboardPage (for MANAGER_ADMIN role)
+- Last change summary: created with admin account management, performance monitoring, and manager tools
+
+### Path: /frontend/src/pages/dashboard/OwnerDashboard.tsx
+- Type: source
+- Purpose: OWNER_ADMIN role dashboard
+- Owned by: frontend
+- Key responsibilities: complete system oversight and management
+- Depends on: auth store
+- Used by: DashboardPage (for OWNER_ADMIN role)
+- Last change summary: created with system-wide analytics, user management, and owner-level tools
+
 ---
 
 ## Frontend (planned - next steps)
-
-### Path: /frontend/src/pages/apartments/ApartmentsPage.tsx
-- Type: source
-- Purpose: apartment listing and browsing
-- Owned by: frontend
-- Key responsibilities: display apartments with filtering and pagination
-- Depends on: api client, apartment API
-- Used by: App router
-- Last change summary: planned - will implement apartment browsing
-
-### Path: /frontend/src/pages/apartments/ApartmentDetailPage.tsx
-- Type: source
-- Purpose: apartment detail view
-- Owned by: frontend
-- Key responsibilities: show detailed apartment information
-- Depends on: api client, apartment API
-- Used by: App router
-- Last change summary: planned - will implement apartment detail view
 
 ### Path: /frontend/src/features/*
 - Type: source

@@ -11,7 +11,7 @@
 
 ## IN PROGRESS
 
-- Apartment browse + detail
+- Seller listing create/edit + upload images
 
 --------
 
@@ -20,8 +20,8 @@
 
 ### Web MVP
 
-- Role-based navigation (user/seller/admin/manager/owner)
-- Seller listing create/edit + upload images
+
+
 - Admin moderation UI (hide/unhide)
 
 ### Mobile Later
@@ -51,4 +51,5 @@
 - Implement "other apartments in same complex" endpoint
 - Implement multi-language fields handling
 - Setup React app skeleton
-- Auth screens + token handling
+- Auth screens + token handling- Apartment browse + detail
+- Role-based navigation (user/seller/admin/manager/owner)

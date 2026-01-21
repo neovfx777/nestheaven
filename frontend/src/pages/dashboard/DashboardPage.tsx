@@ -1,6 +1,41 @@
 import { useAuthStore } from '../../stores/authStore';
 import { Building2, Home, Settings, Users } from 'lucide-react';
+import { useAuthStore } from '../../stores/authStore';
+import DashboardLayout from './DashboardLayout';
+import UserDashboard from './UserDashboard';
+import SellerDashboard from './SellerDashboard';
+import AdminDashboard from './AdminDashboard';
+import ManagerDashboard from './ManagerDashboard';
+import OwnerDashboard from './OwnerDashboard';
 
+const DashboardPage = () => {
+  const { user } = useAuthStore();
+
+  const renderDashboard = () => {
+    switch (user?.role) {
+      case 'USER':
+        return <UserDashboard />;
+      case 'SELLER':
+        return <SellerDashboard />;
+      case 'ADMIN':
+        return <AdminDashboard />;
+      case 'MANAGER_ADMIN':
+        return <ManagerDashboard />;
+      case 'OWNER_ADMIN':
+        return <OwnerDashboard />;
+      default:
+        return <UserDashboard />;
+    }
+  };
+
+  return (
+    <DashboardLayout>
+      {renderDashboard()}
+    </DashboardLayout>
+  );
+};
+
+export default DashboardPage;
 const DashboardPage = () => {
   const { user } = useAuthStore();
 

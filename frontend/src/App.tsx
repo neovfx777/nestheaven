@@ -1,15 +1,3 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
-import Layout from './components/layout/Layout';
-import HomePage from './pages/HomePage';
-import ApartmentsPage from './pages/apartments/ApartmentsPage';
-import ApartmentDetailPage from './pages/apartments/ApartmentDetailPage';
-import LoginPage from './pages/auth/LoginPage';
-import RegisterPage from './pages/auth/RegisterPage';
-import DashboardPage from './pages/dashboard/DashboardPage';
-import NotFoundPage from './pages/NotFoundPage';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-
 function App() {
   return (
     <Router>
@@ -20,38 +8,39 @@ function App() {
           style: {
             background: '#363636',
             color: '#fff',
-          },
-          success: {
-            duration: 3000,
-            theme: {
-              primary: 'green',
-              secondary: 'black',
-            },
+            borderRadius: '8px',
+            padding: '16px',
           },
         }}
       />
       <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Layout />}>
-          <Route index element={<HomePage />} />
+        {/* Public routes with Layout */}
+        <Route element={<Layout />}>
+          <Route path="/" element={<HomePage />} />
           <Route path="apartments" element={<ApartmentsPage />} />
           <Route path="apartments/:id" element={<ApartmentDetailPage />} />
-          <Route path="login" element={<LoginPage />} />
-          <Route path="register" element={<RegisterPage />} />
-          
-          {/* Protected Routes */}
-          <Route path="dashboard/*" element={
-            <ProtectedRoute>
-              <DashboardPage />
-            </ProtectedRoute>
-          } />
-          
-          {/* 404 */}
-          <Route path="*" element={<NotFoundPage />} />
+          <Route path="complexes" element={<ComplexesPage />} />
         </Route>
+        
+        {/* Auth routes without Layout (or with different layout) */}
+        <Route path="login" element={<LoginPage />} />
+        <Route path="register" element={<RegisterPage />} />
+        
+        {/* Protected routes with Layout */}
+        <Route element={<Layout />}>
+          <Route 
+            path="dashboard/*" 
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+        </Route>
+        
+        {/* 404 Route */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
   );
 }
-
-export default App;

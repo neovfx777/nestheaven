@@ -18,8 +18,14 @@ const ProtectedRoute = ({ children, roles }: ProtectedRouteProps) => {
 
   // Check role-based access if roles are specified
   if (roles && user && !roles.includes(user.role)) {
-    // Redirect to home page if user doesn't have required role
-    return <Navigate to="/" replace />;
+    // Redirect to appropriate dashboard based on role
+    let redirectPath = '/dashboard';
+    
+    // You could add specific redirects for different roles if needed
+    // if (user.role === 'USER') redirectPath = '/dashboard/user';
+    // else if (user.role === 'SELLER') redirectPath = '/dashboard/seller';
+    
+    return <Navigate to={redirectPath} replace />;
   }
 
   return <>{children}</>;
