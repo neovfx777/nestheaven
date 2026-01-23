@@ -24,7 +24,7 @@ const storage = multer.diskStorage({
 
 // File filter
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowedTypes = env.ALLOWED_FILE_TYPES.split(',');
+  const allowedTypes = env.ALLOWED_FILE_TYPES ? env.ALLOWED_FILE_TYPES.split(',') : ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
   
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
@@ -38,7 +38,7 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: env.MAX_FILE_SIZE
+    fileSize: env.MAX_FILE_SIZE || 10 * 1024 * 1024 // Default 10MB
   }
 });
 

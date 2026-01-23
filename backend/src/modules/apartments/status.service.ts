@@ -1,77 +1,63 @@
-import { ApartmentStatus, UserRole } from '@prisma/client';
+import { Prisma, ApartmentStatus, UserRole } from '@prisma/client';
 import { prisma } from '../../config/db';
-import { ChangeStatusInput, MarkAsSoldInput } from './status.validators';
+import { 
+  ApartmentCreateInput, 
+  ApartmentUpdateInput, 
+  ApartmentQueryInput 
+} from './apartment.validators';
+import { 
+  createMultiLanguageRecord, 
+  formatMultiLanguageResponse,
+  validateMultiLanguageInput 
+} from '../../utils/i18n';
+import { getFileUrl } from '../../middleware/upload';
 
-export class StatusService {
-  // Check if a status transition is valid
-  private isValidTransition(
-    fromStatus: ApartmentStatus,
-    toStatus: ApartmentStatus,
-    userRole: UserRole,
-    isOwner: boolean
-  ): { valid: boolean; message?: string } {
-    
-    // SELLER can only mark their own as SOLD (from ACTIVE to SOLD)
-    if (userRole === UserRole.SELLER) {
-      if (fromStatus === ApartmentStatus.ACTIVE && toStatus === ApartmentStatus.SOLD) {
-        return { valid: true };
-      }
-      return { 
-        valid: false, 
-        message: 'Sellers can only mark ACTIVE apartments as SOLD' 
-      };
-    }
-
-    // ADMIN/MANAGER/OWNER can do various transitions
-    if ([UserRole.ADMIN, UserRole.MANAGER_ADMIN, UserRole.OWNER_ADMIN].includes(userRole)) {
-      // Can HIDE/UNHIDE any apartment
-      if (
-        (fromStatus === ApartmentStatus.ACTIVE && toStatus === ApartmentStatus.HIDDEN) ||
-        (fromStatus === ApartmentStatus.HIDDEN && toStatus === ApartmentStatus.ACTIVE) ||
-        (fromStatus === ApartmentStatus.SOLD && toStatus === ApartmentStatus.HIDDEN) ||
-        (fromStatus === ApartmentStatus.HIDDEN && toStatus === ApartmentStatus.SOLD)
-      ) {
-        return { valid: true };
-      }
-
-      // Can mark HIDDEN as SOLD (admin marking a hidden apartment as sold)
-      if (fromStatus === ApartmentStatus.HIDDEN && toStatus === ApartmentStatus.SOLD) {
-        return { valid: true };
-      }
-
-      // Cannot mark SOLD as ACTIVE (once sold, stays sold)
-      if (fromStatus === ApartmentStatus.SOLD && toStatus === ApartmentStatus.ACTIVE) {
-        return { 
-          valid: false, 
-          message: 'Cannot reactivate a SOLD apartment' 
-        };
-      }
-    }
-
-    // USER cannot change status
-    if (userRole === UserRole.USER) {
-      return { 
-        valid: false, 
-        message: 'Users cannot change apartment status' 
-      };
-    }
-
-    return { 
-      valid: false, 
-      message: `Invalid status transition: ${fromStatus} -> ${toStatus}` 
+export class ApartmentService {
+  // Create apartment (seller only)
+  async createApartment(sellerId: string, input: ApartmentCreateInput, imageFilenames: string[] = []) {
+    // Validate multi-language input
+    const multiLanguageContent = {
+      uz: { title: input.title.uz, description: input.description?.uz, materials: input.materials?.uz },
+      ru: { title: input.title.ru, description: input.description?.ru, materials: input.materials?.ru },
+      en: { title: input.title.en, description: input.description?.en, materials: input.materials?.en },
     };
-  }
 
-  // Change apartment status
-  async changeStatus(
-    apartmentId: string,
-    userId: string,
-    userRole: UserRole,
-    input: ChangeStatusInput
-  ) {
-    // Get apartment with current status
-    const apartment = await prisma.apartment.findUnique({
-      where: { id: apartmentId },
+    if (!validateMultiLanguageInput(multiLanguageContent)) {
+      throw new Error('All languages must have a title');
+    }
+
+    // Create apartment
+    const apartment = await prisma.apartment.create({
+      data: {
+        ...createMultiLanguageRecord(multiLanguageContent),
+        price: input.price,
+        rooms: input.rooms,
+        area: input.area,
+        floor: input.floor,
+        address: input.address,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        developerName: input.developerName,
+        developerId: input.developerId,
+        complexId: input.complexId,
+        airQualityIndex: input.airQualityIndex,
+        airQualitySource: input.airQualitySource,
+        infrastructure: input.infrastructure as Prisma.JsonValue,
+        infrastructureNoteUz: input.infrastructureNote?.uz,
+        infrastructureNoteRu: input.infrastructureNote?.ru,
+        infrastructureNoteEn: input.infrastructureNote?.en,
+        investmentGrowthPercent: input.investmentGrowthPercent,
+        investmentGrowthNoteUz: input.investmentGrowthNote?.uz,
+        investmentGrowthNoteRu: input.investmentGrowthNote?.ru,
+        investmentGrowthNoteEn: input.investmentGrowthNote?.en,
+        contactPhone: input.contactPhone,
+        contactTelegram: input.contactTelegram,
+        contactWhatsapp: input.contactWhatsapp,
+        contactEmail: input.contactEmail,
+        installmentOptions: input.installmentOptions as Prisma.JsonValue,
+        sellerId,
+        status: ApartmentStatus.ACTIVE,
+      },
       include: {
         seller: {
           select: {
@@ -79,48 +65,137 @@ export class StatusService {
             email: true,
             fullName: true,
           }
+        },
+        complex: {
+          select: {
+            id: true,
+            name: true,
+            coverImage: true,
+          }
         }
       }
     });
 
-    if (!apartment) {
+    // Create apartment images
+    if (imageFilenames.length > 0) {
+      const imagesData = imageFilenames.map((filename, index) => ({
+        apartmentId: apartment.id,
+        url: getFileUrl(filename),
+        orderIndex: index,
+      }));
+
+      await prisma.apartmentImage.createMany({
+        data: imagesData
+      });
+    }
+
+    // Fetch apartment with images
+    const apartmentWithImages = await prisma.apartment.findUnique({
+      where: { id: apartment.id },
+      include: {
+        seller: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+          }
+        },
+        complex: {
+          select: {
+            id: true,
+            name: true,
+            coverImage: true,
+          }
+        },
+        images: {
+          orderBy: { orderIndex: 'asc' }
+        }
+      }
+    });
+
+    return apartmentWithImages;
+  }
+
+  // Update apartment (seller can update their own)
+  async updateApartment(apartmentId: string, userId: string, userRole: UserRole, input: ApartmentUpdateInput) {
+    // Check if apartment exists and user has permission
+    const existingApartment = await prisma.apartment.findUnique({
+      where: { id: apartmentId }
+    });
+
+    if (!existingApartment) {
       throw new Error('Apartment not found');
     }
 
-    const isOwner = apartment.sellerId === userId;
-
-    // Check permission based on role
-    if (userRole === UserRole.SELLER && !isOwner) {
-      throw new Error('Sellers can only change status of their own apartments');
-    }
-
-    // Validate status transition
-    const transitionCheck = this.isValidTransition(
-      apartment.status,
-      input.status,
-      userRole,
-      isOwner
-    );
-
-    if (!transitionCheck.valid) {
-      throw new Error(transitionCheck.message);
-    }
-
-    // Special handling for SOLD status
-    let updateData: any = { status: input.status };
+    // Check permission: seller can update their own, admins can update any
+    const isSellerOwned = existingApartment.sellerId === userId;
+    const isAdmin = [UserRole.ADMIN, UserRole.MANAGER_ADMIN, UserRole.OWNER_ADMIN].includes(userRole);
     
-    if (input.status === ApartmentStatus.SOLD) {
-      updateData.soldAt = new Date();
-    } else if (input.status === ApartmentStatus.HIDDEN) {
-      updateData.hiddenAt = new Date();
-      updateData.hiddenById = userId;
-    } else if (input.status === ApartmentStatus.ACTIVE && apartment.status === ApartmentStatus.HIDDEN) {
-      // When unhiding, clear hidden info
-      updateData.hiddenAt = null;
-      updateData.hiddenById = null;
+    if (!isSellerOwned && !isAdmin) {
+      throw new Error('Not authorized to update this apartment');
     }
 
-    // Update apartment status
+    // Prepare update data
+    const updateData: any = {};
+
+    // Update multi-language fields if provided
+    if (input.title || input.description || input.materials) {
+      const titleUz = input.title?.uz || existingApartment.titleUz;
+      const titleRu = input.title?.ru || existingApartment.titleRu;
+      const titleEn = input.title?.en || existingApartment.titleEn;
+
+      updateData.titleUz = titleUz;
+      updateData.titleRu = titleRu;
+      updateData.titleEn = titleEn;
+
+      if (input.description) {
+        updateData.descriptionUz = input.description.uz;
+        updateData.descriptionRu = input.description.ru;
+        updateData.descriptionEn = input.description.en;
+      }
+
+      if (input.materials) {
+        updateData.materialsUz = input.materials.uz;
+        updateData.materialsRu = input.materials.ru;
+        updateData.materialsEn = input.materials.en;
+      }
+    }
+
+    // Update other fields
+    if (input.price !== undefined) updateData.price = input.price;
+    if (input.rooms !== undefined) updateData.rooms = input.rooms;
+    if (input.area !== undefined) updateData.area = input.area;
+    if (input.floor !== undefined) updateData.floor = input.floor;
+    if (input.address !== undefined) updateData.address = input.address;
+    if (input.latitude !== undefined) updateData.latitude = input.latitude;
+    if (input.longitude !== undefined) updateData.longitude = input.longitude;
+    if (input.developerName !== undefined) updateData.developerName = input.developerName;
+    if (input.developerId !== undefined) updateData.developerId = input.developerId;
+    if (input.complexId !== undefined) updateData.complexId = input.complexId;
+    if (input.airQualityIndex !== undefined) updateData.airQualityIndex = input.airQualityIndex;
+    if (input.airQualitySource !== undefined) updateData.airQualitySource = input.airQualitySource;
+    if (input.infrastructure !== undefined) updateData.infrastructure = input.infrastructure as Prisma.JsonValue;
+    if (input.investmentGrowthPercent !== undefined) updateData.investmentGrowthPercent = input.investmentGrowthPercent;
+    if (input.contactPhone !== undefined) updateData.contactPhone = input.contactPhone;
+    if (input.contactTelegram !== undefined) updateData.contactTelegram = input.contactTelegram;
+    if (input.contactWhatsapp !== undefined) updateData.contactWhatsapp = input.contactWhatsapp;
+    if (input.contactEmail !== undefined) updateData.contactEmail = input.contactEmail;
+    if (input.installmentOptions !== undefined) updateData.installmentOptions = input.installmentOptions as Prisma.JsonValue;
+
+    // Update infrastructure notes
+    if (input.infrastructureNote) {
+      updateData.infrastructureNoteUz = input.infrastructureNote.uz;
+      updateData.infrastructureNoteRu = input.infrastructureNote.ru;
+      updateData.infrastructureNoteEn = input.infrastructureNote.en;
+    }
+
+    // Update investment notes
+    if (input.investmentGrowthNote) {
+      updateData.investmentGrowthNoteUz = input.investmentGrowthNote.uz;
+      updateData.investmentGrowthNoteRu = input.investmentGrowthNote.ru;
+      updateData.investmentGrowthNoteEn = input.investmentGrowthNote.en;
+    }
+
     const updatedApartment = await prisma.apartment.update({
       where: { id: apartmentId },
       data: updateData,
@@ -132,63 +207,53 @@ export class StatusService {
             fullName: true,
           }
         },
-        hiddenBy: input.status === ApartmentStatus.HIDDEN ? {
+        complex: {
           select: {
             id: true,
-            email: true,
-            fullName: true,
+            name: true,
+            coverImage: true,
           }
-        } : undefined,
-      }
-    });
-
-    // Log status change
-    await prisma.apartmentStatusLog.create({
-      data: {
-        apartmentId,
-        fromStatus: apartment.status,
-        toStatus: input.status,
-        changedById: userId,
-        reason: input.reason,
-        notes: input.notes,
+        },
+        images: {
+          orderBy: { orderIndex: 'asc' }
+        }
       }
     });
 
     return updatedApartment;
   }
 
-  // Mark apartment as sold (seller-specific endpoint with additional data)
-  async markAsSold(
-    apartmentId: string,
-    sellerId: string,
-    input: MarkAsSoldInput
-  ) {
+  // Delete apartment (seller can delete their own)
+  async deleteApartment(apartmentId: string, userId: string, userRole: UserRole) {
     const apartment = await prisma.apartment.findUnique({
-      where: { 
-        id: apartmentId,
-        sellerId, // Ensure seller owns this apartment
-        status: ApartmentStatus.ACTIVE // Must be active to mark as sold
-      }
+      where: { id: apartmentId },
+      include: { images: true }
     });
 
     if (!apartment) {
-      throw new Error('Apartment not found or not eligible for marking as sold');
+      throw new Error('Apartment not found');
     }
 
-    const updateData: any = {
-      status: ApartmentStatus.SOLD,
-      soldAt: new Date(),
-    };
+    // Check permission
+    const isSellerOwned = apartment.sellerId === userId;
+    const isAdmin = [UserRole.ADMIN, UserRole.MANAGER_ADMIN, UserRole.OWNER_ADMIN].includes(userRole);
+    
+    if (!isSellerOwned && !isAdmin) {
+      throw new Error('Not authorized to delete this apartment');
+    }
 
-    // Add optional sold information
-    if (input.soldPrice) updateData.soldPrice = input.soldPrice;
-    if (input.soldTo) updateData.soldTo = input.soldTo;
-    if (input.soldNotes) updateData.soldNotes = input.soldNotes;
-    if (input.soldAt) updateData.soldAt = new Date(input.soldAt);
+    // Delete apartment (cascade will delete images from database)
+    await prisma.apartment.delete({
+      where: { id: apartmentId }
+    });
 
-    const updatedApartment = await prisma.apartment.update({
-      where: { id: apartmentId },
-      data: updateData,
+    return { success: true, message: 'Apartment deleted successfully' };
+  }
+
+  // Get apartment by ID
+  async getApartmentById(id: string, userId?: string, userRole?: UserRole) {
+    const apartment = await prisma.apartment.findUnique({
+      where: { id },
       include: {
         seller: {
           select: {
@@ -196,33 +261,17 @@ export class StatusService {
             email: true,
             fullName: true,
           }
+        },
+        complex: {
+          select: {
+            id: true,
+            name: true,
+            coverImage: true,
+          }
+        },
+        images: {
+          orderBy: { orderIndex: 'asc' }
         }
-      }
-    });
-
-    // Log status change
-    await prisma.apartmentStatusLog.create({
-      data: {
-        apartmentId,
-        fromStatus: ApartmentStatus.ACTIVE,
-        toStatus: ApartmentStatus.SOLD,
-        changedById: sellerId,
-        reason: 'Marked as sold by seller',
-        notes: input.soldNotes || `Sold to: ${input.soldTo || 'Unknown'}, Price: ${input.soldPrice || apartment.price}`,
-      }
-    });
-
-    return updatedApartment;
-  }
-
-  // Get status history for an apartment
-  async getStatusHistory(apartmentId: string, userId: string, userRole: UserRole) {
-    // Check permissions
-    const apartment = await prisma.apartment.findUnique({
-      where: { id: apartmentId },
-      select: {
-        sellerId: true,
-        status: true,
       }
     });
 
@@ -230,128 +279,200 @@ export class StatusService {
       throw new Error('Apartment not found');
     }
 
-    const isOwner = apartment.sellerId === userId;
-    const isAdmin = [UserRole.ADMIN, UserRole.MANAGER_ADMIN, UserRole.OWNER_ADMIN].includes(userRole);
-
-    // Only seller or admin can view status history
-    if (!isOwner && !isAdmin) {
-      throw new Error('Not authorized to view status history');
+    // Check visibility: USER cannot see HIDDEN apartments
+    const isUser = userRole === UserRole.USER;
+    const isHidden = apartment.status === ApartmentStatus.HIDDEN;
+    
+    if (isUser && isHidden) {
+      throw new Error('Apartment not found');
     }
 
-    const history = await prisma.apartmentStatusLog.findMany({
-      where: { apartmentId },
+    // Check if user is seller or admin for additional info
+    const isSeller = apartment.sellerId === userId;
+    const isAdmin = userRole && [UserRole.ADMIN, UserRole.MANAGER_ADMIN, UserRole.OWNER_ADMIN].includes(userRole);
+
+    // Format response
+    const formattedApartment = {
+      ...apartment,
+      multiLanguageContent: formatMultiLanguageResponse(apartment),
+      // Only include seller contact info for the seller themselves or admins
+      contactInfo: (isSeller || isAdmin) ? {
+        phone: apartment.contactPhone,
+        telegram: apartment.contactTelegram,
+        whatsapp: apartment.contactWhatsapp,
+        email: apartment.contactEmail,
+      } : undefined,
+      infrastructure: apartment.infrastructure,
+      installmentOptions: apartment.installmentOptions,
+    };
+
+    return formattedApartment;
+  }
+
+  // List apartments with filtering
+  async listApartments(query: ApartmentQueryInput, userId?: string, userRole?: UserRole) {
+    const {
+      status,
+      minPrice,
+      maxPrice,
+      minRooms,
+      maxRooms,
+      minArea,
+      maxArea,
+      complexId,
+      developerName,
+      search,
+      page = 1,
+      limit = 10,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = query;
+
+    // Build where clause
+    const where: Prisma.ApartmentWhereInput = {};
+
+    // Status filter
+    if (status) {
+      where.status = status;
+    } else {
+      // USER cannot see HIDDEN apartments
+      if (userRole === UserRole.USER) {
+        where.status = { in: [ApartmentStatus.ACTIVE, ApartmentStatus.SOLD] };
+      }
+    }
+
+    // Price range
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      where.price = {};
+      if (minPrice !== undefined) where.price.gte = minPrice;
+      if (maxPrice !== undefined) where.price.lte = maxPrice;
+    }
+
+    // Rooms range
+    if (minRooms !== undefined || maxRooms !== undefined) {
+      where.rooms = {};
+      if (minRooms !== undefined) where.rooms.gte = minRooms;
+      if (maxRooms !== undefined) where.rooms.lte = maxRooms;
+    }
+
+    // Area range
+    if (minArea !== undefined || maxArea !== undefined) {
+      where.area = {};
+      if (minArea !== undefined) where.area.gte = minArea;
+      if (maxArea !== undefined) where.area.lte = maxArea;
+    }
+
+    // Complex filter
+    if (complexId) {
+      where.complexId = complexId;
+    }
+
+    // Developer filter
+    if (developerName) {
+      where.developerName = { contains: developerName, mode: 'insensitive' };
+    }
+
+    // Search across titles and descriptions
+    if (search) {
+      where.OR = [
+        { titleUz: { contains: search, mode: 'insensitive' } },
+        { titleRu: { contains: search, mode: 'insensitive' } },
+        { titleEn: { contains: search, mode: 'insensitive' } },
+        { descriptionUz: { contains: search, mode: 'insensitive' } },
+        { descriptionRu: { contains: search, mode: 'insensitive' } },
+        { descriptionEn: { contains: search, mode: 'insensitive' } },
+        { address: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Sort
+    const orderBy: Prisma.ApartmentOrderByWithRelationInput = {};
+    if (sortBy === 'price' || sortBy === 'area' || sortBy === 'rooms' || sortBy === 'createdAt' || sortBy === 'updatedAt') {
+      orderBy[sortBy] = sortOrder;
+    } else {
+      orderBy.createdAt = sortOrder;
+    }
+
+    // Execute query
+    const [apartments, total] = await Promise.all([
+      prisma.apartment.findMany({
+        where,
+        include: {
+          complex: {
+            select: {
+              id: true,
+              name: true,
+              coverImage: true,
+            }
+          },
+          images: {
+            take: 1, // Only get first image for listing
+            orderBy: { orderIndex: 'asc' }
+          }
+        },
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.apartment.count({ where }),
+    ]);
+
+    // Format response
+    const formattedApartments = apartments.map(apartment => ({
+      id: apartment.id,
+      titleUz: apartment.titleUz,
+      titleRu: apartment.titleRu,
+      titleEn: apartment.titleEn,
+      price: apartment.price,
+      rooms: apartment.rooms,
+      area: apartment.area,
+      floor: apartment.floor,
+      address: apartment.address,
+      status: apartment.status,
+      developerName: apartment.developerName,
+      complex: apartment.complex,
+      coverImage: apartment.images[0]?.url || null,
+      createdAt: apartment.createdAt,
+      updatedAt: apartment.updatedAt,
+    }));
+
+    return {
+      apartments: formattedApartments,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      }
+    };
+  }
+
+  // Get apartments by seller
+  async getApartmentsBySeller(sellerId: string, includeHidden: boolean = false) {
+    const where: Prisma.ApartmentWhereInput = { sellerId };
+    
+    if (!includeHidden) {
+      where.status = { not: ApartmentStatus.HIDDEN };
+    }
+
+    const apartments = await prisma.apartment.findMany({
+      where,
       include: {
-        changedBy: {
+        complex: {
           select: {
             id: true,
-            email: true,
-            fullName: true,
-            role: true,
+            name: true,
+            coverImage: true,
           }
+        },
+        images: {
+          take: 1,
+          orderBy: { orderIndex: 'asc' }
         }
       },
       orderBy: { createdAt: 'desc' }
     });
 
-    return history;
-  }
-
-  // Bulk status change for admin (hide/unhide multiple)
-  async bulkChangeStatus(
-    apartmentIds: string[],
-    userId: string,
-    userRole: UserRole,
-    status: ApartmentStatus,
-    reason?: string
-  ) {
-    // Only admins can do bulk operations
-    if (![UserRole.ADMIN, UserRole.MANAGER_ADMIN, UserRole.OWNER_ADMIN].includes(userRole)) {
-      throw new Error('Only admins can perform bulk status changes');
-    }
-
-    // Validate status for bulk operations (only HIDDEN/ACTIVE allowed)
-    if (status === ApartmentStatus.SOLD) {
-      throw new Error('Cannot bulk mark as SOLD. Use individual endpoint.');
-    }
-
-    const results = await prisma.$transaction(async (tx) => {
-      const updates = [];
-      const logs = [];
-
-      for (const apartmentId of apartmentIds) {
-        const apartment = await tx.apartment.findUnique({
-          where: { id: apartmentId }
-        });
-
-        if (!apartment) {
-          updates.push({ id: apartmentId, success: false, error: 'Apartment not found' });
-          continue;
-        }
-
-        // Validate transition
-        const transitionCheck = this.isValidTransition(
-          apartment.status,
-          status,
-          userRole,
-          false // Bulk operations are admin-only, not owner-specific
-        );
-
-        if (!transitionCheck.valid) {
-          updates.push({ 
-            id: apartmentId, 
-            success: false, 
-            error: transitionCheck.message 
-          });
-          continue;
-        }
-
-        // Prepare update data
-        const updateData: any = { status };
-        
-        if (status === ApartmentStatus.HIDDEN) {
-          updateData.hiddenAt = new Date();
-          updateData.hiddenById = userId;
-        } else if (status === ApartmentStatus.ACTIVE && apartment.status === ApartmentStatus.HIDDEN) {
-          updateData.hiddenAt = null;
-          updateData.hiddenById = null;
-        }
-
-        // Update apartment
-        try {
-          const updated = await tx.apartment.update({
-            where: { id: apartmentId },
-            data: updateData
-          });
-
-          // Create log
-          await tx.apartmentStatusLog.create({
-            data: {
-              apartmentId,
-              fromStatus: apartment.status,
-              toStatus: status,
-              changedById: userId,
-              reason: reason || 'Bulk status change',
-              notes: `Bulk operation affecting ${apartmentIds.length} apartments`,
-            }
-          });
-
-          updates.push({ id: apartmentId, success: true, apartment: updated });
-        } catch (error) {
-          updates.push({ id: apartmentId, success: false, error: 'Update failed' });
-        }
-      }
-
-      return updates;
-    });
-
-    const successful = results.filter(r => r.success);
-    const failed = results.filter(r => !r.success);
-
-    return {
-      total: results.length,
-      successful: successful.length,
-      failed: failed.length,
-      details: results
-    };
+    return apartments;
   }
 }

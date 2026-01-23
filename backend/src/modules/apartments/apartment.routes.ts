@@ -19,14 +19,14 @@ router.use(authenticate);
 // Seller-only routes
 router.post(
   '/',
-  requireRole(UserRole.SELLER),
+  requireRole([UserRole.SELLER]),
   upload.array('images', 10), // Max 10 images
   apartmentController.createApartment
 );
 
 router.get(
   '/seller/my',
-  requireRole(UserRole.SELLER),
+  requireRole([UserRole.SELLER]),
   apartmentController.getMyApartments
 );
 
@@ -39,8 +39,8 @@ router.delete(
   '/:id',
   apartmentController.deleteApartment
 );
+
 // Status management routes
 router.use('/:id/status', statusRoutes);
-
 
 export default router;

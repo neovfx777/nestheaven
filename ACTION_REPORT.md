@@ -140,3 +140,65 @@ action12
 - Implemented complete role-based navigation with different sidebar menus for each role
 - Added role-specific statistics, tools, and features for all 5 user roles
 - Created responsive dashboard layout with mobile sidebar toggle
+
+action13
+
+Backend Changes:
+Enhanced upload middleware to handle multiple image files with validation
+Added image management methods to apartment service (upload, reorder, delete)
+Created image upload endpoints in apartment controller
+Added image routes with authentication and role protection
+
+Frontend Changes:
+Created seller apartment listing page with delete functionality
+Built comprehensive apartment form with multi-language support
+Implemented drag-and-drop image upload component with preview and reordering
+Added reusable UI components (Button, MultiLanguageInput)
+Updated seller dashboard routing for apartment management
+Extended API client with image upload methods
+
+Key Features:
+Multi-language support: All text fields support uz/ru/en with tabbed input
+Image management: Upload up to 10 images per apartment with drag-and-drop reordering
+Validation: Comprehensive form validation using Zod schemas
+Responsive design: Works on mobile and desktop
+Error handling: Proper error messages and loading states
+File management: Automatic file cleanup and storage optimization
+
+Security:
+Only sellers can manage their own apartments
+Image uploads validated for type and size
+All endpoints protected with JWT authentication
+File paths secured against directory traversal
+
+
+action14
+Feature: Admin Moderation UI (hide/unhide)
+Status: ✅ COMPLETED
+Changes Made:
+Created frontend/src/pages/dashboard/admin/AdminApartments.tsx with filtering, search, and bulk operations
+Created frontend/src/pages/dashboard/admin/StatusChangeModal.tsx for individual status changes
+Created frontend/src/pages/dashboard/admin/BulkOperations.tsx for mass hide/unhide
+Created frontend/src/components/ui/Modal.tsx reusable modal component
+Created frontend/src/api/status.ts with status management API functions
+Updated frontend/src/pages/dashboard/AdminDashboard.tsx with real moderation UI and statistics
+Updated frontend/src/pages/dashboard/DashboardLayout.tsx with proper admin navigation
+Simplified frontend/src/pages/dashboard/DashboardPage.tsx from 123 to 30 lines
+Updated frontend/src/api/apartments.ts with admin methods
+Created UI utility components: Select, Textarea, Badge, Input, cn
+
+Features:
+Admin can view all apartments (including hidden)
+Filter by status, price, rooms, area, etc.
+Search across apartment fields
+Change individual apartment status (active/hidden/sold)
+Bulk hide/unhide operations
+Status change confirmation with reason logging
+Real-time statistics dashboard
+Responsive design for mobile/desktop
+
+File Info Updates:
+Added 10 new files for admin moderation
+Updated 5 existing files
+All backend status endpoints already implemented
+No database changes required

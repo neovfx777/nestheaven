@@ -3,8 +3,7 @@ import { ApartmentService } from './apartment.service';
 import { 
   apartmentCreateSchema, 
   apartmentUpdateSchema, 
-  apartmentQuerySchema,
-  ApartmentQueryInput 
+  apartmentQuerySchema
 } from './apartment.validators';
 import { AuthRequest } from '../../middleware/auth';
 import { UserRole } from '@prisma/client';
@@ -49,6 +48,7 @@ export class ApartmentController {
         data: apartment
       });
     } catch (error) {
+      console.error('Create apartment error:', error);
       if (error instanceof Error) {
         res.status(400).json({
           success: false,
@@ -86,6 +86,7 @@ export class ApartmentController {
         data: apartment
       });
     } catch (error) {
+      console.error('Update apartment error:', error);
       if (error instanceof Error) {
         res.status(400).json({
           success: false,
@@ -117,6 +118,7 @@ export class ApartmentController {
 
       res.status(200).json(result);
     } catch (error) {
+      console.error('Delete apartment error:', error);
       if (error instanceof Error) {
         res.status(400).json({
           success: false,
@@ -149,8 +151,10 @@ export class ApartmentController {
         data: apartment
       });
     } catch (error) {
+      console.error('Get apartment error:', error);
       if (error instanceof Error) {
-        res.status(404).json({
+        const status = error.message === 'Apartment not found' ? 404 : 400;
+        res.status(status).json({
           success: false,
           error: error.message
         });
@@ -171,7 +175,7 @@ export class ApartmentController {
       const userRole = req.user?.role;
 
       const result = await this.apartmentService.listApartments(
-        validatedQuery as ApartmentQueryInput,
+        validatedQuery,
         userId,
         userRole
       );
@@ -182,6 +186,7 @@ export class ApartmentController {
         pagination: result.pagination
       });
     } catch (error) {
+      console.error('List apartments error:', error);
       if (error instanceof Error) {
         res.status(400).json({
           success: false,
@@ -221,6 +226,7 @@ export class ApartmentController {
         data: apartments
       });
     } catch (error) {
+      console.error('Get my apartments error:', error);
       if (error instanceof Error) {
         res.status(400).json({
           success: false,

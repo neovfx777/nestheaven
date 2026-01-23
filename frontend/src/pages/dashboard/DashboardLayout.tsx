@@ -14,7 +14,10 @@ import {
   LogOut,
   Menu,
   X,
-  User
+  User,
+  Filter,
+  AlertTriangle,
+  CheckCircle
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -59,32 +62,113 @@ const DashboardLayout = () => {
 
   const navigation = [
     // Common for all roles
-    { name: 'Overview', href: '/dashboard', icon: Home, roles: ['USER', 'SELLER', 'ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'] },
+    { 
+      name: 'Overview', 
+      href: '/dashboard', 
+      icon: Home, 
+      roles: ['USER', 'SELLER', 'ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'] 
+    },
     
     // USER specific
-    { name: 'My Favorites', href: '/dashboard/favorites', icon: Eye, roles: ['USER'] },
-    { name: 'Saved Searches', href: '/dashboard/searches', icon: FileText, roles: ['USER'] },
+    { 
+      name: 'My Favorites', 
+      href: '/dashboard/user/favorites', 
+      icon: Eye, 
+      roles: ['USER'] 
+    },
+    { 
+      name: 'Saved Searches', 
+      href: '/dashboard/user/searches', 
+      icon: FileText, 
+      roles: ['USER'] 
+    },
     
     // SELLER specific
-    { name: 'My Listings', href: '/dashboard/listings', icon: Building2, roles: ['SELLER'] },
-    { name: 'Create Listing', href: '/dashboard/listings/create', icon: Building2, roles: ['SELLER'] },
-    { name: 'Sales Analytics', href: '/dashboard/analytics', icon: BarChart3, roles: ['SELLER'] },
+    { 
+      name: 'My Listings', 
+      href: '/dashboard/seller/listings', 
+      icon: Building2, 
+      roles: ['SELLER'] 
+    },
+    { 
+      name: 'Create Listing', 
+      href: '/dashboard/seller/listings/new', 
+      icon: Building2, 
+      roles: ['SELLER'] 
+    },
+    { 
+      name: 'Sales Analytics', 
+      href: '/dashboard/seller/analytics', 
+      icon: BarChart3, 
+      roles: ['SELLER'] 
+    },
     
     // ADMIN specific
-    { name: 'Moderation', href: '/dashboard/moderation', icon: EyeOff, roles: ['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'] },
-    { name: 'Content Review', href: '/dashboard/content', icon: FileText, roles: ['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'] },
+    { 
+      name: 'Apartment Moderation', 
+      href: '/dashboard/admin/apartments', 
+      icon: Filter, 
+      roles: ['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'] 
+    },
+    { 
+      name: 'Flagged Content', 
+      href: '/dashboard/admin/flagged', 
+      icon: AlertTriangle, 
+      roles: ['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'] 
+    },
+    { 
+      name: 'Status History', 
+      href: '/dashboard/admin/history', 
+      icon: CheckCircle, 
+      roles: ['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'] 
+    },
     
     // MANAGER_ADMIN specific
-    { name: 'Admin Management', href: '/dashboard/admins', icon: UserPlus, roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'] },
+    { 
+      name: 'Admin Management', 
+      href: '/dashboard/manager/admins', 
+      icon: UserPlus, 
+      roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'] 
+    },
+    { 
+      name: 'Moderation Logs', 
+      href: '/dashboard/manager/logs', 
+      icon: FileText, 
+      roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'] 
+    },
     
     // OWNER_ADMIN specific
-    { name: 'User Management', href: '/dashboard/users', icon: Users, roles: ['OWNER_ADMIN'] },
-    { name: 'System Settings', href: '/dashboard/settings', icon: Settings, roles: ['OWNER_ADMIN'] },
+    { 
+      name: 'User Management', 
+      href: '/dashboard/owner/users', 
+      icon: Users, 
+      roles: ['OWNER_ADMIN'] 
+    },
+    { 
+      name: 'System Settings', 
+      href: '/dashboard/owner/settings', 
+      icon: Settings, 
+      roles: ['OWNER_ADMIN'] 
+    },
+    { 
+      name: 'Billing & Payments', 
+      href: '/dashboard/owner/billing', 
+      icon: BarChart3, 
+      roles: ['OWNER_ADMIN'] 
+    },
   ];
 
   const filteredNavigation = navigation.filter(item => 
     item.roles.includes(user?.role || 'USER')
   );
+
+  // Check if current path matches any navigation item
+  const isActive = (href: string) => {
+    if (href === '/dashboard') {
+      return location.pathname === '/dashboard';
+    }
+    return location.pathname.startsWith(href);
+  };
 
   const handleLogout = () => {
     logout();
@@ -152,7 +236,7 @@ const DashboardLayout = () => {
           {/* Navigation */}
           <nav className="p-4 space-y-1">
             {filteredNavigation.map((item) => {
-              const isActive = location.pathname === item.href;
+              const active = isActive(item.href);
               return (
                 <Link
                   key={item.name}
@@ -160,9 +244,9 @@ const DashboardLayout = () => {
                   onClick={() => setSidebarOpen(false)}
                   className={`
                     flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors
-                    ${isActive
-                      ? 'bg-primary-50 text-primary-700'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                    ${active
+                      ? 'bg-primary-50 text-primary-700 border-l-4 border-primary-500'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent'
                     }
                   `}
                 >
