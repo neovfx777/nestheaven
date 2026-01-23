@@ -175,13 +175,12 @@ Update it whenever files are created/edited/removed.
 - Last change summary: created with role requirement, role creation permission, and user management permission middleware
 
 ### Path: /backend/src/middleware/upload.ts
-- Type: source
-- Purpose: handle image uploads (multer)
-- Owned by: backend
-- Key responsibilities: validate file type/size, store, provide file URLs
-- Depends on: multer, express, file system
-- Used by: apartments media endpoints
-- Last change summary: created with file filtering, size limits, storage configuration, and file management helpers
+
+Last change summary: Enhanced to handle multiple files with proper error handling and file management utilities
+
+Path: /backend/src/modules/apartments/apartment.service.ts
+
+Last change summary: Added image upload, reorder, and delete functionality with ownership validation
 
 ### Path: /backend/src/utils/jwt.ts
 - Type: source
@@ -228,7 +227,85 @@ Update it whenever files are created/edited/removed.
 - Depends on: database client, bcrypt, jwt utils
 - Used by: auth controller
 - Last change summary: created with registration (USER role only), login, and profile retrieval logic
+Path: /frontend/src/pages/dashboard/seller/ApartmentList.tsx
 
+Type: source
+
+Purpose: Display and manage seller's apartment listings
+
+Owned by: frontend
+
+Key responsibilities: List seller apartments with CRUD operations
+
+Depends on: apartment API, auth store
+
+Used by: SellerDashboard
+
+Last change summary: Created with listing display, delete functionality, and navigation
+
+Path: /frontend/src/pages/dashboard/seller/ApartmentForm.tsx
+
+Type: source
+
+Purpose: Form for creating/editing apartment listings
+
+Owned by: frontend
+
+Key responsibilities: Handle apartment data entry with validation
+
+Depends on: apartment API, complex API, validation schemas
+
+Used by: SellerDashboard
+
+Last change summary: Created with multi-language inputs, image upload, and form validation
+
+Path: /frontend/src/components/ui/ImageUpload.tsx
+
+Type: source
+
+Purpose: Drag-and-drop image upload with preview and reordering
+
+Owned by: frontend
+
+Key responsibilities: Handle image uploads with visual feedback
+
+Depends on: react-dropzone, @dnd-kit for drag-and-drop
+
+Used by: ApartmentForm
+
+Last change summary: Created with drag-and-drop, preview, and sortable functionality
+
+Path: /frontend/src/components/ui/Button.tsx
+
+Type: source
+
+Purpose: Reusable button component with variants
+
+Owned by: frontend
+
+Key responsibilities: Provide consistent button styling across app
+
+Depends on: Tailwind CSS
+
+Used by: All components
+
+Last change summary: Created with multiple variants and sizes
+
+Path: /frontend/src/components/ui/MultiLanguageInput.tsx
+
+Type: source
+
+Purpose: Input component for multi-language content
+
+Owned by: frontend
+
+Key responsibilities: Handle inputs in multiple languages with tab switching
+
+Depends on: Input, Textarea components
+
+Used by: ApartmentForm
+
+Last change summary: Created with language tabs and preview display
 ### Path: /backend/src/modules/auth/auth.controller.ts
 - Type: source
 - Purpose: authentication HTTP endpoint handlers
@@ -292,7 +369,7 @@ Update it whenever files are created/edited/removed.
 - Key responsibilities: handle create, read, update, delete, and list requests
 - Depends on: apartment service, validators, auth middleware
 - Used by: apartment routes
-- Last change summary: created with error handling, file upload processing, and role-based authorization
+- Last change summary: Added image upload endpoints with proper error handling
 
 ### Path: /backend/src/modules/apartments/apartment.routes.ts
 - Type: source
@@ -301,7 +378,7 @@ Update it whenever files are created/edited/removed.
 - Key responsibilities: define public (list, detail) and protected (seller CRUD) routes
 - Depends on: apartment controller, auth middleware, roles middleware, upload middleware
 - Used by: app.ts route mounting
-- Last change summary: created with routes for listing, detail, seller create/update/delete, and my-apartments
+- Last change summary: Added routes for image upload, reorder, and delete operations
 
 ### Apartment Status Module
 ### Path: /backend/src/modules/apartments/status.validators.ts
@@ -496,7 +573,7 @@ Update it whenever files are created/edited/removed.
 - Key responsibilities: define routes, layout structure, global toast notifications
 - Depends on: react-router-dom, layout components
 - Used by: main.tsx
-- Last change summary: created with public routes (home, apartments, auth) and protected dashboard route
+- Last change summary: Verified and confirmed routing supports admin dashboard features
 
 ### Path: /frontend/src/api/client.ts
 - Type: source
@@ -523,7 +600,7 @@ Update it whenever files are created/edited/removed.
 - Key responsibilities: typed API calls for apartments, complexes, filtering, and search
 - Depends on: api client
 - Used by: apartment pages, components
-- Last change summary: created with TypeScript interfaces for apartments, filtering, and paginated responses
+- Last change summary: Added admin-specific methods (getAllApartments, getAdminStats, getPendingReviews, exportApartments, etc.)
 
 ### Path: /frontend/src/stores/authStore.ts
 - Type: source
@@ -617,7 +694,155 @@ Update it whenever files are created/edited/removed.
 - Depends on: apartment images data
 - Used by: ApartmentDetailPage
 - Last change summary: created with thumbnail navigation, fullscreen modal, and image counter
+Path: /frontend/src/pages/dashboard/admin/AdminApartments.tsx
+Type: source
 
+Purpose: Main admin apartment moderation interface
+
+Owned by: frontend
+
+Key responsibilities: List, filter, search apartments; manage status changes; bulk operations
+
+Depends on: apartments API, status API, React Query, UI components
+
+Used by: AdminDashboard
+
+Last change summary: Created with complete moderation functionality including filtering, search, and bulk operations
+
+Path: /frontend/src/pages/dashboard/admin/StatusChangeModal.tsx
+Type: source
+
+Purpose: Modal for changing apartment status
+
+Owned by: frontend
+
+Key responsibilities: Show status options, collect reason, confirm changes
+
+Depends on: Modal component, status API
+
+Used by: AdminApartments
+
+Last change summary: Created with status transition validation and reason logging
+
+Path: /frontend/src/pages/dashboard/admin/BulkOperations.tsx
+Type: source
+
+Purpose: Handle bulk status operations on multiple apartments
+
+Owned by: frontend
+
+Key responsibilities: Bulk hide/unhide operations with confirmation
+
+Depends on: Modal component, status API
+
+Used by: AdminApartments
+
+Last change summary: Created with bulk operation confirmation and error handling
+
+Path: /frontend/src/components/ui/Modal.tsx
+Type: source
+
+Purpose: Reusable modal dialog component
+
+Owned by: frontend
+
+Key responsibilities: Modal overlay, escape key handling, focus management
+
+Depends on: React DOM, Tailwind CSS
+
+Used by: StatusChangeModal, BulkOperations
+
+Last change summary: Created with overlay click handling and escape key support
+
+Path: /frontend/src/components/ui/Select.tsx
+Type: source
+
+Purpose: Reusable select dropdown component
+
+Owned by: frontend
+
+Key responsibilities: Render select with options, handle onChange, show errors
+
+Depends on: cn utility
+
+Used by: AdminApartments, StatusChangeModal, forms
+
+Last change summary: Created with label support and error display
+
+Path: /frontend/src/components/ui/Textarea.tsx
+Type: source
+
+Purpose: Reusable textarea component
+
+Owned by: frontend
+
+Key responsibilities: Multi-line text input with label and error handling
+
+Depends on: cn utility
+
+Used by: StatusChangeModal, forms
+
+Last change summary: Created with label and error support
+
+Path: /frontend/src/components/ui/Badge.tsx
+Type: source
+
+Purpose: Status badge component with variants
+
+Owned by: frontend
+
+Key responsibilities: Display status with appropriate colors
+
+Depends on: cn utility
+
+Used by: AdminApartments, apartment listings
+
+Last change summary: Created with variant support (default, success, destructive, secondary, outline)
+
+Path: /frontend/src/components/ui/Input.tsx
+Type: source
+
+Purpose: Input component with icons and error handling
+
+Owned by: frontend
+
+Key responsibilities: Text input with left/right icons, labels, validation
+
+Depends on: cn utility
+
+Used by: AdminApartments, forms throughout app
+
+Last change summary: Created with icon support and error display
+
+Path: /frontend/src/utils/cn.ts
+Type: source
+
+Purpose: Class name utility function
+
+Owned by: frontend
+
+Key responsibilities: Merge Tailwind CSS classes conditionally
+
+Depends on: clsx, tailwind-merge
+
+Used by: All UI components
+
+Last change summary: Created for consistent class name merging
+
+Path: /frontend/src/api/status.ts
+Type: source
+
+Purpose: Status management API functions
+
+Owned by: frontend
+
+Key responsibilities: Interface with backend status endpoints
+
+Depends on: api client
+
+Used by: AdminApartments, StatusChangeModal, BulkOperations
+
+Last change summary: Created with all status operations including bulk changes
 ### Pages
 ### Path: /frontend/src/pages/HomePage.tsx
 - Type: source
@@ -690,7 +915,7 @@ Update it whenever files are created/edited/removed.
 - Key responsibilities: provide dashboard layout with navigation filtered by user role
 - Depends on: auth store, user role
 - Used by: DashboardPage
-- Last change summary: created with responsive sidebar, role-based menu filtering, and user info display
+- Last change summary: Updated navigation with proper admin routes, added new icons, improved active state detection
 
 ### Path: /frontend/src/pages/dashboard/DashboardPage.tsx
 - Type: source
@@ -699,7 +924,7 @@ Update it whenever files are created/edited/removed.
 - Key responsibilities: route users to appropriate dashboard based on role
 - Depends on: auth store, all dashboard components
 - Used by: App routing (protected)
-- Last change summary: updated to route users to role-specific dashboards (USER, SELLER, ADMIN, MANAGER_ADMIN, OWNER_ADMIN)
+- Last change summary: Simplified from 123 lines to 30 lines; removed duplicate code; improved role-based routing
 
 ### Path: /frontend/src/pages/dashboard/UserDashboard.tsx
 - Type: source
@@ -717,7 +942,7 @@ Update it whenever files are created/edited/removed.
 - Key responsibilities: apartment listing management and seller analytics
 - Depends on: auth store
 - Used by: DashboardPage (for SELLER role)
-- Last change summary: created with listing management, sales analytics, and seller performance metrics
+- Last change summary: Updated to include apartment management routes
 
 ### Path: /frontend/src/pages/dashboard/AdminDashboard.tsx
 - Type: source
@@ -726,7 +951,7 @@ Update it whenever files are created/edited/removed.
 - Key responsibilities: content moderation and platform management
 - Depends on: auth store
 - Used by: DashboardPage (for ADMIN role)
-- Last change summary: created with content review, flagged content management, and moderation tools
+- Last change summary: Completely redesigned with real moderation UI, statistics, and tabbed interface; replaced mock data with real API calls
 
 ### Path: /frontend/src/pages/dashboard/ManagerDashboard.tsx
 - Type: source

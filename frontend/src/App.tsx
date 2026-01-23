@@ -22,21 +22,19 @@ function App() {
           <Route path="complexes" element={<ComplexesPage />} />
         </Route>
         
-        {/* Auth routes without Layout (or with different layout) */}
+        {/* Auth routes */}
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         
-        {/* Protected routes with Layout */}
-        <Route element={<Layout />}>
-          <Route 
-            path="dashboard/*" 
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            } 
-          />
-        </Route>
+        {/* Dashboard routes */}
+        <Route
+          path="dashboard/*"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
         
         {/* 404 Route */}
         <Route path="*" element={<NotFoundPage />} />

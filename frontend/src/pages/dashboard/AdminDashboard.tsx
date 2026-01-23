@@ -1,102 +1,143 @@
-import { useState } from 'react';
-import { EyeOff, CheckCircle, XCircle, AlertTriangle, Filter } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { EyeOff, CheckCircle, XCircle, AlertTriangle, Filter, Eye, Users, Shield } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
+import { AdminApartments } from './admin/AdminApartments';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { useQuery } from '@tanstack/react-query';
+import { apartmentsApi } from '../../api/apartments';
+import { statusApi } from '../../api/status';
 
 const AdminDashboard = () => {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState('pending');
+  const [activeTab, setActiveTab] = useState('apartments');
 
-  // Mock data
-  const mockPendingReviews = [
-    { id: 1, title: 'Luxury apartment in downtown', seller: 'John Smith', submitted: '2 hours ago', issues: 0 },
-    { id: 2, title: 'Family house with garden', seller: 'Sarah Johnson', submitted: '5 hours ago', issues: 2 },
-    { id: 3, title: 'Modern studio apartment', seller: 'Mike Wilson', submitted: '1 day ago', issues: 1 },
-  ];
+  // Fetch real statistics
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['admin-stats'],
+    queryFn: async () => {
+      // Get all apartments for statistics
+      const apartments = await apartmentsApi.getApartments({ limit: 1000 });
+      
+      // Calculate statistics
+      const allApartments = apartments.apartments;
+      const activeCount = allApartments.filter(a => a.status === 'ACTIVE').length;
+      const hiddenCount = allApartments.filter(a => a.status === 'HIDDEN').length;
+      const soldCount = allApartments.filter(a => a.status === 'SOLD').length;
+      
+      // For pending reviews, we need to implement this in backend
+      const pendingReviews = allApartments.filter(a => 
+        a.status === 'ACTIVE' && !a.images?.[0] // Example: apartments without images
+      ).length;
 
-  const mockFlaggedContent = [
-    { id: 1, title: 'Suspicious pricing', reporter: 'user123', reason: 'Price seems too low', status: 'unresolved' },
-    { id: 2, title: 'Inappropriate images', reporter: 'user456', reason: 'Non-apartment photos', status: 'resolved' },
-    { id: 3, title: 'False information', reporter: 'user789', reason: 'Wrong location data', status: 'investigating' },
-  ];
+      return {
+        pendingReviews,
+        activeListings: activeCount,
+        hiddenListings: hiddenCount,
+        soldListings: soldCount,
+        totalListings: allApartments.length,
+      };
+    },
+  });
 
-  const mockStats = {
-    pendingReviews: 12,
-    todayApprovals: 8,
-    todayRejections: 2,
-    flaggedContent: 5,
-    hiddenListings: 3,
-    suspendedUsers: 1,
+  const statsData = stats || {
+    pendingReviews: 0,
+    activeListings: 0,
+    hiddenListings: 0,
+    soldListings: 0,
+    totalListings: 0,
   };
 
   return (
     <div className="max-w-7xl mx-auto">
       {/* Welcome Section */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-600 mt-2">
-          Moderate content and manage platform integrity
-        </p>
-        <div className="mt-4 inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800">
-          <span className="text-sm font-medium">Role: {user?.role}</span>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p className="text-gray-600 mt-2">
+              Moderate content and manage platform integrity
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="px-4 py-2 rounded-full bg-green-100 text-green-800">
+              <span className="text-sm font-medium">Role: {user?.role}</span>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => window.location.reload()}
+            >
+              Refresh Data
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <Card className="p-6">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-yellow-100 text-yellow-600">
               <AlertTriangle className="h-6 w-6" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Pending Reviews</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockStats.pendingReviews}</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {statsLoading ? '...' : statsData.pendingReviews}
+              </p>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <Card className="p-6">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-green-100 text-green-600">
-              <CheckCircle className="h-6 w-6" />
+              <Eye className="h-6 w-6" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Today's Approvals</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockStats.todayApprovals}</p>
+              <p className="text-sm font-medium text-gray-600">Active Listings</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {statsLoading ? '...' : statsData.activeListings}
+              </p>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-red-100 text-red-600">
-              <XCircle className="h-6 w-6" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Today's Rejections</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockStats.todayRejections}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <Card className="p-6">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-purple-100 text-purple-600">
               <EyeOff className="h-6 w-6" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Hidden Listings</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockStats.hiddenListings}</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {statsLoading ? '...' : statsData.hiddenListings}
+              </p>
             </div>
           </div>
-        </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+              <CheckCircle className="h-6 w-6" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Sold Listings</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {statsLoading ? '...' : statsData.soldListings}
+              </p>
+            </div>
+          </div>
+        </Card>
       </div>
 
-      {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+      {/* Main Content with Tabs */}
+      <Card className="mb-8">
         <div className="border-b border-gray-200">
           <nav className="flex">
-            {['pending', 'flagged', 'hidden', 'users'].map((tab) => (
+            {['apartments', 'flagged', 'users', 'reports'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -113,142 +154,138 @@ const AdminDashboard = () => {
         </div>
 
         <div className="p-6">
-          {activeTab === 'pending' && (
-            <div>
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Pending Reviews</h3>
-                <div className="flex items-center space-x-3">
-                  <Filter className="h-5 w-5 text-gray-400" />
-                  <select className="px-3 py-2 border border-gray-300 rounded-md text-sm">
-                    <option>All Sellers</option>
-                    <option>New Sellers</option>
-                    <option>Verified Sellers</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {mockPendingReviews.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
-                  >
-                    <div className="flex-1">
-                      <div className="font-medium">{item.title}</div>
-                      <div className="text-sm text-gray-500 mt-1">
-                        Seller: {item.seller} • Submitted: {item.submitted}
-                        {item.issues > 0 && (
-                          <span className="ml-3 text-red-600">
-                            {item.issues} issue{item.issues !== 1 ? 's' : ''} found
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-3">
-                      <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium">
-                        Approve
-                      </button>
-                      <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm font-medium">
-                        Reject
-                      </button>
-                      <button className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium">
-                        Review
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
+          {activeTab === 'apartments' && <AdminApartments />}
+          
           {activeTab === 'flagged' && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">Flagged Content</h3>
-              <div className="space-y-4">
-                {mockFlaggedContent.map((item) => (
-                  <div
-                    key={item.id}
-                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="font-medium">{item.title}</div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        item.status === 'resolved'
-                          ? 'bg-green-100 text-green-800'
-                          : item.status === 'investigating'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {item.status}
-                      </span>
-                    </div>
-                    <div className="text-sm text-gray-600 mb-3">
-                      Reporter: {item.reporter} • Reason: {item.reason}
-                    </div>
-                    <div className="flex space-x-3">
-                      <button className="text-sm text-primary-600 hover:text-primary-700 font-medium">
-                        View Details
-                      </button>
-                      <button className="text-sm text-gray-600 hover:text-gray-800 font-medium">
-                        Contact Reporter
-                      </button>
-                      <button className="text-sm text-red-600 hover:text-red-700 font-medium">
-                        Remove Content
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'hidden' && (
-            <div className="text-center py-8">
-              <EyeOff className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Hidden listings management</p>
+            <div className="text-center py-12">
+              <AlertTriangle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500">Flagged Content Management</p>
               <p className="text-sm text-gray-400 mt-2">
-                View and manage all hidden apartment listings
+                This feature is coming soon. Currently, you can manage flagged content through apartment moderation.
               </p>
-              <button className="mt-4 bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors">
-                View Hidden Listings
-              </button>
+              <Button
+                onClick={() => setActiveTab('apartments')}
+                className="mt-4"
+              >
+                Go to Apartment Moderation
+              </Button>
             </div>
           )}
 
           {activeTab === 'users' && (
-            <div className="text-center py-8">
-              <AlertTriangle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">User management tools</p>
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500">User Management</p>
               <p className="text-sm text-gray-400 mt-2">
-                Manage user accounts, warnings, and suspensions
+                User management tools will be available soon for MANAGER_ADMIN and OWNER_ADMIN roles.
               </p>
-              <button className="mt-4 bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors">
-                Manage Users
-              </button>
+              {user?.role === 'OWNER_ADMIN' && (
+                <Button className="mt-4">Access User Management</Button>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'reports' && (
+            <div className="text-center py-12">
+              <Filter className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500">Analytics & Reports</p>
+              <p className="text-sm text-gray-400 mt-2">
+                Detailed analytics and reporting features will be available in the next update.
+              </p>
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="p-4">
+                  <div className="font-medium text-gray-900">Quick Stats</div>
+                  <div className="mt-2 space-y-1 text-sm text-gray-600">
+                    <div>Total Listings: {statsData.totalListings}</div>
+                    <div>Active Rate: {statsData.totalListings > 0 
+                      ? ((statsData.activeListings / statsData.totalListings) * 100).toFixed(1) 
+                      : 0}%</div>
+                    <div>Hidden Rate: {statsData.totalListings > 0 
+                      ? ((statsData.hiddenListings / statsData.totalListings) * 100).toFixed(1) 
+                      : 0}%</div>
+                  </div>
+                </Card>
+                <Card className="p-4">
+                  <div className="font-medium text-gray-900">Export Options</div>
+                  <div className="mt-2 space-y-2">
+                    <Button variant="outline" size="sm" className="w-full">Export All Listings</Button>
+                    <Button variant="outline" size="sm" className="w-full">Export Hidden Listings</Button>
+                    <Button variant="outline" size="sm" className="w-full">Export User Activity</Button>
+                  </div>
+                </Card>
+              </div>
             </div>
           )}
         </div>
-      </div>
+      </Card>
 
-      {/* Admin Tools */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Admin Tools</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <button className="p-4 border border-gray-200 rounded-lg text-left hover:border-primary-300 hover:bg-primary-50 transition-colors">
-            <div className="font-medium text-gray-900">Bulk Hide/Unhide</div>
-            <div className="text-sm text-gray-500 mt-1">Hide or unhide multiple listings</div>
-          </button>
-          <button className="p-4 border border-gray-200 rounded-lg text-left hover:border-primary-300 hover:bg-primary-50 transition-colors">
-            <div className="font-medium text-gray-900">Content Export</div>
-            <div className="text-sm text-gray-500 mt-1">Export listing data for review</div>
-          </button>
-          <button className="p-4 border border-gray-200 rounded-lg text-left hover:border-primary-300 hover:bg-primary-50 transition-colors">
-            <div className="font-medium text-gray-900">Analytics Report</div>
-            <div className="text-sm text-gray-500 mt-1">Generate platform analytics</div>
-          </button>
+      {/* Quick Actions */}
+      <Card className="bg-blue-50 border-blue-200">
+        <div className="p-6">
+          <h3 className="text-lg font-semibold text-blue-900 mb-4">Quick Admin Actions</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button
+              onClick={() => {
+                setActiveTab('apartments');
+                // You could add logic here to filter to only hidden apartments
+              }}
+              className="p-4 bg-white border border-blue-100 rounded-lg text-left hover:border-blue-300 hover:bg-blue-50 transition-colors"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <EyeOff className="h-5 w-5 text-blue-600" />
+                <div className="font-medium text-blue-800">Review Hidden</div>
+              </div>
+              <div className="text-sm text-blue-700">
+                Review and unhide hidden listings
+              </div>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('apartments');
+                // Filter to only active apartments
+              }}
+              className="p-4 bg-white border border-blue-100 rounded-lg text-left hover:border-blue-300 hover:bg-blue-50 transition-colors"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <Eye className="h-5 w-5 text-green-600" />
+                <div className="font-medium text-blue-800">Review New</div>
+              </div>
+              <div className="text-sm text-blue-700">
+                Review newly added active listings
+              </div>
+            </button>
+
+            <button
+              onClick={() => {
+                // Open bulk operations modal
+              }}
+              className="p-4 bg-white border border-blue-100 rounded-lg text-left hover:border-blue-300 hover:bg-blue-50 transition-colors"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <Filter className="h-5 w-5 text-purple-600" />
+                <div className="font-medium text-blue-800">Bulk Operations</div>
+              </div>
+              <div className="text-sm text-blue-700">
+                Perform bulk hide/unhide operations
+              </div>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('reports')}
+              className="p-4 bg-white border border-blue-100 rounded-lg text-left hover:border-blue-300 hover:bg-blue-50 transition-colors"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <CheckCircle className="h-5 w-5 text-orange-600" />
+                <div className="font-medium text-blue-800">Generate Report</div>
+              </div>
+              <div className="text-sm text-blue-700">
+                Generate moderation activity report
+              </div>
+            </button>
+          </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
