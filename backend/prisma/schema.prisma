@@ -184,3 +184,33 @@ model ApartmentStatusLog {
   @@index([changedById])
   @@index([createdAt])
 }
+// Add these models after ApartmentStatusLog model
+
+model UserFavorite {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apartmentId String
+  apartment   Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  
+  @@unique([userId, apartmentId])
+  @@index([userId])
+  @@index([apartmentId])
+  @@index([createdAt])
+}
+
+model SavedSearch {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  filters     Json      // Store search criteria as JSON
+  resultsCount Int?
+  lastUsed    DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([userId])
+  @@index([createdAt])
+}
