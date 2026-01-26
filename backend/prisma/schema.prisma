@@ -1,4 +1,3 @@
-// Data source
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,7 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enums
 enum UserRole {
   USER
   SELLER
@@ -23,168 +21,124 @@ enum ApartmentStatus {
   SOLD
 }
 
-// Models
 model User {
-  id            String        @id @default(cuid())
-  email         String        @unique
-  passwordHash  String
-  fullName      String
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  role          UserRole  @default(USER)
   phone         String?
-  role          UserRole      @default(USER)
-  
+  avatar        String?
+  lastLoginAt   DateTime?
+  emailVerified Boolean   @default(false)
+
   // Relations
-  sellerApartments Apartment[] @relation("SellerApartments")
-  hiddenApartments Apartment[] @relation("HiddenByUser")
-  
+  apartments    Apartment[]          @relation("SellerApartments")
+  favorites     UserFavorite[]
+  savedSearches SavedSearch[]
+  statusChanges ApartmentStatusLog[]
+
   // Timestamps
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  
-  // Indexes
-  @@index([email])
-  @@index([role])
-  
-  // Ensure only USER can self-register
-  // Other roles must be created by higher roles (enforced in application logic)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Complex {
-  id            String        @id @default(cuid())
-  name          String
-  coverImage    String?       // URL to cover image
-  
+  id          String  @id @default(cuid())
+  name        String
+  image       String?
+  description String?
+
   // Relations
-  apartments    Apartment[]
-  
+  apartments Apartment[]
+
   // Timestamps
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  
-  @@index([name])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Apartment {
-  id            String        @id @default(cuid())
-  
+  id        String  @id @default(cuid())
+  complexId String?
+
+  // Status
+  status ApartmentStatus @default(ACTIVE)
+
   // Basic info
-  titleUz       String
-  titleRu       String
-  titleEn       String
-  descriptionUz String?
-  descriptionRu String?
-  descriptionEn String?
-  
-  // Pricing & specs
-  price         Float         // in USD or local currency
-  rooms         Int
-  area          Float         // square meters
-  floor         Int
-  
+  title       Json // Multi-language {uz, ru, en}
+  description Json // Multi-language {uz, ru, en}
+  price       Float
+  rooms       Int
+  area        Float
+  floor       Int
+  developer   String
+
   // Location
-  address       String
-  latitude      Float?
-  longitude     Float?
-  
-  // Developer info
-  developerName String
-  developerId   String?       // Could reference a Developer table if expanded
-  
-  // Complex relation (nullable as per spec)
-  complexId     String?
-  complex       Complex?      @relation(fields: [complexId], references: [id], onDelete: SetNull)
-  
-  // Status & ownership
-  status        ApartmentStatus @default(ACTIVE)
-  sellerId      String
-  seller        User           @relation("SellerApartments", fields: [sellerId], references: [id], onDelete: Cascade)
-  
-  // Hidden by admin (optional)
-  hiddenById    String?
-  hiddenBy      User?          @relation("HiddenByUser", fields: [hiddenById], references: [id], onDelete: SetNull)
-  
-  // Multi-language materials
-  materialsUz   String?
-  materialsRu   String?
-  materialsEn   String?
-  
-  // Quality & environment
-  airQualityIndex     Int?      // 1-100 scale
-  airQualitySource    String?
-  
-  // Infrastructure (structured as JSON for flexibility)
-  infrastructure      Json?     // {parking: boolean, school: boolean, metroDistance: number, ...}
-  infrastructureNoteUz String?
-  infrastructureNoteRu String?
-  infrastructureNoteEn String?
-  
-  // Investment info
+  address String
+  lat     Float?
+  lng     Float?
+
+  // Materials & Infrastructure
+  materials      Json? // Multi-language or structured
+  infrastructure Json? // Structured booleans + optional notes
+
+  // Additional info
+  airQualityIndex         Float?
+  airQualitySource        String?
   investmentGrowthPercent Float?
-  investmentGrowthNoteUz  String?
-  investmentGrowthNoteRu  String?
-  investmentGrowthNoteEn  String?
-  
-  // Contact info (could be normalized, but keeping simple)
-  contactPhone   String
+  investmentGrowthNote    String?
+
+  // Contact
+  contactPhone    String
   contactTelegram String?
   contactWhatsapp String?
-  contactEmail   String?
-  
-  // Installment options (JSON array for flexibility)
-  installmentOptions Json?     // [{bankName: string, years: number, interest: float, downPayment: float}]
-  
+  contactEmail    String?
+
+  // Installment options (JSON array)
+  installmentOptions Json?
+
+  // Counters
+  views          Int @default(0)
+  favoritesCount Int @default(0)
+
+  // Relations
+  complex    Complex?             @relation(fields: [complexId], references: [id], onDelete: SetNull)
+  sellerId   String
+  seller     User                 @relation("SellerApartments", fields: [sellerId], references: [id], onDelete: Cascade)
+  images     ApartmentImage[]
+  statusLogs ApartmentStatusLog[]
+  favorites  UserFavorite[]
+
   // Timestamps
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  soldAt        DateTime?
-  hiddenAt      DateTime?
-  
-  // Indexes for filtering
-  @@index([status])
-  @@index([price])
-  @@index([rooms])
-  @@index([area])
-  @@index([complexId])
-  @@index([sellerId])
-  @@index([createdAt])
-  
-  // Composite index for location-based searches
-  @@index([latitude, longitude])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ApartmentImage {
-  id            String        @id @default(cuid())
-  apartmentId   String
-  apartment     Apartment     @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
-  url           String
-  orderIndex    Int           @default(0)
-  captionUz     String?
-  captionRu     String?
-  captionEn     String?
-  
+  id          String    @id @default(cuid())
+  apartmentId String
+  apartment   Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  url         String
+  order       Int       @default(0)
+
   // Timestamps
-  createdAt     DateTime      @default(now())
-  
-  @@index([apartmentId, orderIndex])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
+
 model ApartmentStatusLog {
-  id            String         @id @default(cuid())
-  apartmentId   String
-  apartment     Apartment      @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
-  fromStatus    ApartmentStatus
-  toStatus      ApartmentStatus
-  changedById   String
-  changedBy     User           @relation(fields: [changedById], references: [id], onDelete: Cascade)
-  reason        String?
-  notes         String?
-  
+  id          String          @id @default(cuid())
+  apartmentId String
+  apartment   Apartment       @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  fromStatus  ApartmentStatus
+  toStatus    ApartmentStatus
+  changedById String
+  changedBy   User            @relation(fields: [changedById], references: [id], onDelete: Cascade)
+  reason      String?
+
   // Timestamps
-  createdAt     DateTime       @default(now())
-  
-  @@index([apartmentId])
-  @@index([changedById])
-  @@index([createdAt])
+  createdAt DateTime @default(now())
 }
-// Add these models after ApartmentStatusLog model
 
 model UserFavorite {
   id          String    @id @default(cuid())
@@ -192,25 +146,23 @@ model UserFavorite {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   apartmentId String
   apartment   Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
-  createdAt   DateTime  @default(now())
-  
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Composite unique constraint
   @@unique([userId, apartmentId])
-  @@index([userId])
-  @@index([apartmentId])
-  @@index([createdAt])
 }
 
 model SavedSearch {
-  id          String    @id @default(cuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String
-  filters     Json      // Store search criteria as JSON
-  resultsCount Int?
-  lastUsed    DateTime  @default(now())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  @@index([userId])
-  @@index([createdAt])
+  id      String  @id @default(cuid())
+  userId  String
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name    String
+  filters Json // JSON object with search filters
+  notify  Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
