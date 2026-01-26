@@ -14,6 +14,7 @@ import adminRoutes from './modules/admin/admin.routes';
 import apartmentRoutes from './modules/apartments/apartment.routes';
 import complexRoutes from './modules/complexes/complex.routes';
 import userRoutes from './modules/users/user.routes';
+import { analyticsRoutes } from './modules/analytics/analytics.routes';
 
 // Initialize Express application
 const app = express();
@@ -24,7 +25,8 @@ const app = express();
 
 // Security headers
 app.use(helmet());
-
+// Add to route mounting (after other routes)
+app.use('/api/analytics', analyticsRoutes);
 // CORS
 app.use(cors({
   origin: env.CORS_ORIGIN,

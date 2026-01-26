@@ -1,24 +1,266 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Search, Bell, Eye } from 'lucide-react';
+import { Heart, Search, Bell, Eye, Building2, User, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
+import { usersApi } from '../../api/users';
+import { apartmentsApi } from '../../api/apartments';
+import { FavoriteButton } from '../../components/apartments/FavoriteButton';
+import { Button } from '../../components/ui/Button';
+import { Card } from '../../components/ui/Card';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
 
 const UserDashboard = () => {
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('favorites');
+  const queryClient = useQueryClient();
 
-  // Mock data - in real app, this would come from API
-  const mockFavorites = [
-    { id: 1, title: 'Modern 3-bedroom apartment', price: 150000, status: 'ACTIVE' },
-    { id: 2, title: 'Luxury penthouse', price: 350000, status: 'SOLD' },
-    { id: 3, title: 'City center studio', price: 85000, status: 'ACTIVE' },
-  ];
+  // Fetch favorites
+  const {
+    data: favoritesData,
+    isLoading: favoritesLoading,
+    refetch: refetchFavorites,
+  } = useQuery({
+    queryKey: ['user-favorites'],
+    queryFn: () => usersApi.getFavorites(1, 10),
+    enabled: activeTab === 'favorites',
+  });
 
-  const mockSearches = [
-    { id: 1, query: '3 bedroom apartments', count: 24, lastUsed: '2024-01-15' },
-    { id: 2, query: 'apartments near metro', count: 18, lastUsed: '2024-01-10' },
-    { id: 3, query: 'new buildings', count: 42, lastUsed: '2024-01-05' },
-  ];
+  // Fetch saved searches
+  const {
+    data: savedSearches = [],
+    isLoading: searchesLoading,
+    refetch: refetchSearches,
+  } = useQuery({
+    queryKey: ['user-saved-searches'],
+    queryFn: () => usersApi.getSavedSearches(),
+    enabled: activeTab === 'searches',
+  });
+
+  // Delete saved search mutation
+  const deleteSearchMutation = useMutation({
+    mutationFn: (searchId: string) => usersApi.deleteSavedSearch(searchId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-saved-searches'] });
+      toast.success('Search deleted');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to delete search');
+    },
+  });
+
+  // Remove favorite mutation
+  const removeFavoriteMutation = useMutation({
+    mutationFn: (apartmentId: string) => usersApi.removeFavorite(apartmentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
+      toast.success('Removed from favorites');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to remove favorite');
+    },
+  });
+
+  const handleRunSearch = async (searchId: string, filters: any) => {
+    try {
+      await usersApi.updateLastUsed(searchId);
+      // Convert filters to URL params and redirect to apartments page
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.set(key, String(value));
+        }
+      });
+      window.location.href = `/apartments?${params.toString()}`;
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to run search');
+    }
+  };
+
+  const handleRemoveFavorite = async (apartmentId: string) => {
+    if (window.confirm('Are you sure you want to remove this from favorites?')) {
+      await removeFavoriteMutation.mutateAsync(apartmentId);
+    }
+  };
+
+  const stats = {
+    favorites: favoritesData?.pagination.total || 0,
+    savedSearches: savedSearches.length || 0,
+    // For recently viewed, we'd need to implement this separately
+    recentlyViewed: 0,
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  const renderContent = () => {
+    if (activeTab === 'favorites') {
+      if (favoritesLoading) {
+        return (
+          <div className="py-12 text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary-600 mx-auto mb-4" />
+            <p className="text-gray-500">Loading favorites...</p>
+          </div>
+        );
+      }
+
+      const favorites = favoritesData?.apartments || [];
+
+      if (favorites.length === 0) {
+        return (
+          <div className="text-center py-12">
+            <Heart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">You haven't saved any apartments yet.</p>
+            <Link
+              to="/apartments"
+              className="mt-4 inline-block text-primary-600 hover:text-primary-700 font-medium"
+            >
+              Browse apartments →
+            </Link>
+          </div>
+        );
+      }
+
+      return (
+        <div className="space-y-4">
+          {favorites.map((apartment: any) => (
+            <Card key={apartment.id} className="p-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="font-medium text-gray-900">{apartment.titleEn}</div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      apartment.status === 'ACTIVE'
+                        ? 'bg-green-100 text-green-800'
+                        : apartment.status === 'SOLD'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {apartment.status}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p>${apartment.price.toLocaleString()} • {apartment.rooms} rooms • {apartment.area}m²</p>
+                    <p>Saved on {formatDate(apartment.favoritedAt)}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <Link
+                    to={`/apartments/${apartment.id}`}
+                    className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+                  >
+                    View
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveFavorite(apartment.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+
+          {favoritesData && favoritesData.pagination.total > 10 && (
+            <div className="text-center pt-4">
+              <Link to="/dashboard/favorites">
+                <Button variant="outline">
+                  View All Favorites ({favoritesData.pagination.total})
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (activeTab === 'searches') {
+      if (searchesLoading) {
+        return (
+          <div className="py-12 text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary-600 mx-auto mb-4" />
+            <p className="text-gray-500">Loading saved searches...</p>
+          </div>
+        );
+      }
+
+      if (savedSearches.length === 0) {
+        return (
+          <div className="text-center py-12">
+            <Search className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">You haven't saved any searches yet.</p>
+            <p className="text-sm text-gray-400 mt-2">
+              Save your search criteria while browsing apartments
+            </p>
+          </div>
+        );
+      }
+
+      return (
+        <div className="space-y-4">
+          {savedSearches.map((search) => (
+            <Card key={search.id} className="p-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 mb-1">{search.name}</div>
+                  <div className="text-sm text-gray-600">
+                    Last used: {formatDate(search.lastUsed)}
+                    {search.resultsCount && ` • ${search.resultsCount} results last time`}
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500">
+                    Filters: {Object.keys(search.filters || {}).length} applied
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRunSearch(search.id, search.filters)}
+                  >
+                    Run Search
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => deleteSearchMutation.mutate(search.id)}
+                    disabled={deleteSearchMutation.isPending}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      );
+    }
+
+    if (activeTab === 'notifications') {
+      return (
+        <div className="text-center py-12">
+          <Bell className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">No new notifications</p>
+          <p className="text-sm text-gray-400 mt-2">
+            We'll notify you when there are new apartments matching your criteria
+          </p>
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -32,45 +274,45 @@ const UserDashboard = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <Card className="p-6">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-pink-100 text-pink-600">
               <Heart className="h-6 w-6" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Favorites</p>
-              <p className="text-2xl font-semibold text-gray-900">3</p>
+              <p className="text-2xl font-semibold text-gray-900">{stats.favorites}</p>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <Card className="p-6">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-blue-100 text-blue-600">
               <Search className="h-6 w-6" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Saved Searches</p>
-              <p className="text-2xl font-semibold text-gray-900">3</p>
+              <p className="text-2xl font-semibold text-gray-900">{stats.savedSearches}</p>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <Card className="p-6">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-green-100 text-green-600">
               <Eye className="h-6 w-6" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Recently Viewed</p>
-              <p className="text-2xl font-semibold text-gray-900">12</p>
+              <p className="text-2xl font-semibold text-gray-900">{stats.recentlyViewed}</p>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+      <Card className="mb-8">
         <div className="border-b border-gray-200">
           <nav className="flex">
             {['favorites', 'searches', 'notifications'].map((tab) => (
@@ -90,91 +332,19 @@ const UserDashboard = () => {
         </div>
 
         <div className="p-6">
-          {activeTab === 'favorites' && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Favorite Apartments</h3>
-              {mockFavorites.length === 0 ? (
-                <div className="text-center py-8">
-                  <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">You haven't saved any apartments yet.</p>
-                  <Link
-                    to="/apartments"
-                    className="mt-4 inline-block text-primary-600 hover:text-primary-700 font-medium"
-                  >
-                    Browse apartments →
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {mockFavorites.map((apt) => (
-                    <div
-                      key={apt.id}
-                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
-                    >
-                      <div>
-                        <div className="font-medium">{apt.title}</div>
-                        <div className="text-sm text-gray-500">${apt.price.toLocaleString()}</div>
-                      </div>
-                      <div className="flex items-center space-x-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          apt.status === 'ACTIVE' 
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {apt.status}
-                        </span>
-                        <Link
-                          to={`/apartments/${apt.id}`}
-                          className="text-primary-600 hover:text-primary-700 text-sm font-medium"
-                        >
-                          View
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'searches' && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Saved Searches</h3>
-              <div className="space-y-4">
-                {mockSearches.map((search) => (
-                  <div
-                    key={search.id}
-                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
-                  >
-                    <div>
-                      <div className="font-medium">{search.query}</div>
-                      <div className="text-sm text-gray-500">
-                        {search.count} results • Last used {search.lastUsed}
-                      </div>
-                    </div>
-                    <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-                      Run Search
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'notifications' && (
-            <div className="text-center py-8">
-              <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No new notifications</p>
-              <p className="text-sm text-gray-400 mt-2">
-                We'll notify you when there are new apartments matching your criteria
-              </p>
-            </div>
-          )}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">
+              {activeTab === 'favorites' && 'Your Favorite Apartments'}
+              {activeTab === 'searches' && 'Saved Searches'}
+              {activeTab === 'notifications' && 'Notifications'}
+            </h3>
+          </div>
+          {renderContent()}
         </div>
-      </div>
+      </Card>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <Card className="p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
@@ -206,7 +376,7 @@ const UserDashboard = () => {
             <div className="font-medium">Edit Profile</div>
           </button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
