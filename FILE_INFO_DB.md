@@ -154,13 +154,15 @@ Update it whenever files are created/edited/removed.
 - **Last change summary**: Created with environment validation, logging, and graceful shutdown
 
 #### Path: /backend/src/app.ts
-- **Type**: source
-- **Purpose**: Express app setup
-- **Owned by**: backend
-- **Key responsibilities**: Middleware, routes, error handler mount, static file serving
-- **Depends on**: Routes, middleware/*
-- **Used by**: server.ts
-- **Last change summary**: Created with security middleware, CORS, rate limiting, health check, and route mounting
+Type: source
+Purpose: Main Express application configuration
+Owned by: backend
+Key responsibilities: Set up middleware, mount routes, handle errors, serve static files
+Depends on: All route modules, middleware modules
+Used by: server.ts
+Last change summary: Fixed analytics routes mounting position (moved from middleware section to API routes section)
+
+
 
 ### Middleware
 
@@ -290,13 +292,29 @@ Update it whenever files are created/edited/removed.
 - **Last change summary**: Created with comprehensive validation for all apartment fields including multi-language, infrastructure, and installment options
 
 #### Path: /backend/src/modules/apartments/apartment.service.ts
-- **Type**: source
-- **Purpose**: Apartment business logic
-- **Owned by**: backend
-- **Key responsibilities**: CRUD operations, filtering, seller authorization, visibility rules
-- **Depends on**: database client, i18n utils, upload middleware
-- **Used by**: apartment controller
-- **Last change summary**: Added image upload, reorder, and delete functionality with ownership validation
+Type: source
+Purpose: Apartment business logic with JSON field handling
+Owned by: backend
+Key responsibilities: CRUD operations, filtering, multi-language support, image management
+Depends on: Prisma client, i18n utilities, upload middleware
+Used by: apartment controller
+Last change summary: Fixed JSON field handling to match Prisma schema, corrected field names, added constructor
+
+### Path: /backend/src/modules/apartments/status.routes.ts (New/Created)
+Type: source
+
+Purpose: Route definitions for status management endpoints
+
+Owned by: backend
+
+Key responsibilities: Define authenticated routes for status operations
+
+Depends on: status controller, auth middleware, roles middleware
+
+Used by: app.ts route mounting
+
+Last change summary: Created to fix undefined routes error in app.ts
+
 
 #### Path: /backend/src/modules/apartments/apartment.controller.ts
 - **Type**: source
@@ -328,22 +346,25 @@ Update it whenever files are created/edited/removed.
 - **Last change summary**: Created with schemas for status changes, mark-as-sold, and bulk operations
 
 #### Path: /backend/src/modules/apartments/status.service.ts
-- **Type**: source
-- **Purpose**: Status change business logic and permission validation
-- **Owned by**: backend
-- **Key responsibilities**: Validate status transitions, check permissions, log changes, handle bulk operations
-- **Depends on**: database client, Prisma enums
-- **Used by**: status controller
-- **Last change summary**: Created with complete status transition rules matching SERVICE_DOC.md specifications
+Type: source
+Purpose: Status management business logic
+Owned by: backend
+Key responsibilities: Handle apartment status changes, validation, history tracking, bulk operations
+Depends on: Prisma client, validation schemas
+Used by: status controller
+Last change summary: Fixed method signatures to match controller expectations, added proper error handling
+
+
 
 #### Path: /backend/src/modules/apartments/status.controller.ts
-- **Type**: source
-- **Purpose**: HTTP handlers for status operations
-- **Owned by**: backend
-- **Key responsibilities**: Handle status changes, mark-as-sold, history, bulk operations, transition checks
-- **Depends on**: status service, validators, auth middleware
-- **Used by**: status routes
-- **Last change summary**: Created with endpoints for all status operations including bulk admin actions
+Type: source
+Purpose: HTTP handlers for status operations
+Owned by: backend
+Key responsibilities: Handle status change requests, mark as sold, get history, bulk operations
+Depends on: status service, validation schemas, auth middleware
+Used by: status routes
+Last change summary: Fixed circular dependency, added missing prisma import, matched method signatures with service
+
 
 #### Path: /backend/src/modules/apartments/status.routes.ts
 - **Type**: source
@@ -384,22 +405,23 @@ Update it whenever files are created/edited/removed.
 - **Last change summary**: Created with logic to find other apartments in same complex and complex statistics
 
 #### Path: /backend/src/modules/complexes/complex.controller.ts
-- **Type**: source
-- **Purpose**: Complex HTTP endpoint handlers
-- **Owned by**: backend
-- **Key responsibilities**: Handle complex CRUD, related apartments, statistics, admin operations
-- **Depends on**: complex service, other-apartments service, validators
-- **Used by**: complex routes
-- **Last change summary**: Added getComplexStats() and getComplexesWithFilters() methods for admin UI
+Type: source
+Purpose: Fixed complex controller to match route method names
+Owned by: backend
+Key responsibilities: Handle complex CRUD operations, filtering, statistics, and apartment relationships
+Depends on: ComplexService, OtherApartmentsService, validation schemas
+Used by: complex routes
+Last change summary: Unified method names to match routes (getAll, search, getById, etc.), added route-compatible methods, preserved backward compatibility with aliases
 
 #### Path: /backend/src/modules/complexes/complex.routes.ts
-- **Type**: source
-- **Purpose**: Complex route definitions
-- **Owned by**: backend
-- **Key responsibilities**: Define public and protected routes for complex management
-- **Depends on**: complex controller, auth middleware
-- **Used by**: app.ts route mounting
-- **Last change summary**: Added /admin/filtered and /admin/stats routes for admin dashboard
+Type: source
+Purpose: Fixed route definitions to match controller methods
+Owned by: backend
+Key responsibilities: Define complex API endpoints with proper authentication and role checks
+Depends on: complex controller, auth middleware, roles middleware
+Used by: app.ts route mounting
+Last change summary: Updated method bindings to match unified controller methods
+
 
 ### Analytics Module
 
@@ -422,13 +444,21 @@ Update it whenever files are created/edited/removed.
 - **Last change summary**: Created with endpoints for all analytics data including export functionality
 
 #### Path: /backend/src/modules/analytics/analytics.routes.ts
-- **Type**: source
-- **Purpose**: Route definitions for analytics endpoints
-- **Owned by**: backend
-- **Key responsibilities**: Define protected routes for analytics data access
-- **Depends on**: analytics controller, auth middleware, roles middleware
-- **Used by**: app.ts route mounting
-- **Last change summary**: Created with routes for platform overview, growth metrics, revenue data, and export
+Type: source
+
+Purpose: Analytics dashboard routes
+
+Owned by: backend
+
+Key responsibilities: Define protected analytics endpoints for admin users
+
+Depends on: analytics controller, auth middleware, roles middleware
+
+Used by: app.ts route mounting
+
+Last change summary: Verified exists and exports correctly as named export
+
+
 
 ### Users Module
 

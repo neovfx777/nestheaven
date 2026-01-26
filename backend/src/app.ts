@@ -25,8 +25,7 @@ const app = express();
 
 // Security headers
 app.use(helmet());
-// Add to route mounting (after other routes)
-app.use('/api/analytics', analyticsRoutes);
+
 // CORS
 app.use(cors({
   origin: env.CORS_ORIGIN,
@@ -64,6 +63,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/apartments', apartmentRoutes);
 app.use('/api/complexes', complexRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/analytics', analyticsRoutes); // MOVED HERE with other routes!
 
 /* =========================
    Health Check
