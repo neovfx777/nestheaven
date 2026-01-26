@@ -11,7 +11,7 @@
 
 ## IN PROGRESS
 
-- User favorites/saved searches UI
+
 
 --------
 
@@ -21,9 +21,9 @@
 ### Web MVP
 
 
-- Complex management UI for admins
 
-- Advanced analytics dashboard
+
+
 
 ### Mobile Later
 - Create Expo project
@@ -56,3 +56,6 @@
 - Role-based navigation (user/seller/admin/manager/owner)
 - Seller listing create/edit + upload images
 - Admin moderation UI (hide/unhide)
+- User favorites/saved searches UI
+- Complex management UI for admins
+- Advanced analytics dashboard 

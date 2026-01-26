@@ -1,12 +1,39 @@
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Bed, Square, Layers, MapPin, DollarSign } from 'lucide-react';
+import { Bed, Square, Layers, MapPin, Heart } from 'lucide-react';
 import { Apartment } from '../../api/apartments';
+import { FavoriteButton } from './FavoriteButton';
+import { usersApi } from '../../api/users';
+import { useAuthStore } from '../../stores/authStore';
 
 interface ApartmentCardProps {
   apartment: Apartment;
 }
 
 const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
+  const { isAuthenticated } = useAuthStore();
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+
+  // Check favorite status on mount
+  useEffect(() => {
+    if (isAuthenticated && apartment.id) {
+      checkFavoriteStatus();
+    }
+  }, [apartment.id, isAuthenticated]);
+
+  const checkFavoriteStatus = async () => {
+    try {
+      setIsChecking(true);
+      const { isFavorite: favoriteStatus } = await usersApi.checkFavoriteStatus(apartment.id);
+      setIsFavorite(favoriteStatus);
+    } catch (error) {
+      console.error('Failed to check favorite status:', error);
+    } finally {
+      setIsChecking(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ACTIVE':
@@ -29,11 +56,12 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
     }).format(price);
   };
 
+  const handleFavoriteToggle = (newIsFavorite: boolean) => {
+    setIsFavorite(newIsFavorite);
+  };
+
   return (
-    <Link
-      to={`/apartments/${apartment.id}`}
-      className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-    >
+    <div className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       {/* Image */}
       <div className="relative h-48 overflow-hidden">
         {apartment.coverImage ? (
@@ -50,13 +78,25 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
             </div>
           </div>
         )}
+        
         {/* Status Badge */}
         <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(apartment.status)}`}>
           {apartment.status}
         </div>
+        
         {/* Price Badge */}
         <div className="absolute bottom-3 right-3 bg-black/70 text-white px-3 py-2 rounded-lg backdrop-blur-sm">
           <div className="text-lg font-bold">{formatPrice(apartment.price)}</div>
+        </div>
+        
+        {/* Favorite Button */}
+        <div className="absolute top-3 right-3">
+          <FavoriteButton
+            apartmentId={apartment.id}
+            size="sm"
+            initialIsFavorite={isFavorite}
+            onToggle={handleFavoriteToggle}
+          />
         </div>
       </div>
 
@@ -64,7 +104,9 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
       <div className="p-5">
         {/* Title */}
         <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-1 group-hover:text-primary-600 transition-colors">
-          {apartment.titleEn}
+          <Link to={`/apartments/${apartment.id}`}>
+            {apartment.titleEn}
+          </Link>
         </h3>
 
         {/* Address */}
@@ -114,7 +156,7 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 
