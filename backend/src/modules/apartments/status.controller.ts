@@ -2,10 +2,12 @@ import { Request, Response } from 'express';
 import { StatusService } from './status.service';
 import { changeStatusSchema, markAsSoldSchema } from './status.validators';
 import { AuthRequest } from '../../middleware/auth';
-import { UserRole } from '@prisma/client';
+import { UserRole, ApartmentStatus } from '@prisma/client';
+import { db } from '../../config/db';
 
 export class StatusController {
   private statusService: StatusService;
+  private prisma = db;
 
   constructor() {
     this.statusService = new StatusService();
@@ -185,7 +187,7 @@ export class StatusController {
       }
 
       const apartmentId = req.params.id;
-      const apartment = await prisma.apartment.findUnique({
+      const apartment = await this.prisma.apartment.findUnique({
         where: { id: apartmentId },
         select: {
           id: true,
@@ -212,7 +214,7 @@ export class StatusController {
       for (const targetStatus of allStatuses) {
         if (targetStatus === currentStatus) continue;
 
-        const transitionCheck = this.statusService['isValidTransition'](
+        const transitionCheck = this.statusService.isValidTransition(
           currentStatus,
           targetStatus,
           userRole,
@@ -270,6 +272,3 @@ export class StatusController {
     return descriptions[key] || `Change from ${from} to ${to}`;
   }
 }
-
-// Need to import prisma for the getAvailableTransitions method
-import { prisma } from '../../config/db';

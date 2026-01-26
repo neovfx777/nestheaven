@@ -13,8 +13,8 @@ router.get('/:id', controller.getById.bind(controller));
 router.get('/:id/apartments', controller.getOtherApartments.bind(controller));
 router.get('/:id/stats', controller.getComplexStats.bind(controller));
 
-// Other apartments endpoint (public)
-router.get('/apartments/:apartmentId/other', controller.getOtherApartments.bind(controller));
+// Other apartments endpoint (public) - FIXED ROUTE
+router.get('/apartments/:apartmentId/other', controller.getOtherApartmentsByApartmentId.bind(controller));
 
 // ===== Protected admin routes =====
 router.get(
@@ -28,7 +28,7 @@ router.get(
   '/admin/stats',
   authenticate,
   requireRole(['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN']),
-  controller.getComplexStats.bind(controller)
+  controller.getAdminStats.bind(controller) // Changed from getComplexStats
 );
 
 router.post(
