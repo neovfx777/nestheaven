@@ -22,4 +22,4 @@ router.get('/listing-performance', controller.getListingPerformance.bind(control
 // Export
 router.get('/export', controller.exportAnalytics.bind(controller));
 
-export { router as analyticsRoutes };
+export default router;

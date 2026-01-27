@@ -9,13 +9,13 @@ import { env } from './config/env';
 import { isDatabaseHealthy } from './config/db';
 
 // Routes
+// Routes - ALL should be default imports since all your route files use "export default"
 import authRoutes from './modules/auth/auth.routes';
 import adminRoutes from './modules/admin/admin.routes';
 import apartmentRoutes from './modules/apartments/apartment.routes';
 import complexRoutes from './modules/complexes/complex.routes';
 import userRoutes from './modules/users/user.routes';
-import { analyticsRoutes } from './modules/analytics/analytics.routes';
-
+import analyticsRoutes from './modules/analytics/analytics.routes'; // Should be default import
 // Initialize Express application
 const app = express();
 
