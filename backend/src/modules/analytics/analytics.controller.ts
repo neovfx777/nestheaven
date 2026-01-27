@@ -2,18 +2,23 @@ import { Request, Response } from 'express';
 import { AnalyticsService } from './analytics.service';
 import { z } from 'zod';
 
-const analyticsService = new AnalyticsService();
-
 const analyticsQuerySchema = z.object({
   days: z.coerce.number().int().positive().max(365).optional().default(30),
   months: z.coerce.number().int().positive().max(60).optional().default(12),
-  period: z.enum(['day', 'week', 'month', 'year']).optional().default('month')
+  period: z.enum(['day', 'week', 'month', 'year']).optional().default('month'),
+  limit: z.coerce.number().int().positive().max(100).optional().default(10)
 });
 
 export class AnalyticsController {
+  private service: AnalyticsService;
+
+  constructor() {
+    this.service = new AnalyticsService();
+  }
+
   async getPlatformOverview(req: Request, res: Response) {
     try {
-      const data = await analyticsService.getPlatformOverview();
+      const data = await this.service.getPlatformOverview();
       res.json({ success: true, data });
     } catch (error) {
       console.error('Error fetching platform overview:', error);
@@ -27,7 +32,7 @@ export class AnalyticsController {
   async getUserGrowth(req: Request, res: Response) {
     try {
       const { days } = analyticsQuerySchema.parse(req.query);
-      const data = await analyticsService.getUserGrowth(days);
+      const data = await this.service.getUserGrowth(days);
       res.json({ success: true, data });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -48,14 +53,14 @@ export class AnalyticsController {
   async getApartmentGrowth(req: Request, res: Response) {
     try {
       const { days } = analyticsQuerySchema.parse(req.query);
-      const data = await analyticsService.getApartmentGrowth(days);
+      const data = await this.service.getApartmentGrowth(days);
       res.json({ success: true, data });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
           success: false, 
           error: 'Validation error', 
-          details: error.errors 
+          details: error.errors     
         });
       }
       console.error('Error fetching apartment growth:', error);
@@ -69,7 +74,7 @@ export class AnalyticsController {
   async getRevenueData(req: Request, res: Response) {
     try {
       const { months } = analyticsQuerySchema.parse(req.query);
-      const data = await analyticsService.getRevenueData(months);
+      const data = await this.service.getRevenueData(months);
       res.json({ success: true, data });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -89,10 +94,17 @@ export class AnalyticsController {
 
   async getTopPerformers(req: Request, res: Response) {
     try {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const data = await analyticsService.getTopPerformers(limit);
+      const { limit } = analyticsQuerySchema.parse(req.query);
+      const data = await this.service.getTopPerformers(limit);
       res.json({ success: true, data });
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Validation error', 
+          details: error.errors 
+        });
+      }
       console.error('Error fetching top performers:', error);
       res.status(500).json({ 
         success: false, 
@@ -103,7 +115,7 @@ export class AnalyticsController {
 
   async getGeographicDistribution(req: Request, res: Response) {
     try {
-      const data = await analyticsService.getGeographicDistribution();
+      const data = await this.service.getGeographicDistribution();
       res.json({ success: true, data });
     } catch (error) {
       console.error('Error fetching geographic distribution:', error);
@@ -117,7 +129,7 @@ export class AnalyticsController {
   async getUserEngagement(req: Request, res: Response) {
     try {
       const { days } = analyticsQuerySchema.parse(req.query);
-      const data = await analyticsService.getUserEngagement(days);
+      const data = await this.service.getUserEngagement(days);
       res.json({ success: true, data });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -138,7 +150,7 @@ export class AnalyticsController {
   async getListingPerformance(req: Request, res: Response) {
     try {
       const { period } = analyticsQuerySchema.parse(req.query);
-      const data = await analyticsService.getListingPerformance(period);
+      const data = await this.service.getListingPerformance(period);
       res.json({ success: true, data });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -170,13 +182,13 @@ export class AnalyticsController {
         userEngagement,
         listingPerformance
       ] = await Promise.all([
-        analyticsService.getPlatformOverview(),
-        analyticsService.getUserGrowth(365),
-        analyticsService.getApartmentGrowth(365),
-        analyticsService.getRevenueData(60),
-        analyticsService.getTopPerformers(50),
-        analyticsService.getUserEngagement(365),
-        analyticsService.getListingPerformance('year')
+        this.service.getPlatformOverview(),
+        this.service.getUserGrowth(365),
+        this.service.getApartmentGrowth(365),
+        this.service.getRevenueData(60),
+        this.service.getTopPerformers(50),
+        this.service.getUserEngagement(365),
+        this.service.getListingPerformance('year')
       ]);
 
       const exportData = {
