@@ -1,5 +1,4 @@
 import { db } from '../../config/db';
-import { Prisma } from '@prisma/client';
 
 export class AnalyticsService {
   async getPlatformOverview() {
@@ -47,60 +46,93 @@ export class AnalyticsService {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const users = await db.user.groupBy({
-      by: ['createdAt'],
+    const users = await db.user.findMany({
       where: {
         createdAt: {
           gte: startDate
         }
       },
-      _count: {
-        _all: true
+      select: {
+        createdAt: true
       },
       orderBy: {
         createdAt: 'asc'
       }
     });
 
-    return users.map(user => ({
-      date: user.createdAt.toISOString().split('T')[0],
-      count: user._count._all
-    }));
+    // Group by date
+    const grouped = users.reduce((acc, user) => {
+      const date = user.createdAt.toISOString().split('T')[0];
+      if (!acc[date]) {
+        acc[date] = 0;
+      }
+      acc[date]++;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Convert to array with cumulative counts
+    const dates = Object.keys(grouped).sort();
+    let cumulative = 0;
+    return dates.map(date => {
+      cumulative += grouped[date];
+      return {
+        date,
+        count: cumulative
+      };
+    });
   }
 
   async getApartmentGrowth(days: number = 30) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const apartments = await db.apartment.groupBy({
-      by: ['createdAt', 'status'],
+    const apartments = await db.apartment.findMany({
       where: {
         createdAt: {
           gte: startDate
         }
       },
-      _count: {
-        _all: true
+      select: {
+        createdAt: true,
+        status: true
       },
       orderBy: {
         createdAt: 'asc'
       }
     });
 
+    // Group by date and status
     const grouped = apartments.reduce((acc, apt) => {
       const date = apt.createdAt.toISOString().split('T')[0];
       if (!acc[date]) {
         acc[date] = { total: 0, active: 0, sold: 0, hidden: 0 };
       }
-      acc[date].total += apt._count._all;
-      acc[date][apt.status.toLowerCase()] += apt._count._all;
+      acc[date].total++;
+      acc[date][apt.status.toLowerCase()]++;
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, { total: number; active: number; sold: number; hidden: number }>);
 
-    return Object.entries(grouped).map(([date, counts]) => ({
-      date,
-      ...counts
-    }));
+    // Convert to array with cumulative counts
+    const dates = Object.keys(grouped).sort();
+    let cumulativeTotal = 0;
+    let cumulativeActive = 0;
+    let cumulativeSold = 0;
+    let cumulativeHidden = 0;
+
+    return dates.map(date => {
+      cumulativeTotal += grouped[date].total;
+      cumulativeActive += grouped[date].active;
+      cumulativeSold += grouped[date].sold;
+      cumulativeHidden += grouped[date].hidden;
+
+      return {
+        date,
+        total: cumulativeTotal,
+        active: cumulativeActive,
+        sold: cumulativeSold,
+        hidden: cumulativeHidden
+      };
+    });
   }
 
   async getRevenueData(months: number = 12) {
@@ -129,22 +161,25 @@ export class AnalyticsService {
         acc[month] = {
           revenue: 0,
           count: 0,
-          avgPrice: 0,
           totalArea: 0,
-          data: []
+          apartments: []
         };
       }
       acc[month].revenue += apt.price;
       acc[month].count += 1;
       acc[month].totalArea += apt.area;
-      acc[month].data.push(apt);
+      acc[month].apartments.push(apt);
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, { revenue: number; count: number; totalArea: number; apartments: any[] }>);
 
     // Calculate averages
-    Object.values(monthlyData).forEach((month: any) => {
-      month.avgPrice = month.revenue / month.count;
-      month.avgArea = month.totalArea / month.count;
+    Object.keys(monthlyData).forEach(month => {
+      const data = monthlyData[month];
+      monthlyData[month] = {
+        ...data,
+        avgPrice: data.revenue / data.count,
+        avgArea: data.totalArea / data.count
+      };
     });
 
     return Object.entries(monthlyData).map(([month, data]) => ({
@@ -158,13 +193,7 @@ export class AnalyticsService {
       include: {
         _count: {
           select: {
-            apartments: true,
-            apartmentsActive: {
-              where: { status: 'ACTIVE' }
-            },
-            apartmentsSold: {
-              where: { status: 'SOLD' }
-            }
+            apartments: true
           }
         },
         apartments: {
@@ -188,13 +217,7 @@ export class AnalyticsService {
       include: {
         _count: {
           select: {
-            apartments: true,
-            apartmentsActive: {
-              where: { status: 'ACTIVE' }
-            },
-            apartmentsSold: {
-              where: { status: 'SOLD' }
-            }
+            apartments: true
           }
         },
         apartments: {
@@ -211,25 +234,64 @@ export class AnalyticsService {
       take: limit
     });
 
-    return {
-      complexes: topComplexes.map(complex => ({
+    // Get active and sold counts separately
+    const complexPromises = topComplexes.map(async complex => {
+      const [activeCount, soldCount] = await Promise.all([
+        db.apartment.count({
+          where: { 
+            complexId: complex.id,
+            status: 'ACTIVE'
+          }
+        }),
+        db.apartment.count({
+          where: { 
+            complexId: complex.id,
+            status: 'SOLD'
+          }
+        })
+      ]);
+
+      return {
         id: complex.id,
         name: complex.name,
         totalListings: complex._count.apartments,
-        activeListings: complex._count.apartmentsActive,
-        soldListings: complex._count.apartmentsSold,
+        activeListings: activeCount,
+        soldListings: soldCount,
         highestPrice: complex.apartments[0]?.price || 0
-      })),
-      sellers: topSellers.map(seller => ({
+      };
+    });
+
+    const sellerPromises = topSellers.map(async seller => {
+      const [activeCount, soldCount] = await Promise.all([
+        db.apartment.count({
+          where: { 
+            sellerId: seller.id,
+            status: 'ACTIVE'
+          }
+        }),
+        db.apartment.count({
+          where: { 
+            sellerId: seller.id,
+            status: 'SOLD'
+          }
+        })
+      ]);
+
+      return {
         id: seller.id,
         name: seller.name,
         email: seller.email,
         totalListings: seller._count.apartments,
-        activeListings: seller._count.apartmentsActive,
-        soldListings: seller._count.apartmentsSold,
+        activeListings: activeCount,
+        soldListings: soldCount,
         highestPrice: seller.apartments[0]?.price || 0
-      }))
-    };
+      };
+    });
+
+    const complexes = await Promise.all(complexPromises);
+    const sellers = await Promise.all(sellerPromises);
+
+    return { complexes, sellers };
   }
 
   async getGeographicDistribution() {
@@ -264,53 +326,59 @@ export class AnalyticsService {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const [favorites, searches, logins] = await Promise.all([
-      db.userFavorite.groupBy({
-        by: ['createdAt'],
-        where: {
-          createdAt: { gte: startDate }
-        },
-        _count: { _all: true },
-        orderBy: { createdAt: 'asc' }
-      }),
-      db.savedSearch.groupBy({
-        by: ['createdAt'],
-        where: {
-          createdAt: { gte: startDate }
-        },
-        _count: { _all: true },
-        orderBy: { createdAt: 'asc' }
-      }),
-      db.user.findMany({
-        where: {
-          lastLoginAt: { gte: startDate }
-        },
-        select: {
-          lastLoginAt: true
-        }
-      })
-    ]);
+    const favorites = await db.userFavorite.findMany({
+      where: {
+        createdAt: { gte: startDate }
+      },
+      select: {
+        createdAt: true
+      }
+    });
 
-    // Combine daily data
-    const dailyData: Record<string, any> = {};
+    const searches = await db.savedSearch.findMany({
+      where: {
+        createdAt: { gte: startDate }
+      },
+      select: {
+        createdAt: true
+      }
+    });
+
+    const usersWithLogin = await db.user.findMany({
+      where: {
+        lastLoginAt: { gte: startDate }
+      },
+      select: {
+        lastLoginAt: true
+      }
+    });
+
+    // Group by date
+    const dailyData: Record<string, { favorites: number; searches: number; logins: number }> = {};
     
     favorites.forEach(fav => {
       const date = fav.createdAt.toISOString().split('T')[0];
-      if (!dailyData[date]) dailyData[date] = { favorites: 0, searches: 0, logins: 0 };
-      dailyData[date].favorites += fav._count._all;
+      if (!dailyData[date]) {
+        dailyData[date] = { favorites: 0, searches: 0, logins: 0 };
+      }
+      dailyData[date].favorites++;
     });
 
     searches.forEach(search => {
       const date = search.createdAt.toISOString().split('T')[0];
-      if (!dailyData[date]) dailyData[date] = { favorites: 0, searches: 0, logins: 0 };
-      dailyData[date].searches += search._count._all;
+      if (!dailyData[date]) {
+        dailyData[date] = { favorites: 0, searches: 0, logins: 0 };
+      }
+      dailyData[date].searches++;
     });
 
-    logins.forEach(user => {
+    usersWithLogin.forEach(user => {
       if (user.lastLoginAt) {
         const date = user.lastLoginAt.toISOString().split('T')[0];
-        if (!dailyData[date]) dailyData[date] = { favorites: 0, searches: 0, logins: 0 };
-        dailyData[date].logins += 1;
+        if (!dailyData[date]) {
+          dailyData[date] = { favorites: 0, searches: 0, logins: 0 };
+        }
+        dailyData[date].logins++;
       }
     });
 
@@ -364,7 +432,7 @@ export class AnalyticsService {
       take: 50
     });
 
-    const performanceMetrics = listings.map(listing => {
+    return listings.map(listing => {
       const daysActive = Math.ceil(
         (now.getTime() - listing.createdAt.getTime()) / (1000 * 60 * 60 * 24)
       );
@@ -379,11 +447,8 @@ export class AnalyticsService {
         complexName: listing.complex?.name || 'Standalone',
         daysActive,
         viewsPerDay: daysActive > 0 ? (listing.views || 0) / daysActive : 0,
-        conversionRate: daysActive > 0 ? 
-          (listing.status === 'SOLD' ? 100 : 0) : 0
+        conversionRate: listing.status === 'SOLD' ? 100 : 0
       };
     });
-
-    return performanceMetrics;
   }
 }
