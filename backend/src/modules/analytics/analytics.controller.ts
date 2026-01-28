@@ -9,7 +9,8 @@ const analyticsQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).optional().default(10)
 });
 
-export class AnalyticsController {
+// CHANGED: Export as default
+export default class AnalyticsController {
   private service: AnalyticsService;
 
   constructor() {

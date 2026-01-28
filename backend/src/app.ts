@@ -8,14 +8,14 @@ import path from 'path';
 import { env } from './config/env';
 import { isDatabaseHealthy } from './config/db';
 
-// Routes
-// Routes - ALL should be default imports since all your route files use "export default"
+// Routes - ALL are default imports
 import authRoutes from './modules/auth/auth.routes';
 import adminRoutes from './modules/admin/admin.routes';
 import apartmentRoutes from './modules/apartments/apartment.routes';
 import complexRoutes from './modules/complexes/complex.routes';
 import userRoutes from './modules/users/user.routes';
-import analyticsRoutes from './modules/analytics/analytics.routes'; // Should be default import
+import analyticsRoutes from './modules/analytics/analytics.routes';
+
 // Initialize Express application
 const app = express();
 
@@ -61,9 +61,10 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/apartments', apartmentRoutes);
-app.use('/api/complexes', complexRoutes);
+app.use('/api/analytics', analyticsRoutes);
+console.log('Analytics routes disabled for debugging');
 app.use('/api/users', userRoutes);
-app.use('/api/analytics', analyticsRoutes); // MOVED HERE with other routes!
+app.use('/api/analytics', analyticsRoutes);
 
 /* =========================
    Health Check
