@@ -334,4 +334,26 @@ action21
   - /backend/src/modules/analytics/analytics.service.ts (fixed schema field references)
   - /backend/src/modules/analytics/analytics.routes.ts (added lazy loading)
 - **Resolution**: All circular dependencies resolved, schema fields corrected
+  action22
+  ## [FIX] React Router nested route structure
+- **Date**: $(today)
+- **Issue**: Route configuration errors causing layout issues
+- **Root Cause**: Mixed route patterns and incorrect nesting
+- **Fix**: 
+  1. Fixed nested route structure for Layout and DashboardLayout
+  2. Moved auth routes inside Layout
+  3. Fixed 404 route placement
+  4. Ensured proper import paths
+- **Files Modified**:
+  - /frontend/src/App.tsx (fixed route structure)
+- **Resolution**: Frontend routes now properly structured
 
+action23
+## [FIX] Tailwind CSS configuration - missing border-border variable
+- **Date**: $(today)
+- **Issue**: The `border-border` class does not exist in Tailwind config
+- **Root Cause**: index.css defines CSS variables but tailwind.config.js doesn't map them
+- **Fix**: Updated tailwind.config.js to include all CSS variables from index.css
+- **Files Modified**:
+  - /frontend/tailwind.config.js (added color mappings for all CSS variables)
+- **Resolution**: Tailwind now recognizes border-border and other CSS variable classes
