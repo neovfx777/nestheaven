@@ -605,7 +605,7 @@ Last change summary: Verified exists and exports correctly as named export
 - **Key responsibilities**: Define routes, layout structure, global toast notifications
 - **Depends on**: react-router-dom, layout components
 - **Used by**: main.tsx
-- **Last change summary**: Added routes for complex management and analytics dashboard
+- **Last change summary**: Fixed import statements for ComplexList and ComplexForm components (changed from default to named imports)
 
 ### API Layer
 
@@ -703,7 +703,7 @@ Last change summary: Verified exists and exports correctly as named export
 - **Key responsibilities**: Logo, navigation links, auth status display
 - **Depends on**: auth store, react-router
 - **Used by**: Layout.tsx
-- **Last change summary**: Added complexes link to navigation
+- **Last change summary**: Fixed file extension (.ts to .tsx) and added missing React import
 
 #### Path: /frontend/src/components/layout/Footer.tsx
 - **Type**: source
@@ -844,7 +844,7 @@ Last change summary: Verified exists and exports correctly as named export
 - **Key responsibilities**: Provide consistent card styling for dashboard components
 - **Depends on**: cn utility
 - **Used by**: AnalyticsDashboard and other dashboard components
-- **Last change summary**: Created with header, title, description, content, and footer subcomponents
+- **Last change summary**: Fixed import path for cn utility from "../../../utils/cn" to "../../utils/cn"
 
 ### Feature Components
 

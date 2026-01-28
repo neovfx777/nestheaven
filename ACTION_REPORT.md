@@ -358,3 +358,10 @@ action23
   - /frontend/tailwind.config.js (added color mappings for all CSS variables)
 - **Resolution**: Tailwind now recognizes border-border and other CSS variable classes
     shitttt
+
+
+action 24
+    Fixed import/export mismatch in App.tsx - changed ComplexList and ComplexForm from default imports to named imports
+
+action25
+Fixed import path in Card.tsx - changed from "../../../utils/cn" to "../../utils/cn"

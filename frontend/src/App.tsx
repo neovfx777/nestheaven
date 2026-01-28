@@ -20,9 +20,9 @@ import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import FavoritesPage from './pages/dashboard/FavoritesPage';
 
-// Admin dashboard pages
-import ComplexList from './pages/dashboard/admin/ComplexList';
-import ComplexForm from './pages/dashboard/admin/ComplexForm';
+// Admin dashboard pages - FIXED: Changed to named imports
+import { ComplexList } from './pages/dashboard/admin/ComplexList';
+import { ComplexForm } from './pages/dashboard/admin/ComplexForm';
 import { AnalyticsDashboard } from './pages/dashboard/admin/AnalyticsDashboard';
 
 // Misc
