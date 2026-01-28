@@ -20,9 +20,11 @@ export class AnalyticsService {
       db.savedSearch.count()
     ]);
 
-    const userGrowth = await this.getUserGrowth();
-    const apartmentGrowth = await this.getApartmentGrowth();
-    const revenueData = await this.getRevenueData();
+    const [userGrowth, apartmentGrowth, revenueData] = await Promise.all([
+      this.getUserGrowth(7),
+      this.getApartmentGrowth(7),
+      this.getRevenueData(3)
+    ]);
 
     return {
       totals: {
@@ -108,7 +110,7 @@ export class AnalyticsService {
         acc[date] = { total: 0, active: 0, sold: 0, hidden: 0 };
       }
       acc[date].total++;
-      acc[date][apt.status.toLowerCase()]++;
+      acc[date][apt.status.toLowerCase() as 'active' | 'sold' | 'hidden']++;
       return acc;
     }, {} as Record<string, { total: number; active: number; sold: number; hidden: number }>);
 
@@ -265,13 +267,13 @@ export class AnalyticsService {
       const [activeCount, soldCount] = await Promise.all([
         db.apartment.count({
           where: { 
-            sellerId: seller.id,
+            createdById: seller.id,
             status: 'ACTIVE'
           }
         }),
         db.apartment.count({
           where: { 
-            sellerId: seller.id,
+            createdById: seller.id,
             status: 'SOLD'
           }
         })
@@ -308,7 +310,8 @@ export class AnalyticsService {
         price: true,
         area: true,
         rooms: true,
-        status: true
+        status: true,
+        title: true
       }
     });
 
@@ -318,7 +321,8 @@ export class AnalyticsService {
       price: apt.price,
       area: apt.area,
       rooms: apt.rooms,
-      status: apt.status
+      status: apt.status,
+      title: apt.title
     }));
   }
 
@@ -326,32 +330,32 @@ export class AnalyticsService {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const favorites = await db.userFavorite.findMany({
-      where: {
-        createdAt: { gte: startDate }
-      },
-      select: {
-        createdAt: true
-      }
-    });
-
-    const searches = await db.savedSearch.findMany({
-      where: {
-        createdAt: { gte: startDate }
-      },
-      select: {
-        createdAt: true
-      }
-    });
-
-    const usersWithLogin = await db.user.findMany({
-      where: {
-        lastLoginAt: { gte: startDate }
-      },
-      select: {
-        lastLoginAt: true
-      }
-    });
+    const [favorites, searches, usersWithLogin] = await Promise.all([
+      db.userFavorite.findMany({
+        where: {
+          createdAt: { gte: startDate }
+        },
+        select: {
+          createdAt: true
+        }
+      }),
+      db.savedSearch.findMany({
+        where: {
+          createdAt: { gte: startDate }
+        },
+        select: {
+          createdAt: true
+        }
+      }),
+      db.user.findMany({
+        where: {
+          lastLoginAt: { gte: startDate }
+        },
+        select: {
+          lastLoginAt: true
+        }
+      })
+    ]);
 
     // Group by date
     const dailyData: Record<string, { favorites: number; searches: number; logins: number }> = {};
@@ -416,8 +420,6 @@ export class AnalyticsService {
         title: true,
         price: true,
         status: true,
-        views: true,
-        favoritesCount: true,
         createdAt: true,
         updatedAt: true,
         complex: {
@@ -427,7 +429,7 @@ export class AnalyticsService {
         }
       },
       orderBy: {
-        views: 'desc'
+        price: 'desc'
       },
       take: 50
     });
@@ -442,12 +444,9 @@ export class AnalyticsService {
         title: listing.title,
         price: listing.price,
         status: listing.status,
-        views: listing.views || 0,
-        favorites: listing.favoritesCount || 0,
         complexName: listing.complex?.name || 'Standalone',
         daysActive,
-        viewsPerDay: daysActive > 0 ? (listing.views || 0) / daysActive : 0,
-        conversionRate: listing.status === 'SOLD' ? 100 : 0
+        pricePerDay: daysActive > 0 ? listing.price / daysActive : listing.price
       };
     });
   }

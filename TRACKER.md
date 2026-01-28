@@ -11,7 +11,7 @@
 
 ## IN PROGRESS
 
-
+Verify all analytics module files exist
 
 --------
 
@@ -19,6 +19,16 @@
 ## TODO
 
 ### Web MVP
+
+
+
+Run database migrations and seeding
+
+Test API endpoints with Postman/curl
+
+Start frontend development server
+
+Test complete user flows (registration → browsing → favorites → dashboard)
 
 
 

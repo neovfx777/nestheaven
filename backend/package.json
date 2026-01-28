@@ -41,10 +41,14 @@
     "@typescript-eslint/parser": "^6.2.0",
     "eslint": "^8.45.0",
     "prisma": "^5.22.0",
+    "ts-node": "^10.9.2",
     "tsx": "^3.14.0",
     "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

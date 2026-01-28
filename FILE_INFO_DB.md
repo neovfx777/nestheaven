@@ -154,13 +154,13 @@ Update it whenever files are created/edited/removed.
 - **Last change summary**: Created with environment validation, logging, and graceful shutdown
 
 #### Path: /backend/src/app.ts
-Type: source
-Purpose: Main Express application configuration
-Owned by: backend
-Key responsibilities: Set up middleware, mount routes, handle errors, serve static files
-Depends on: All route modules, middleware modules
-Used by: server.ts
-Last change summary: Fixed analytics routes mounting position (moved from middleware section to API routes section)
+- **Type**: source
+- **Purpose**: Main Express application configuration
+- **Owned by**: backend
+- **Key responsibilities**: Set up middleware, mount routes, handle errors, serve static files
+- **Depends on**: All route modules, middleware modules
+- **Used by**: server.ts
+- **Last change summary**: Fixed analytics routes import to correctly match named export from analytics.routes.ts
 
 
 

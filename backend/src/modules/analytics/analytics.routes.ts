@@ -1,25 +1,34 @@
 import { Router } from 'express';
-import { AnalyticsController } from './analytics.controller';
+import AnalyticsController from './analytics.controller';
 import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/roles';
 
 const router = Router();
-const controller = new AnalyticsController();
+
+// Initialize controller lazily to avoid circular dependencies
+let controller: AnalyticsController | null = null;
+
+const getController = (): AnalyticsController => {
+  if (!controller) {
+    controller = new AnalyticsController();
+  }
+  return controller;
+};
 
 // All analytics routes require admin, manager, or owner roles
 router.use(authenticate, requireRole(['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN']));
 
 // Platform analytics
-router.get('/overview', controller.getPlatformOverview.bind(controller));
-router.get('/user-growth', controller.getUserGrowth.bind(controller));
-router.get('/apartment-growth', controller.getApartmentGrowth.bind(controller));
-router.get('/revenue', controller.getRevenueData.bind(controller));
-router.get('/top-performers', controller.getTopPerformers.bind(controller));
-router.get('/geographic', controller.getGeographicDistribution.bind(controller));
-router.get('/user-engagement', controller.getUserEngagement.bind(controller));
-router.get('/listing-performance', controller.getListingPerformance.bind(controller));
+router.get('/overview', (req, res) => getController().getPlatformOverview(req, res));
+router.get('/user-growth', (req, res) => getController().getUserGrowth(req, res));
+router.get('/apartment-growth', (req, res) => getController().getApartmentGrowth(req, res));
+router.get('/revenue', (req, res) => getController().getRevenueData(req, res));
+router.get('/top-performers', (req, res) => getController().getTopPerformers(req, res));
+router.get('/geographic', (req, res) => getController().getGeographicDistribution(req, res));
+router.get('/user-engagement', (req, res) => getController().getUserEngagement(req, res));
+router.get('/listing-performance', (req, res) => getController().getListingPerformance(req, res));
 
 // Export
-router.get('/export', controller.exportAnalytics.bind(controller));
+router.get('/export', (req, res) => getController().exportAnalytics(req, res));
 
-export { router as analyticsRoutes };
+export default router;
