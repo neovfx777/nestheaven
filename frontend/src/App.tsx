@@ -1,16 +1,16 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
-// Layouts
-import Layout from './layouts/Layout';
-import DashboardLayout from './layouts/DashboardLayout';
+// Layouts - FIXED IMPORTS
+import Layout from './components/layout/Layout';
+import DashboardLayout from './pages/dashboard/DashboardLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 // Public pages
 import HomePage from './pages/HomePage';
 import ApartmentsPage from './pages/apartments/ApartmentsPage';
 import ApartmentDetailPage from './pages/apartments/ApartmentDetailPage';
-import ComplexesPage from './pages/complexes/ComplexesPage';
+import ComplexesPage from './pages/ComplexesPage';
 
 // Auth pages
 import LoginPage from './pages/auth/LoginPage';
@@ -20,10 +20,11 @@ import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import FavoritesPage from './pages/dashboard/FavoritesPage';
 
-// Admin dashboard pages (complex management)
+// Admin dashboard pages
 import ComplexList from './pages/dashboard/admin/ComplexList';
 import ComplexForm from './pages/dashboard/admin/ComplexForm';
 import { AnalyticsDashboard } from './pages/dashboard/admin/AnalyticsDashboard';
+
 // Misc
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -44,21 +45,21 @@ function App() {
       />
 
       <Routes>
-        {/* Public routes with layout */}
-        <Route element={<Layout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="apartments" element={<ApartmentsPage />} />
-          <Route path="apartments/:id" element={<ApartmentDetailPage />} />
+        {/* Public routes with Layout */}
+        <Route path="/" element={<Layout />}>
+          <Route index element={<HomePage />} />
+          <Route path="apartments">
+            <Route index element={<ApartmentsPage />} />
+            <Route path=":id" element={<ApartmentDetailPage />} />
+          </Route>
           <Route path="complexes" element={<ComplexesPage />} />
+          <Route path="login" element={<LoginPage />} />
+          <Route path="register" element={<RegisterPage />} />
         </Route>
-
-        {/* Auth routes */}
-        <Route path="login" element={<LoginPage />} />
-        <Route path="register" element={<RegisterPage />} />
 
         {/* Dashboard routes (protected) */}
         <Route
-          path="dashboard"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <DashboardLayout />
@@ -103,7 +104,7 @@ function App() {
           />
         </Route>
 
-        {/* 404 */}
+        {/* 404 - Should be outside all layouts */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
