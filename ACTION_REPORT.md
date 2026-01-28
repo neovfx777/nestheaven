@@ -357,3 +357,4 @@ action23
 - **Files Modified**:
   - /frontend/tailwind.config.js (added color mappings for all CSS variables)
 - **Resolution**: Tailwind now recognizes border-border and other CSS variable classes
+    shitttt
