@@ -19,11 +19,13 @@ import RegisterPage from './pages/auth/RegisterPage';
 // Dashboard pages
 import DashboardPage from './pages/dashboard/DashboardPage';
 import FavoritesPage from './pages/dashboard/FavoritesPage';
+import { Overview } from './pages/dashboard/Overview';
 
 // Admin dashboard pages - FIXED: Changed to named imports
 import { ComplexList } from './pages/dashboard/admin/ComplexList';
 import { ComplexForm } from './pages/dashboard/admin/ComplexForm';
 import { AnalyticsDashboard } from './pages/dashboard/admin/AnalyticsDashboard';
+import { UserManagement } from './pages/dashboard/admin/UserManagement';
 
 // vimda kod yozdim
 
@@ -68,10 +70,18 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<DashboardPage />} />
+          <Route index element={<Overview />} />
           <Route path="favorites" element={<FavoritesPage />} />
           
           {/* Admin routes */}
+          <Route
+            path="admin/users"
+            element={
+              <ProtectedRoute requireRole={['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN']}>
+                <UserManagement />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="admin/analytics"
             element={

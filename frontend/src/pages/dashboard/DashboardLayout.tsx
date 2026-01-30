@@ -93,59 +93,14 @@ const DashboardLayout = () => {
       icon: Heart,
       roles: ['USER'],
     },
-    {
-      name: 'Saved Searches',
-      href: '/dashboard/user/searches',
-      icon: FileText,
-      roles: ['USER'],
-    },
-
-    // SELLER
-    {
-      name: 'My Listings',
-      href: '/dashboard/seller/listings',
-      icon: Building2,
-      roles: ['SELLER'],
-    },
-    {
-      name: 'Create Listing',
-      href: '/dashboard/seller/listings/new',
-      icon: Building2,
-      roles: ['SELLER'],
-    },
-    {
-      name: 'Sales Analytics',
-      href: '/dashboard/seller/analytics',
-      icon: BarChart3,
-      roles: ['SELLER'],
-    },
 
     // ADMIN
     {
-      name: 'Apartment Moderation',
-      href: '/dashboard/admin/apartments',
-      icon: Filter,
+      name: 'User Management',
+      href: '/dashboard/admin/users',
+      icon: Users,
       roles: ['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'],
     },
-    {
-      name: 'Flagged Content',
-      href: '/dashboard/admin/flagged',
-      icon: AlertTriangle,
-      roles: ['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'],
-    },
-    {
-      name: 'Status History',
-      href: '/dashboard/admin/history',
-      icon: CheckCircle,
-      roles: ['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'],
-    },
-    {
-      name: 'Complex Management',
-      href: '/dashboard/admin/complexes',
-      icon: Building2,
-      roles: ['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'],
-    },
-    // Add to admin navigation items
     {
       name: 'Analytics',
       href: '/dashboard/admin/analytics',

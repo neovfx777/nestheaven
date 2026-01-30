@@ -218,8 +218,13 @@ export interface AdminStats {
 export const apartmentsApi = {
   // Get apartments with filtering
   getApartments: async (params: FilterParams = {}): Promise<PaginatedResponse<Apartment>> => {
-    const response = await apiClient.get<{ success: boolean; data: PaginatedResponse<Apartment> }>('/apartments', { params });
-    return response.data.data;
+    try {
+      const response = await apiClient.get<{ success: boolean; data: PaginatedResponse<Apartment> }>('/apartments', { params });
+      return response.data.data || { apartments: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
+    } catch (error) {
+      console.error('Failed to fetch apartments:', error);
+      return { apartments: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
+    }
   },
 
   // Get apartment by ID
@@ -230,8 +235,13 @@ export const apartmentsApi = {
 
   // Get complexes
   getComplexes: async (): Promise<Complex[]> => {
-    const response = await apiClient.get<{ success: boolean; data: Complex[] }>('/complexes');
-    return response.data.data;
+    try {
+      const response = await apiClient.get<{ success: boolean; data: Complex[] }>('/complexes');
+      return response.data.data || [];
+    } catch (error) {
+      console.error('Failed to fetch complexes:', error);
+      return [];
+    }
   },
 
   // Get other apartments in same complex
@@ -245,10 +255,15 @@ export const apartmentsApi = {
 
   // Search apartments
   searchApartments: async (query: string, params: FilterParams = {}): Promise<PaginatedResponse<Apartment>> => {
-    const response = await apiClient.get<{ success: boolean; data: PaginatedResponse<Apartment> }>('/apartments', {
-      params: { ...params, search: query }
-    });
-    return response.data.data;
+    try {
+      const response = await apiClient.get<{ success: boolean; data: PaginatedResponse<Apartment> }>('/apartments', {
+        params: { ...params, search: query }
+      });
+      return response.data.data || { apartments: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
+    } catch (error) {
+      console.error('Failed to search apartments:', error);
+      return { apartments: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
+    }
   },
 
   // Create apartment (seller only)

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Building2, Loader2, Filter, Save } from 'lucide-react';
 
 import ApartmentCard from '../../components/apartments/ApartmentCard';
@@ -36,19 +36,19 @@ const ApartmentsPage = () => {
      Queries
      ========================= */
 
-  const { data: complexes = [] } = useQuery(
-    'complexes',
-    apartmentsApi.getComplexes
-  );
+  const { data: complexes = [] } = useQuery({
+    queryKey: ['complexes'],
+    queryFn: apartmentsApi.getComplexes
+  });
 
   const {
     data: apartmentsData,
     isLoading,
     isError,
     refetch,
-  } = useQuery(
-    ['apartments', page, filters],
-    () => {
+  } = useQuery({
+    queryKey: ['apartments', page, filters],
+    queryFn: () => {
       const apiFilters: ApiFilterParams = {
         page,
         limit,
@@ -67,10 +67,8 @@ const ApartmentsPage = () => {
 
       return apartmentsApi.getApartments(apiFilters);
     },
-    {
-      keepPreviousData: true,
-    }
-  );
+    placeholderData: (previousData) => previousData,
+  });
 
   /* =========================
      URL Sync

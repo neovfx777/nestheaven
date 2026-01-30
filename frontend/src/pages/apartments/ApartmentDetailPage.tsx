@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   Bed,
   Square,
@@ -31,16 +31,18 @@ const ApartmentDetailPage = () => {
     data: apartment,
     isLoading,
     isError,
-  } = useQuery(['apartment', id], () => apartmentsApi.getApartmentById(id!), {
+  } = useQuery({
+    queryKey: ['apartment', id],
+    queryFn: () => apartmentsApi.getApartmentById(id!),
     enabled: !!id,
   });
 
   // Fetch other apartments in same complex
-  const { data: otherApartments } = useQuery(
-    ['otherApartments', id],
-    () => apartmentsApi.getOtherApartments(id!, 4),
-    { enabled: !!apartment?.complex }
-  );
+  const { data: otherApartments } = useQuery({
+    queryKey: ['otherApartments', id],
+    queryFn: () => apartmentsApi.getOtherApartments(id!, 4),
+    enabled: !!apartment?.complex,
+  });
 
   if (isLoading) {
     return (

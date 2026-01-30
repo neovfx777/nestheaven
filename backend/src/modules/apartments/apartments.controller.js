@@ -3,7 +3,7 @@ const apartmentsService = require('./apartments.service');
 async function list(req, res, next) {
   try {
     const result = await apartmentsService.list(req.validated, req.user);
-    res.json(result);
+    res.json({ success: true, data: result });
   } catch (err) {
     next(err);
   }
@@ -13,7 +13,7 @@ async function getById(req, res, next) {
   try {
     const { id } = req.validated.params;
     const result = await apartmentsService.getById(id, req.user);
-    res.json(result);
+    res.json({ success: true, data: result });
   } catch (err) {
     next(err);
   }

@@ -31,9 +31,12 @@ async function getFavorites(req, res, next) {
 
 async function addFavorite(req, res, next) {
   try {
-    const apartmentId = req.params.apartmentId || req.params.id;
+    const apartmentId = req.params.apartmentId || req.body.apartmentId;
+    if (!apartmentId) {
+      return res.status(400).json({ error: 'Apartment ID is required' });
+    }
     const result = await usersService.addFavorite(req.user.id, apartmentId);
-    res.status(201).json(result);
+    res.status(201).json({ success: true, data: result });
   } catch (err) {
     next(err);
   }
@@ -43,7 +46,7 @@ async function removeFavorite(req, res, next) {
   try {
     const apartmentId = req.params.apartmentId || req.params.id;
     await usersService.removeFavorite(req.user.id, apartmentId);
-    res.status(204).send();
+    res.json({ success: true, data: { success: true } });
   } catch (err) {
     next(err);
   }

@@ -46,11 +46,13 @@ async function list(data, reqUser) {
   ]);
 
   return {
-    items,
-    total,
-    page,
-    limit,
-    totalPages: Math.ceil(total / limit),
+    apartments: items,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    }
   };
 }
 

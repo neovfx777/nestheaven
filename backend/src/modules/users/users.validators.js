@@ -9,7 +9,10 @@ const updateProfileSchema = z.object({
 });
 
 const favoriteSchema = z.object({
-  params: z.object({ apartmentId: z.string().min(1) }),
+  params: z.object({ apartmentId: z.string().min(1).optional() }),
+  body: z.object({ apartmentId: z.string().min(1).optional() }),
+}).refine((data) => data.params.apartmentId || data.body.apartmentId, {
+  message: 'Apartment ID is required in params or body',
 });
 
 const savedSearchSchema = z.object({
@@ -33,7 +36,10 @@ function validateUpdateProfile(req, res, next) {
 }
 
 function validateFavorite(req, res, next) {
-  const result = favoriteSchema.safeParse({ params: { apartmentId: req.params.apartmentId || req.params.id } });
+  const result = favoriteSchema.safeParse({ 
+    params: { apartmentId: req.params.apartmentId || req.params.id },
+    body: req.body
+  });
   if (!result.success) {
     return res.status(400).json({ error: 'Validation failed', details: result.error.errors });
   }

@@ -1,49 +1,57 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Building2, Loader2, MapPin, Calendar, TrendingUp } from 'lucide-react';
 import { ApartmentCarousel } from '../components/apartments/ApartmentCarousel';
 import { apartmentsApi, Apartment } from '../api/apartments';
 import { defaultComplexData, defaultApartmentsData } from '../data/defaultData';
 import { DefaultApartmentData } from '../data/types';
+import { useAuthStore } from '../stores/authStore';
 
 const HomePage = () => {
+  const { user, isAuthenticated } = useAuthStore();
   const [useDefaultData, setUseDefaultData] = useState(false);
+
+  // Check if user is premium (has paid role)
+  const isPremiumUser = user?.role === 'SELLER' || user?.role === 'ADMIN' || 
+                       user?.role === 'MANAGER_ADMIN' || user?.role === 'OWNER_ADMIN';
 
   // Try to fetch apartments from API
   const {
     data: apartmentsData,
     isLoading,
     isError,
-  } = useQuery(
-    ['apartments', 'home'],
-    () => apartmentsApi.getApartments({ page: 1, limit: 6 }),
-    {
-      retry: 1,
-      onError: () => {
-        // If API fails, use default data
-        setUseDefaultData(true);
-      },
-    }
-  );
+  } = useQuery({
+    queryKey: ['apartments', 'home'],
+    queryFn: async () => {
+      try {
+        const result = await apartmentsApi.getApartments({ page: 1, limit: 6 });
+        return result || { apartments: [], pagination: { page: 1, limit: 6, total: 0, totalPages: 0 } };
+      } catch (error) {
+        console.error('API fetch failed, using default data:', error);
+        return { apartments: [], pagination: { page: 1, limit: 6, total: 0, totalPages: 0 } };
+      }
+    },
+    retry: 1,
+  });
 
   const complexData = defaultComplexData;
 
   // Use default data if API fails or no data
   useEffect(() => {
-    if (isError || (!isLoading && (!apartmentsData || apartmentsData.apartments.length === 0))) {
+    if (isError || (!isLoading && (!apartmentsData || !apartmentsData.apartments || apartmentsData.apartments.length === 0))) {
       setUseDefaultData(true);
     }
   }, [isError, isLoading, apartmentsData]);
 
-  // Filter apartments for carousels
+  // Filter apartments for carousels based on user type
   const featuredApartments = useDefaultData
     ? defaultApartmentsData.filter((apt: DefaultApartmentData) => apt.isFeatured).slice(0, 8)
-    : apartmentsData?.apartments.filter((apt: Apartment) => apt.isFeatured).slice(0, 8) || [];
+    : apartmentsData?.apartments?.slice(0, 8) || [];
 
   const recommendedApartments = useDefaultData
     ? defaultApartmentsData.filter((apt: DefaultApartmentData) => apt.isRecommended).slice(0, 8)
-    : apartmentsData?.apartments.filter((apt: Apartment) => apt.isRecommended).slice(0, 8) || [];
+    : isPremiumUser ? apartmentsData?.apartments?.slice(8, 16) || [] : apartmentsData?.apartments?.slice(8, 16) || [];
 
   // Convert default data format to API format
   const convertToApiFormat = (apt: DefaultApartmentData): Apartment => ({

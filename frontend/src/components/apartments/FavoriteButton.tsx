@@ -33,10 +33,15 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
 
   const checkFavoriteStatus = async () => {
     try {
-      const { isFavorite: favoriteStatus } = await usersApi.checkFavoriteStatus(apartmentId);
-      setIsFavorite(favoriteStatus);
+      const response = await usersApi.checkFavoriteStatus(apartmentId);
+      if (response && typeof response === 'object' && 'isFavorite' in response) {
+        setIsFavorite(response.isFavorite);
+      } else {
+        setIsFavorite(false);
+      }
     } catch (error) {
       console.error('Failed to check favorite status:', error);
+      setIsFavorite(false);
     }
   };
 

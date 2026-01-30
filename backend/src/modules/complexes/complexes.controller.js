@@ -3,7 +3,7 @@ const complexesService = require('./complexes.service');
 async function list(req, res, next) {
   try {
     const result = await complexesService.list(req.user);
-    res.json(result);
+    res.json({ success: true, data: result });
   } catch (err) {
     next(err);
   }

@@ -18,6 +18,7 @@ router.get('/me', usersController.getProfile);
 router.patch('/me', validateUpdateProfile, usersController.updateProfile);
 
 router.get('/favorites', usersController.getFavorites);
+router.post('/favorites', validateFavorite, usersController.addFavorite);
 router.post('/favorites/:apartmentId', validateFavorite, usersController.addFavorite);
 router.delete('/favorites/:apartmentId', validateFavorite, usersController.removeFavorite);
 router.get('/favorites/status/:apartmentId', usersController.checkFavoriteStatus);
