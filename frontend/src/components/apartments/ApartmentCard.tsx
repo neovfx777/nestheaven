@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Bed, Square, Layers, MapPin, Heart } from 'lucide-react';
+import { Bed, Square, Layers, MapPin } from 'lucide-react';
 import { Apartment } from '../../api/apartments';
 import { FavoriteButton } from './FavoriteButton';
 import { usersApi } from '../../api/users';
@@ -13,7 +13,6 @@ interface ApartmentCardProps {
 const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
   const { isAuthenticated } = useAuthStore();
   const [isFavorite, setIsFavorite] = useState(false);
-  const [isChecking, setIsChecking] = useState(false);
 
   // Check favorite status on mount
   useEffect(() => {
@@ -24,23 +23,20 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
 
   const checkFavoriteStatus = async () => {
     try {
-      setIsChecking(true);
       const { isFavorite: favoriteStatus } = await usersApi.checkFavoriteStatus(apartment.id);
       setIsFavorite(favoriteStatus);
     } catch (error) {
       console.error('Failed to check favorite status:', error);
-    } finally {
-      setIsChecking(false);
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'ACTIVE':
+      case 'active':
         return 'bg-green-100 text-green-800';
-      case 'SOLD':
+      case 'sold':
         return 'bg-red-100 text-red-800';
-      case 'HIDDEN':
+      case 'hidden':
         return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-blue-100 text-blue-800';
@@ -67,7 +63,7 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
         {apartment.coverImage ? (
           <img
             src={apartment.coverImage}
-            alt={apartment.titleEn}
+            alt={apartment.title?.en || apartment.titleEn || apartment.titleUz || 'Apartment'}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
@@ -105,14 +101,16 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
         {/* Title */}
         <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-1 group-hover:text-primary-600 transition-colors">
           <Link to={`/apartments/${apartment.id}`}>
-            {apartment.titleEn}
+            {apartment.title?.en || apartment.titleEn || apartment.titleUz || 'Apartment'}
           </Link>
         </h3>
 
         {/* Address */}
         <div className="flex items-center text-gray-600 text-sm mb-3">
           <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-          <span className="line-clamp-1">{apartment.address}</span>
+          <span className="line-clamp-1">
+            {apartment.complex?.address?.en || apartment.address || 'Location not specified'}
+          </span>
         </div>
 
         {/* Developer */}
@@ -125,7 +123,7 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
         {/* Complex */}
         {apartment.complex && (
           <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary-50 text-primary-700 text-sm font-medium mb-4">
-            {apartment.complex.name}
+            {typeof apartment.complex.name === 'string' ? apartment.complex.name : apartment.complex.name?.en || 'Complex'}
           </div>
         )}
 

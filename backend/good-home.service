@@ -1,0 +1,20 @@
+[Unit]
+Description=Good Home Real Estate API
+Documentation=https://github.com/your-repo/good-home
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/good-home/backend
+ExecStart=/usr/bin/node src/server.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=good-home
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

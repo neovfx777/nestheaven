@@ -2,6 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
 // Create axios instance
+// Default backend URL points to local development API; can be overridden via VITE_API_URL
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
   headers: {
@@ -23,15 +24,23 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle errors
+// Response interceptor to handle auth errors on protected routes only
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
+    const status = error.response?.status;
+    const url: string | undefined = error.config?.url;
+
+    // Don't auto-logout on auth endpoints themselves
+    const isAuthEndpoint =
+      url?.includes('/auth/login') || url?.includes('/auth/register');
+
+    if (status === 401 && !isAuthEndpoint) {
+      // Token expired or invalid on protected route
       useAuthStore.getState().logout();
       window.location.href = '/login';
     }
+
     return Promise.reject(error);
   }
 );

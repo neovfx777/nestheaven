@@ -60,43 +60,135 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await authApi.login(data);
-          if (response.success) {
-            set({
-              user: response.data.user,
-              token: response.data.token,
-              isAuthenticated: true,
-              isLoading: false,
-              error: null,
-            });
+          
+          // Debug: log response to see what we're getting
+          console.log('Login response:', response);
+
+          // Backend returns { success: true, data: { user, token } }
+          // Handle both success: true and direct data structure
+          if (response) {
+            // Case 1: Standard format { success: true, data: { user, token } }
+            if (response.success === true && response.data) {
+              set({
+                user: response.data.user,
+                token: response.data.token,
+                isAuthenticated: true,
+                error: null,
+              });
+              return; // Success, exit early
+            }
+            
+            // Case 2: Direct data format { user, token } (without success wrapper)
+            if ((response as any).user && (response as any).token) {
+              set({
+                user: (response as any).user,
+                token: (response as any).token,
+                isAuthenticated: true,
+                error: null,
+              });
+              return; // Success, exit early
+            }
+            
+            // Case 3: Error response { success: false, error: "..." }
+            if (response.success === false) {
+              const errorMsg = (response as any)?.error || 'Login failed. Please check your credentials.';
+              set({ error: errorMsg });
+              throw new Error(errorMsg);
+            }
           }
+          
+          // If we get here, response structure is unexpected
+          throw new Error('Unexpected response format from server');
         } catch (error: any) {
+          console.error('Login error:', error);
+          
+          // Extract error message from various possible locations
+          let message = 'Login failed. Please try again.';
+          
+          if (error.response) {
+            // Axios error with response
+            message = error.response.data?.error || 
+                     error.response.data?.message || 
+                     error.response.statusText ||
+                     message;
+          } else if (error.message) {
+            // Standard Error object
+            message = error.message;
+          }
+
           set({
-            isLoading: false,
-            error: error.response?.data?.error || 'Login failed. Please try again.',
+            error: message,
           });
           throw error;
+        } finally {
+          // Always stop loading, even if something unexpected happens
+          set({ isLoading: false });
         }
       },
 
       registerUser: async (data: RegisterInput) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await authApi.register(data);
-          if (response.success) {
-            set({
-              user: response.data.user,
-              token: response.data.token,
-              isAuthenticated: true,
-              isLoading: false,
-              error: null,
-            });
+          // Remove confirmPassword before sending to backend
+          const { confirmPassword, ...registerData } = data;
+          
+          const response = await authApi.register(registerData);
+          
+          console.log('Register response:', response);
+
+          // Handle both success: true and direct data structure
+          if (response) {
+            // Case 1: Standard format { success: true, data: { user, token } }
+            if (response.success === true && response.data) {
+              set({
+                user: response.data.user,
+                token: response.data.token,
+                isAuthenticated: true,
+                error: null,
+              });
+              return; // Success, exit early
+            }
+            
+            // Case 2: Direct data format { user, token } (without success wrapper)
+            if ((response as any).user && (response as any).token) {
+              set({
+                user: (response as any).user,
+                token: (response as any).token,
+                isAuthenticated: true,
+                error: null,
+              });
+              return; // Success, exit early
+            }
+            
+            // Case 3: Error response { success: false, error: "..." }
+            if (response.success === false) {
+              const errorMsg = (response as any)?.error || 'Registration failed. Please check your data.';
+              set({ error: errorMsg });
+              throw new Error(errorMsg);
+            }
           }
+          
+          throw new Error('Unexpected response format from server');
         } catch (error: any) {
+          console.error('Register error:', error);
+          
+          let message = 'Registration failed. Please try again.';
+          
+          if (error.response) {
+            message = error.response.data?.error || 
+                     error.response.data?.message || 
+                     error.response.statusText ||
+                     message;
+          } else if (error.message) {
+            message = error.message;
+          }
+
           set({
-            isLoading: false,
-            error: error.response?.data?.error || 'Registration failed. Please try again.',
+            error: message,
           });
           throw error;
+        } finally {
+          set({ isLoading: false });
         }
       },
 
@@ -104,19 +196,27 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await authApi.getProfile();
-          if (response.success) {
-            set({
-              user: response.data,
-              isLoading: false,
-              error: null,
-            });
+
+          if (!response?.success || !response.data) {
+            throw new Error('Failed to fetch profile.');
           }
-        } catch (error: any) {
+
           set({
-            isLoading: false,
-            error: error.response?.data?.error || 'Failed to fetch profile.',
+            user: response.data,
+            error: null,
+          });
+        } catch (error: any) {
+          const message =
+            error.response?.data?.error ||
+            error.message ||
+            'Failed to fetch profile.';
+
+          set({
+            error: message,
           });
           throw error;
+        } finally {
+          set({ isLoading: false });
         }
       },
     }),
