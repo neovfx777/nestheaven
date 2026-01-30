@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, RegisterInput } from '../../utils/validation';
 import { useAuthStore } from '../../stores/authStore';
-import AuthForm, { FormInput } from '../../components/auth/AuthForm';
+import { AuthForm,  FormInput } from '../../components/auth/AuthForm';
 import { UserPlus } from 'lucide-react';
 
 const RegisterPage = () => {

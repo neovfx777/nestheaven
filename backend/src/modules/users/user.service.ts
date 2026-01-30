@@ -137,7 +137,7 @@ export class UserService {
       data: {
         userId,
         name: data.name,
-        filters: data.filters as Prisma.JsonValue,
+        filters: (data.filters ?? {}) as Prisma.JsonValue,
       },
     });
 
@@ -162,7 +162,6 @@ export class UserService {
       data: {
         ...data,
         filters: data.filters as Prisma.JsonValue,
-        updatedAt: new Date(),
       },
     });
 
@@ -171,13 +170,12 @@ export class UserService {
 
   // Get saved searches
   async getSavedSearches(userId: string) {
-    const searches = await prisma.savedSearch.findMany({
+    return prisma.savedSearch.findMany({
       where: { userId },
-      orderBy: { lastUsed: 'desc' },
+      orderBy: { createdAt: 'desc' }, // ✅
     });
-
-    return searches;
   }
+
 
   // Delete saved search
   async deleteSavedSearch(userId: string, searchId: string) {
@@ -200,25 +198,7 @@ export class UserService {
   }
 
   // Update last used time for saved search
-  async updateLastUsed(userId: string, searchId: string) {
-    const savedSearch = await prisma.savedSearch.findFirst({
-      where: {
-        id: searchId,
-        userId,
-      },
-    });
 
-    if (!savedSearch) {
-      throw new Error('Saved search not found');
-    }
-
-    const updatedSearch = await prisma.savedSearch.update({
-      where: { id: searchId },
-      data: { lastUsed: new Date() },
-    });
-
-    return updatedSearch;
-  }
 
   // Check if apartment is in favorites
   async isFavorite(userId: string, apartmentId: string): Promise<boolean> {
