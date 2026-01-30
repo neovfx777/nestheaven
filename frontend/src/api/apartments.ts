@@ -2,76 +2,108 @@ import apiClient from './client';
 
 export interface Apartment {
   id: string;
-  titleUz: string;
-  titleRu: string;
-  titleEn: string;
+  title: { uz: string; ru: string; en: string };
+  description?: { uz: string; ru: string; en: string };
   price: number;
   rooms: number;
   area: number;
   floor: number;
-  address: string;
-  status: 'ACTIVE' | 'HIDDEN' | 'SOLD';
-  developerName: string;
-  complex: {
+  totalFloors?: number;
+  status: 'active' | 'hidden' | 'sold';
+  complexId: string;
+  sellerId: string;
+  complex?: {
     id: string;
-    name: string;
+    name: { uz: string; ru: string; en: string };
+    address?: { uz: string; ru: string; en: string };
+    city: string;
     coverImage: string | null;
   } | null;
   coverImage: string | null;
   createdAt: string;
   updatedAt: string;
+  materials?: { uz: string; ru: string; en: string };
+  infrastructureNote?: { uz: string; ru: string; en: string };
+  isFeatured?: boolean;
+  isRecommended?: boolean;
+  images?: Array<{
+    id: string;
+    url: string;
+    order: number;
+  }>;
   seller?: {
     id: string;
     fullName: string;
     email: string;
   };
+  // Legacy fields for backward compatibility
+  titleUz?: string;
+  titleRu?: string;
+  titleEn?: string;
+  descriptionUz?: string;
+  descriptionRu?: string;
+  descriptionEn?: string;
+  address?: string;
+  developerName?: string;
 }
 
 export interface ApartmentDetail {
   id: string;
-  titleUz: string;
-  titleRu: string;
-  titleEn: string;
-  descriptionUz: string | null;
-  descriptionRu: string | null;
-  descriptionEn: string | null;
+  title: { uz: string; ru: string; en: string };
+  description?: { uz: string; ru: string; en: string };
   price: number;
   rooms: number;
   area: number;
   floor: number;
-  address: string;
-  latitude: number | null;
-  longitude: number | null;
-  status: 'ACTIVE' | 'HIDDEN' | 'SOLD';
-  developerName: string;
-  developerId: string | null;
-  airQualityIndex: number | null;
-  airQualitySource: string | null;
-  infrastructure: any;
-  investmentGrowthPercent: number | null;
-  contactPhone: string;
-  contactTelegram: string | null;
-  contactWhatsapp: string | null;
-  contactEmail: string | null;
-  complex: {
+  totalFloors?: number;
+  status: 'active' | 'hidden' | 'sold';
+  complexId: string;
+  sellerId: string;
+  materials?: { uz: string; ru: string; en: string };
+  infrastructureNote?: { uz: string; ru: string; en: string };
+  isFeatured?: boolean;
+  isRecommended?: boolean;
+  complex?: {
     id: string;
-    name: string;
+    name: { uz: string; ru: string; en: string };
+    address?: { uz: string; ru: string; en: string };
+    city: string;
     coverImage: string | null;
   } | null;
   images: Array<{
     id: string;
     url: string;
-    orderIndex: number;
-    captionUz: string | null;
-    captionRu: string | null;
-    captionEn: string | null;
+    order: number;
   }>;
   seller: {
     id: string;
     fullName: string;
     email: string;
   };
-  multiLanguageContent: {
+  coverImage: string | null;
+  createdAt: string;
+  updatedAt: string;
+  // Legacy fields for backward compatibility
+  titleUz?: string;
+  titleRu?: string;
+  titleEn?: string;
+  descriptionUz?: string;
+  descriptionRu?: string;
+  descriptionEn?: string;
+  address?: string;
+  developerName?: string;
+  developerId?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  airQualityIndex?: number | null;
+  airQualitySource?: string | null;
+  infrastructure?: any;
+  investmentGrowthPercent?: number | null;
+  contactPhone?: string;
+  contactTelegram?: string | null;
+  contactWhatsapp?: string | null;
+  contactEmail?: string | null;
+  multiLanguageContent?: {
     uz: {
       title: string;
       description: string | null;
@@ -94,15 +126,13 @@ export interface ApartmentDetail {
       investmentGrowthNote: string | null;
     };
   };
-  installmentOptions: any;
+  installmentOptions?: any;
   contactInfo?: {
     phone: string;
     telegram: string | null;
     whatsapp: string | null;
     email: string | null;
   };
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -124,7 +154,7 @@ export interface FilterParams {
   maxRooms?: number;
   minArea?: number;
   maxArea?: number;
-  status?: string;
+  status?: 'active' | 'hidden' | 'sold';
   complexId?: string;
   developerName?: string;
   search?: string;
@@ -134,11 +164,15 @@ export interface FilterParams {
 
 export interface Complex {
   id: string;
-  name: string;
+  name: { uz: string; ru: string; en: string };
+  address?: { uz: string; ru: string; en: string };
+  city: string;
   coverImage: string | null;
-  _count: {
+  _count?: {
     apartments: number;
   };
+  // Legacy fields for backward compatibility
+  nameString?: string;
 }
 
 export interface CreateApartmentData {
@@ -332,7 +366,7 @@ export const apartmentsApi = {
     const allApartments = await apartmentsApi.getAllApartments(params);
     const pending = allApartments.apartments.filter(apt => {
       // Simple logic: apartments that might need review
-      return apt.status === 'ACTIVE' && (!apt.coverImage || !apt.titleUz || !apt.titleRu || !apt.titleEn);
+      return apt.status === 'active' && (!apt.coverImage || !apt.title?.uz || !apt.title?.ru || !apt.title?.en);
     });
     
     return {

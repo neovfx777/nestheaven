@@ -9,6 +9,7 @@ import { statusApi } from '../../../api/status';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
 import { Badge } from '../../../components/ui/Badge';
+import { Star, Sparkles } from 'lucide-react';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { StatusChangeModal } from './StatusChangeModal';
@@ -319,6 +320,20 @@ export const AdminApartments: React.FC = () => {
                         <div className="text-sm text-gray-500">
                           ${apartment.price.toLocaleString()}
                         </div>
+                        <div className="flex gap-2 mt-1">
+                          {(apartment as any).isFeatured && (
+                            <Badge variant="success" className="text-xs flex items-center gap-1">
+                              <Star className="h-3 w-3" />
+                              Featured (Free)
+                            </Badge>
+                          )}
+                          {(apartment as any).isRecommended && (
+                            <Badge variant="info" className="text-xs flex items-center gap-1">
+                              <Sparkles className="h-3 w-3" />
+                              Recommended (Paid)
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -376,6 +391,35 @@ export const AdminApartments: React.FC = () => {
                           </Button>
                         )}
                         
+                        <button
+                          onClick={() => {
+                            // Toggle featured/recommended status
+                            // This would need API endpoint to update apartment flags
+                            toast.success('Feature toggle functionality - to be implemented with API');
+                          }}
+                          className={`text-xs px-2 py-1 rounded ${
+                            (apartment as any).isFeatured
+                              ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                          title="Toggle Featured (Free)"
+                        >
+                          {(apartment as any).isFeatured ? '★ Featured' : '☆ Feature'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            // Toggle recommended status
+                            toast.success('Recommend toggle functionality - to be implemented with API');
+                          }}
+                          className={`text-xs px-2 py-1 rounded ${
+                            (apartment as any).isRecommended
+                              ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                          title="Toggle Recommended (Paid)"
+                        >
+                          {(apartment as any).isRecommended ? '✓ Recommended' : '○ Recommend'}
+                        </button>
                         <a
                           href={`/apartments/${apartment.id}`}
                           target="_blank"

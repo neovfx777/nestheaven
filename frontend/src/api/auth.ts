@@ -44,14 +44,24 @@ export interface ProfileResponse {
 export const authApi = {
   // Login user
   login: async (data: LoginInput): Promise<LoginResponse> => {
-    const response = await apiClient.post<LoginResponse>('/auth/login', data);
-    return response.data;
+    try {
+      const response = await apiClient.post<LoginResponse>('/auth/login', data);
+      // Axios wraps the response, so response.data is the actual API response
+      return response.data;
+    } catch (error: any) {
+      // Re-throw with better error info
+      throw error;
+    }
   },
 
   // Register user
-  register: async (data: RegisterInput): Promise<RegisterResponse> => {
-    const response = await apiClient.post<RegisterResponse>('/auth/register', data);
-    return response.data;
+  register: async (data: Omit<RegisterInput, 'confirmPassword'>): Promise<RegisterResponse> => {
+    try {
+      const response = await apiClient.post<RegisterResponse>('/auth/register', data);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
   },
 
   // Get user profile

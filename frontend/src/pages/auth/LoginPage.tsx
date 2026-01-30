@@ -12,7 +12,7 @@ const LoginPage = () => {
   const location = useLocation();
   const { loginUser, isLoading, error, clearError } = useAuthStore();
   
-  const from = location.state?.from?.pathname || '/dashboard';
+  const from = location.state?.from?.pathname || '/';
 
   const {
     register,

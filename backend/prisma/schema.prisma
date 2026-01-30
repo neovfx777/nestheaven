@@ -1,168 +1,101 @@
+// Prisma schema for Good Home - Real Estate API
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
-}
-
-enum UserRole {
-  USER
-  SELLER
-  ADMIN
-  MANAGER_ADMIN
-  OWNER_ADMIN
-}
-
-enum ApartmentStatus {
-  ACTIVE
-  HIDDEN
-  SOLD
 }
 
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
-  password      String
-  name          String
-  role          UserRole  @default(USER)
+  passwordHash  String    @map("password_hash")
+  role          String    @default("USER")
+  firstName     String?   @map("first_name")
+  lastName      String?   @map("last_name")
   phone         String?
-  avatar        String?
-  lastLoginAt   DateTime?
-  emailVerified Boolean   @default(false)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  createdById   String?   @map("created_by_id")
 
-  // Relations
-  apartments    Apartment[]          @relation("SellerApartments")
-  favorites     UserFavorite[]
-  savedSearches SavedSearch[]
-  statusChanges ApartmentStatusLog[]
+  createdBy   User?    @relation("UserCreatedBy", fields: [createdById], references: [id])
+  createdUsers User[]  @relation("UserCreatedBy")
 
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  favorites      Favorite[]
+  savedSearches  SavedSearch[]
+  apartments     Apartment[]
 }
 
 model Complex {
-  id          String  @id @default(cuid())
-  name        String
-  image       String?
-  description String?
+  id          String   @id @default(cuid())
+  name        String   // JSON: { uz, ru, en }
+  address     String?  // JSON: { uz, ru, en }
+  city        String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  // Relations
-  apartments Apartment[]
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  apartments  Apartment[]
 }
 
 model Apartment {
-  id        String  @id @default(cuid())
-  complexId String?
+  id               String          @id @default(cuid())
+  complexId        String          @map("complex_id")
+  sellerId         String          @map("seller_id")
+  status           String          @default("active")
+  price            Float
+  area             Float
+  rooms            Int
+  floor            Int?
+  totalFloors      Int?            @map("total_floors")
+  title            String          // JSON: { uz, ru, en }
+  description      String?         // JSON: { uz, ru, en }
+  materials        String?         // JSON: { uz, ru, en }, optional
+  infrastructureNote String?       @map("infrastructure_note") // JSON, optional
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
 
-  // Status
-  status ApartmentStatus @default(ACTIVE)
-
-  // Basic info
-  title       Json // Multi-language {uz, ru, en}
-  description Json // Multi-language {uz, ru, en}
-  price       Float
-  rooms       Int
-  area        Float
-  floor       Int
-  developer   String
-
-  // Location
-  address String
-  lat     Float?
-  lng     Float?
-
-  // Materials & Infrastructure
-  materials      Json? // Multi-language or structured
-  infrastructure Json? // Structured booleans + optional notes
-
-  // Additional info
-  airQualityIndex         Float?
-  airQualitySource        String?
-  investmentGrowthPercent Float?
-  investmentGrowthNote    String?
-
-  // Contact
-  contactPhone    String
-  contactTelegram String?
-  contactWhatsapp String?
-  contactEmail    String?
-
-  // Installment options (JSON array)
-  installmentOptions Json?
-
-  // Counters
-  views          Int @default(0)
-  favoritesCount Int @default(0)
-
-  // Relations
-  complex    Complex?             @relation(fields: [complexId], references: [id], onDelete: SetNull)
-  sellerId   String
-  seller     User                 @relation("SellerApartments", fields: [sellerId], references: [id], onDelete: Cascade)
+  complex    Complex    @relation(fields: [complexId], references: [id], onDelete: Cascade)
+  seller     User       @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   images     ApartmentImage[]
-  statusLogs ApartmentStatusLog[]
-  favorites  UserFavorite[]
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  favorites  Favorite[]
 }
 
 model ApartmentImage {
   id          String    @id @default(cuid())
-  apartmentId String
-  apartment   Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  apartmentId String    @map("apartment_id")
   url         String
   order       Int       @default(0)
+  createdAt   DateTime  @default(now()) @map("created_at")
 
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  apartment Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+
+  @@map("apartment_images")
 }
 
-model ApartmentStatusLog {
-  id          String          @id @default(cuid())
-  apartmentId String
-  apartment   Apartment       @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
-  fromStatus  ApartmentStatus
-  toStatus    ApartmentStatus
-  changedById String
-  changedBy   User            @relation(fields: [changedById], references: [id], onDelete: Cascade)
-  reason      String?
+model Favorite {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  apartmentId String   @map("apartment_id")
+  createdAt   DateTime @default(now()) @map("created_at")
 
-  // Timestamps
-  createdAt DateTime @default(now())
-}
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apartment Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
 
-model UserFavorite {
-  id          String    @id @default(cuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  apartmentId String
-  apartment   Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
-
-  // Timestamps
-  createdAt DateTime @default(now())
-
-  // Composite unique constraint
   @@unique([userId, apartmentId])
+  @@map("favorites")
 }
 
 model SavedSearch {
-  id      String  @id @default(cuid())
-  userId  String
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name    String
-  filters Json // JSON object with search filters
-  notify  Boolean @default(false)
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  name        String?
+  filters     String   // JSON
+  createdAt   DateTime @default(now()) @map("created_at")
 
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("saved_searches")
 }
