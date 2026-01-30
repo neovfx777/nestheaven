@@ -2,9 +2,11 @@ const { prisma } = require('../../config/db');
 const { ROLES } = require('../../utils/roles');
 
 async function getStats(data, reqUser) {
-  if (![ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN].includes(reqUser.role)) {
-    const err = new Error('Forbidden');
-    err.statusCode = 403;
+  // Allow all authenticated users to see basic stats
+  // Only restrict sensitive admin data if needed in future
+  if (!reqUser) {
+    const err = new Error('Unauthorized');
+    err.statusCode = 401;
     throw err;
   }
 
@@ -29,6 +31,7 @@ async function getStats(data, reqUser) {
     totalComplexes,
     totalUsers,
     totalSellers,
+    totalAdmins,
   ] = await Promise.all([
     prisma.apartment.count({ where }),
     prisma.apartment.count({ where: { ...where, status: 'active' } }),
@@ -37,7 +40,23 @@ async function getStats(data, reqUser) {
     prisma.complex.count(),
     prisma.user.count({ where: { role: 'USER' } }),
     prisma.user.count({ where: { role: 'SELLER' } }),
+    prisma.user.count({ where: { role: { in: ['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'] } } }),
   ]);
+
+  // Get all users count for debugging
+  const allUsers = await prisma.user.count();
+
+  console.log('Analytics Debug:', {
+    allUsers,
+    totalUsers,
+    totalSellers,
+    totalAdmins,
+    totalApartments,
+    activeApartments,
+    soldApartments,
+    hiddenApartments,
+    totalComplexes
+  });
 
   return {
     apartments: {
@@ -48,8 +67,10 @@ async function getStats(data, reqUser) {
     },
     complexes: { total: totalComplexes },
     users: {
-      total: totalUsers,
+      total: allUsers, // Total all users
+      regularUsers: totalUsers, // Users with USER role
       sellers: totalSellers,
+      admins: totalAdmins,
     },
   };
 }

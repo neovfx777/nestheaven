@@ -26,10 +26,13 @@ function hasRoleOrAbove(roleA, roleB) {
  */
 function canCreateRole(creatorRole, targetRole) {
   if (creatorRole === ROLES.OWNER_ADMIN) {
-    return [ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN].includes(targetRole);
+    return [ROLES.USER, ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN].includes(targetRole);
   }
   if (creatorRole === ROLES.MANAGER_ADMIN) {
-    return targetRole === ROLES.ADMIN;
+    return [ROLES.USER, ROLES.SELLER, ROLES.ADMIN].includes(targetRole);
+  }
+  if (creatorRole === ROLES.ADMIN) {
+    return [ROLES.USER, ROLES.SELLER].includes(targetRole);
   }
   return false;
 }

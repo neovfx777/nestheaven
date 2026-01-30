@@ -20,8 +20,10 @@ async function updateProfile(req, res, next) {
 
 async function getFavorites(req, res, next) {
   try {
-    const result = await usersService.getFavorites(req.user.id);
-    res.json(result);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const result = await usersService.getFavorites(req.user.id, page, limit);
+    res.json({ success: true, data: result });
   } catch (err) {
     next(err);
   }
@@ -42,6 +44,16 @@ async function removeFavorite(req, res, next) {
     const apartmentId = req.params.apartmentId || req.params.id;
     await usersService.removeFavorite(req.user.id, apartmentId);
     res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function checkFavoriteStatus(req, res, next) {
+  try {
+    const apartmentId = req.params.apartmentId;
+    const result = await usersService.checkFavoriteStatus(req.user.id, apartmentId);
+    res.json({ success: true, data: result });
   } catch (err) {
     next(err);
   }
@@ -81,6 +93,7 @@ module.exports = {
   getFavorites,
   addFavorite,
   removeFavorite,
+  checkFavoriteStatus,
   getSavedSearches,
   createSavedSearch,
   deleteSavedSearch,

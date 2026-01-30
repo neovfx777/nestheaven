@@ -19,4 +19,40 @@ async function listUsers(req, res, next) {
   }
 }
 
-module.exports = { createUser, listUsers };
+async function getUserById(req, res, next) {
+  try {
+    const { id } = req.validated.params;
+    const result = await adminService.getUserById(id, req.user);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updateUser(req, res, next) {
+  try {
+    const { id } = req.validated.params;
+    const result = await adminService.updateUser(id, req.validated, req.user);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function deleteUser(req, res, next) {
+  try {
+    const { id } = req.validated.params;
+    await adminService.deleteUser(id, req.user);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { 
+  createUser, 
+  listUsers, 
+  getUserById, 
+  updateUser, 
+  deleteUser 
+};

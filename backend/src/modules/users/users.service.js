@@ -50,22 +50,39 @@ async function updateProfile(userId, data) {
   });
 }
 
-async function getFavorites(userId) {
-  const favorites = await prisma.favorite.findMany({
-    where: { userId },
-    include: {
-      apartment: {
-        include: {
-          complex: { select: { id: true, name: true, city: true } },
-          images: { orderBy: { order: 'asc' }, take: 1 },
+async function getFavorites(userId, page = 1, limit = 20) {
+  const skip = (page - 1) * limit;
+  
+  const [favorites, total] = await Promise.all([
+    prisma.favorite.findMany({
+      where: { userId },
+      include: {
+        apartment: {
+          include: {
+            complex: { select: { id: true, name: true, city: true } },
+            images: { orderBy: { order: 'asc' }, take: 1 },
+          },
         },
       },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.favorite.count({ where: { userId } })
+  ]);
 
   const visibleStatuses = getVisibleStatusesForRole('USER');
-  return favorites.filter((f) => visibleStatuses.includes(f.apartment.status));
+  const filteredFavorites = favorites.filter((f) => visibleStatuses.includes(f.apartment.status));
+
+  return {
+    apartments: filteredFavorites.map(f => f.apartment),
+    pagination: {
+      page,
+      limit,
+      total: filteredFavorites.length,
+      totalPages: Math.ceil(filteredFavorites.length / limit)
+    }
+  };
 }
 
 async function addFavorite(userId, apartmentId) {
@@ -108,6 +125,15 @@ async function removeFavorite(userId, apartmentId) {
   return { success: true };
 }
 
+async function checkFavoriteStatus(userId, apartmentId) {
+  const favorite = await prisma.favorite.findUnique({
+    where: {
+      userId_apartmentId: { userId, apartmentId },
+    },
+  });
+  return { isFavorite: !!favorite };
+}
+
 async function getSavedSearches(userId) {
   return prisma.savedSearch.findMany({
     where: { userId },
@@ -144,6 +170,7 @@ module.exports = {
   getFavorites,
   addFavorite,
   removeFavorite,
+  checkFavoriteStatus,
   getSavedSearches,
   createSavedSearch,
   deleteSavedSearch,
