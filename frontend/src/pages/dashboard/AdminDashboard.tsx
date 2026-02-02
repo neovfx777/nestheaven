@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { EyeOff, CheckCircle, XCircle, AlertTriangle, Filter, Eye, Users, Shield } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { AdminApartments } from './admin/AdminApartments';
+import { UserManagement } from './admin/UserManagement';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useQuery } from '@tanstack/react-query';
@@ -48,6 +49,9 @@ const AdminDashboard = () => {
     soldListings: 0,
     totalListings: 0,
   };
+
+  // Check if user can access user management
+  const canAccessUserManagement = user?.role === 'OWNER_ADMIN' || user?.role === 'MANAGER_ADMIN';
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -137,24 +141,31 @@ const AdminDashboard = () => {
       <Card className="mb-8">
         <div className="border-b border-gray-200">
           <nav className="flex">
-            {['apartments', 'flagged', 'users', 'reports'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
+            {['apartments', 'users', 'flagged', 'reports'].map((tab) => {
+              // Hide users tab if user doesn't have permission
+              if (tab === 'users' && !canAccessUserManagement) return null;
+              
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === tab
+                      ? 'border-primary-500 text-primary-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              );
+            })}
           </nav>
         </div>
 
         <div className="p-6">
           {activeTab === 'apartments' && <AdminApartments />}
+          
+          {activeTab === 'users' && canAccessUserManagement && <UserManagement />}
           
           {activeTab === 'flagged' && (
             <div className="text-center py-12">
@@ -169,19 +180,6 @@ const AdminDashboard = () => {
               >
                 Go to Apartment Moderation
               </Button>
-            </div>
-          )}
-
-          {activeTab === 'users' && (
-            <div className="text-center py-12">
-              <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">User Management</p>
-              <p className="text-sm text-gray-400 mt-2">
-                User management tools will be available soon for MANAGER_ADMIN and OWNER_ADMIN roles.
-              </p>
-              {user?.role === 'OWNER_ADMIN' && (
-                <Button className="mt-4">Access User Management</Button>
-              )}
             </div>
           )}
 
@@ -256,20 +254,20 @@ const AdminDashboard = () => {
               </div>
             </button>
 
-            <button
-              onClick={() => {
-                // Open bulk operations modal
-              }}
-              className="p-4 bg-white border border-blue-100 rounded-lg text-left hover:border-blue-300 hover:bg-blue-50 transition-colors"
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <Filter className="h-5 w-5 text-purple-600" />
-                <div className="font-medium text-blue-800">Bulk Operations</div>
-              </div>
-              <div className="text-sm text-blue-700">
-                Perform bulk hide/unhide operations
-              </div>
-            </button>
+            {canAccessUserManagement && (
+              <button
+                onClick={() => setActiveTab('users')}
+                className="p-4 bg-white border border-blue-100 rounded-lg text-left hover:border-blue-300 hover:bg-blue-50 transition-colors"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <Users className="h-5 w-5 text-purple-600" />
+                  <div className="font-medium text-blue-800">Manage Users</div>
+                </div>
+                <div className="text-sm text-blue-700">
+                  Manage user accounts and permissions
+                </div>
+              </button>
+            )}
 
             <button
               onClick={() => setActiveTab('reports')}

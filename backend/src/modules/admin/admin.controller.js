@@ -12,8 +12,23 @@ async function createUser(req, res, next) {
 async function listUsers(req, res, next) {
   try {
     const roleFilter = req.query.role || null;
-    const result = await adminService.listUsers(roleFilter, req.user);
-    res.json(result);
+    const searchTerm = req.query.searchTerm || null;
+    const searchBy = req.query.searchBy || 'all'; // Default to searching all fields
+    
+    const result = await adminService.listUsers({
+      roleFilter,
+      searchTerm,
+      searchBy
+    }, req.user);
+    
+    res.json({
+      ...result,
+      search: {
+        term: searchTerm,
+        by: searchBy,
+        performed: !!searchTerm
+      }
+    });
   } catch (err) {
     next(err);
   }
