@@ -1,4 +1,4 @@
-                                                                                        import apiClient from './client';
+import apiClient from './client';
 
 export interface UserFavorite {
   id: string;
@@ -27,6 +27,47 @@ export interface FavoritesResponse {
     total: number;
     totalPages: number;
   };
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  role: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  createdAt: string;
+}
+
+export interface AdminUsersResponse {
+  users: AdminUser[];
+  total: number;
+  filters: {
+    role: string | null;
+    searchTerm: string | null;
+    searchBy: string;
+  };
+  search: {
+    term: string | null;
+    by: string;
+    performed: boolean;
+  };
+}
+
+export interface CreateUserData {
+  email: string;
+  password: string;
+  role: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+}
+
+export interface UpdateUserData {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  role?: string;
 }
 
 export const usersApi = {
@@ -106,5 +147,43 @@ export const usersApi = {
       `/users/saved-searches/${id}/last-used`
     );
     return response.data;
+  },
+
+  // ADMIN FUNCTIONS - User Management
+  
+  // Get all users (admin only)
+  getAdminUsers: async (params?: {
+    role?: string;
+    searchTerm?: string;
+    searchBy?: string;
+  }): Promise<AdminUsersResponse> => {
+    const response = await apiClient.get<{ success: boolean; data: AdminUsersResponse }>('/admin/users', {
+      params,
+    });
+    return response.data.data;
+  },
+
+  // Create user (admin only)
+  createAdminUser: async (userData: CreateUserData) => {
+    const response = await apiClient.post<{ success: boolean; data: AdminUser }>('/admin/users', userData);
+    return response.data;
+  },
+
+  // Get user by ID (admin only)
+  getAdminUserById: async (id: string): Promise<AdminUser> => {
+    const response = await apiClient.get<{ success: boolean; data: AdminUser }>(`/admin/users/${id}`);
+    return response.data.data;
+  },
+
+  // Update user (admin only)
+  updateAdminUser: async (id: string, userData: UpdateUserData): Promise<AdminUser> => {
+    const response = await apiClient.patch<{ success: boolean; data: AdminUser }>(`/admin/users/${id}`, userData);
+    return response.data.data;
+  },
+
+  // Delete user (admin only)
+  deleteAdminUser: async (id: string): Promise<{ success: boolean }> => {
+    const response = await apiClient.delete<{ success: boolean; data: { success: boolean } }>(`/admin/users/${id}`);
+    return response.data.data;
   },
 };

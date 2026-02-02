@@ -36,6 +36,15 @@ const deleteUserSchema = z.object({
   }),
 });
 
+// Add search query validation schema
+const listUsersQuerySchema = z.object({
+  query: z.object({
+    role: z.enum([ROLES.USER, ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN]).optional(),
+    searchTerm: z.string().min(1).max(100).optional(),
+    searchBy: z.enum(['name', 'email', 'phone', 'all']).default('all').optional(),
+  }),
+});
+
 function validateCreateUser(req, res, next) {
   const result = createUserSchema.safeParse({ body: req.body });
   if (!result.success) {
@@ -72,9 +81,21 @@ function validateDeleteUser(req, res, next) {
   next();
 }
 
+// Add this validation function
+function validateListUsersQuery(req, res, next) {
+  const result = listUsersQuerySchema.safeParse({ query: req.query });
+  if (!result.success) {
+    return res.status(400).json({ error: 'Validation failed', details: result.error.errors });
+  }
+  // Merge validated query params
+  req.query = { ...req.query, ...result.data.query };
+  next();
+}
+
 module.exports = { 
   validateCreateUser, 
   validateUpdateUser, 
   validateGetUserById, 
-  validateDeleteUser 
+  validateDeleteUser,
+  validateListUsersQuery
 };

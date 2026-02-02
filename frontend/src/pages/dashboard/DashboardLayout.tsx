@@ -122,13 +122,7 @@ const DashboardLayout = () => {
       roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'],
     },
 
-    // OWNER_ADMIN
-    {
-      name: 'User Management',
-      href: '/dashboard/owner/users',
-      icon: Users,
-      roles: ['OWNER_ADMIN'],
-    },
+    // OWNER_ADMIN - REMOVED DUPLICATE "User Management"
     {
       name: 'System Settings',
       href: '/dashboard/owner/settings',
@@ -207,7 +201,7 @@ const DashboardLayout = () => {
           <nav className="p-4 space-y-1">
             {filteredNavigation.map(item => (
               <Link
-                key={item.name}
+                key={`${item.name}-${item.href}`} // FIX: Added href to make unique
                 to={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={`
