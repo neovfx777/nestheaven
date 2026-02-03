@@ -27,7 +27,9 @@ import { ComplexForm } from './pages/dashboard/admin/ComplexForm';
 import { AnalyticsDashboard } from './pages/dashboard/admin/AnalyticsDashboard';
 import { UserManagement } from './pages/dashboard/admin/UserManagement';
 
-// vimda kod yozdim
+// Seller dashboard pages - ADDED IMPORTS
+import { SellerApartmentList } from './pages/dashboard/seller/ApartmentList';
+import { ApartmentForm } from './pages/dashboard/seller/ApartmentForm';
 
 // Misc
 import NotFoundPage from './pages/NotFoundPage';
@@ -70,8 +72,34 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Overview />} />
+          <Route index element={<DashboardPage />} />
           <Route path="favorites" element={<FavoritesPage />} />
+          
+          {/* Seller routes - ADDED THESE */}
+          <Route
+            path="seller/listings"
+            element={
+              <ProtectedRoute requireRole={['SELLER']}>
+                <SellerApartmentList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="seller/apartments/new"
+            element={
+              <ProtectedRoute requireRole={['SELLER']}>
+                <ApartmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="seller/apartments/:id/edit"
+            element={
+              <ProtectedRoute requireRole={['SELLER']}>
+                <ApartmentForm />
+              </ProtectedRoute>
+            }
+          />
           
           {/* Admin routes */}
           <Route

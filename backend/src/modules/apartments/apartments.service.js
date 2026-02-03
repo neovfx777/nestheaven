@@ -56,6 +56,52 @@ async function list(data, reqUser) {
   };
 }
 
+// Seller o'z listlarini olish
+async function getMyListings(options) {
+  const {
+    sellerId,
+    page = 1,
+    limit = 10,
+    status,
+    sortBy = 'createdAt',
+    sortOrder = 'desc'
+  } = options;
+
+  const skip = (page - 1) * limit;
+
+  const where = {
+    sellerId: sellerId
+  };
+
+  if (status) {
+    where.status = status;
+  }
+
+  const [items, total] = await Promise.all([
+    prisma.apartment.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { [sortBy]: sortOrder },
+      include: {
+        complex: { select: { id: true, name: true, city: true, address: true } },
+        images: { orderBy: { order: 'asc' }, take: 1 },
+      },
+    }),
+    prisma.apartment.count({ where }),
+  ]);
+
+  return {
+    apartments: items,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    }
+  };
+}
+
 async function getById(id, reqUser) {
   const apartment = await prisma.apartment.findUnique({
     where: { id },
@@ -262,6 +308,7 @@ async function addImages(apartmentId, urls, reqUser) {
 
 module.exports = {
   list,
+  getMyListings,
   getById,
   create,
   update,

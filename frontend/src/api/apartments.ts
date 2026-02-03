@@ -9,7 +9,7 @@ export interface Apartment {
   area: number;
   floor: number;
   totalFloors?: number;
-  status: 'active' | 'hidden' | 'sold';
+  status: 'ACTIVE' | 'HIDDEN' | 'SOLD' | 'active' | 'hidden' | 'sold'; // Ikkala formatni qo'shdim
   complexId: string;
   sellerId: string;
   complex?: {
@@ -215,6 +215,20 @@ export interface AdminStats {
   flaggedContent: number;
 }
 
+// Seller listings response interface
+export interface SellerListingsResponse {
+  success: boolean;
+  data: {
+    apartments: Apartment[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  };
+}
+
 export const apartmentsApi = {
   // Get apartments with filtering
   getApartments: async (params: FilterParams = {}): Promise<PaginatedResponse<Apartment>> => {
@@ -298,10 +312,25 @@ export const apartmentsApi = {
     return response.data;
   },
 
-  // Get seller's apartments
+  // Get seller's apartments - MUHIM O'ZGARTIRISH
   getMyListings: async (): Promise<Apartment[]> => {
-    const response = await apiClient.get<{ success: boolean; data: Apartment[] }>('/apartments/seller/my');
-    return response.data.data;
+    try {
+      const response = await apiClient.get<SellerListingsResponse>('/apartments/seller/my');
+      
+      // Backend response formatini tekshiramiz
+      if (response.data.success && response.data.data) {
+        // Backend { success: true, data: { apartments: [], pagination: {} } } formatida qaytaradi
+        return response.data.data.apartments || [];
+      } else if (response.data.success && Array.isArray(response.data.data)) {
+        // Agar to'g'ridan-to'g'ri array qaytarsa
+        return response.data.data;
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Failed to fetch seller listings:', error);
+      return [];
+    }
   },
 
   // Upload images for apartment

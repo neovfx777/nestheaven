@@ -16,7 +16,9 @@ import {
   Filter,
   AlertTriangle,
   CheckCircle,
-  Heart
+  Heart,
+  List,
+  PlusCircle
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -94,6 +96,14 @@ const DashboardLayout = () => {
       roles: ['USER'],
     },
 
+    // SELLER - Added Manage Listings
+    {
+      name: 'Manage Listings',
+      href: '/dashboard/seller',
+      icon: List,
+      roles: ['SELLER'],
+    },
+
     // ADMIN
     {
       name: 'User Management',
@@ -122,7 +132,7 @@ const DashboardLayout = () => {
       roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'],
     },
 
-    // OWNER_ADMIN - REMOVED DUPLICATE "User Management"
+    // OWNER_ADMIN
     {
       name: 'System Settings',
       href: '/dashboard/owner/settings',
@@ -218,6 +228,20 @@ const DashboardLayout = () => {
               </Link>
             ))}
           </nav>
+
+          {/* Quick Create Button for Sellers */}
+          {user?.role === 'SELLER' && (
+            <div className="px-4 py-3">
+              <Link
+                to="/dashboard/seller/apartments/new"
+                onClick={() => setSidebarOpen(false)}
+                className="flex items-center justify-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+              >
+                <PlusCircle className="h-5 w-5 mr-2" />
+                Create New Listing
+              </Link>
+            </div>
+          )}
 
           {/* Logout */}
           <div className="absolute bottom-0 w-full p-4 border-t">

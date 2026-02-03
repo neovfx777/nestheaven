@@ -1,23 +1,56 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { apartmentApi } from '../../../api/apartments';
+import { apartmentsApi } from '../../../api/apartments'; // FIXED: apartmentsApi
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
 import { Badge } from '../../../components/ui/Badge';
+import { Input } from '../../../components/ui/Input';
+import { Select } from '../../../components/ui/Select';
 import { toast } from 'react-hot-toast';
+import { 
+  Eye, 
+  Edit3, 
+  Trash2, 
+  Building2, 
+  Filter,
+  Search,
+  RefreshCw,
+  PlusCircle
+} from 'lucide-react';
+
+interface Apartment {
+  id: string;
+  title?: {
+    uz?: string;
+    ru?: string;
+    en?: string;
+  };
+  price: number;
+  rooms: number;
+  area: number;
+  status: string;
+  images?: Array<{ url: string }>;
+  complex?: {
+    id: string;
+    name: string;
+  };
+  createdAt: string;
+}
 
 export const SellerApartmentList: React.FC = () => {
   const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { data: apartments, isLoading } = useQuery({
+  const { data: apartments, isLoading, refetch } = useQuery({
     queryKey: ['seller-apartments'],
-    queryFn: () => apartmentApi.getMyListings()
+    queryFn: () => apartmentsApi.getMyListings?.() || [] // FIXED: apartmentsApi
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => apartmentApi.deleteListing(id),
+    mutationFn: (id: string) => apartmentsApi.deleteListing?.(id) || Promise.reject('Delete not implemented'), // FIXED: apartmentsApi
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['seller-apartments'] });
       toast.success('Apartment deleted successfully');
@@ -30,77 +63,218 @@ export const SellerApartmentList: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this apartment?')) {
       setDeletingId(id);
-      await deleteMutation.mutateAsync(id);
-      setDeletingId(null);
+      try {
+        await deleteMutation.mutateAsync(id);
+      } catch (error) {
+        // Error handled by mutation
+      } finally {
+        setDeletingId(null);
+      }
     }
   };
 
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, 'success' | 'destructive' | 'secondary' | 'default'> = {
+      'ACTIVE': 'success',
+      'active': 'success',
+      'SOLD': 'destructive',
+      'sold': 'destructive',
+      'HIDDEN': 'secondary',
+      'hidden': 'secondary'
+    };
+    
+    return (
+      <Badge variant={variants[status] || 'default'}>
+        {status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()}
+      </Badge>
+    );
+  };
+
+  const getTitle = (apartment: Apartment) => {
+    return apartment.title?.en || apartment.title?.uz || apartment.title?.ru || 'Untitled';
+  };
+
+  const filteredApartments = apartments?.filter((apt: Apartment) => {
+    const matchesSearch = searchTerm === '' || 
+      getTitle(apt).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      apt.complex?.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || apt.status.toLowerCase() === statusFilter.toLowerCase();
+    
+    return matchesSearch && matchesStatus;
+  }) || [];
+
   if (isLoading) {
-    return <div className="flex justify-center py-8">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">My Apartments</h2>
-        <Link to="/dashboard/seller/apartments/new">
-          <Button>Add New Apartment</Button>
-        </Link>
+    <div className="space-y-6">
+      {/* Header with Actions */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Manage Listings</h1>
+          <p className="text-gray-600">View and manage all your apartment listings</p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => refetch()} variant="outline" className="flex items-center gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+          <Link to="/dashboard/seller/apartments/new">
+            <Button className="flex items-center gap-2">
+              <PlusCircle className="h-4 w-4" />
+              Create New
+            </Button>
+          </Link>
+        </div>
       </div>
 
-      {apartments?.length === 0 ? (
-        <Card className="p-8 text-center">
-          <p className="text-gray-500 mb-4">You haven't listed any apartments yet.</p>
+      {/* Filters */}
+      <Card className="p-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search by title or complex..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-40"
+            >
+              <option value="all">All Status</option>
+              <option value="ACTIVE">Active</option>
+              <option value="SOLD">Sold</option>
+              <option value="HIDDEN">Hidden</option>
+            </Select>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              More Filters
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Results Summary */}
+      <div className="flex items-center justify-between text-sm text-gray-600">
+        <span>Showing {filteredApartments.length} of {apartments?.length || 0} listings</span>
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+            Active: {apartments?.filter((a: Apartment) => a.status === 'ACTIVE').length || 0}
+          </span>
+          <span className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+            Sold: {apartments?.filter((a: Apartment) => a.status === 'SOLD').length || 0}
+          </span>
+        </div>
+      </div>
+
+      {/* Apartments Grid */}
+      {filteredApartments.length === 0 ? (
+        <Card className="p-12 text-center">
+          <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No listings found</h3>
+          <p className="text-gray-500 mb-6">
+            {searchTerm || statusFilter !== 'all' 
+              ? 'Try adjusting your search filters' 
+              : 'Start by creating your first apartment listing'}
+          </p>
           <Link to="/dashboard/seller/apartments/new">
             <Button>Create Your First Listing</Button>
           </Link>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {apartments?.map((apt) => (
-            <Card key={apt.id} className="overflow-hidden">
+          {filteredApartments.map((apt: Apartment) => (
+            <Card key={apt.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              {/* Image Section */}
               <div className="relative h-48 bg-gray-200">
                 {apt.images && apt.images.length > 0 ? (
                   <img
                     src={apt.images[0].url}
-                    alt={apt.title?.uz || 'Apartment'}
+                    alt={getTitle(apt)}
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    No Image
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                    <Building2 className="h-12 w-12 mb-2" />
+                    <span>No Image</span>
                   </div>
                 )}
-                <Badge className="absolute top-2 right-2">
-                  {apt.status}
-                </Badge>
+                <div className="absolute top-2 right-2">
+                  {getStatusBadge(apt.status)}
+                </div>
+                {apt.complex && (
+                  <div className="absolute bottom-2 left-2">
+                    <Badge variant="outline" className="bg-white/90">
+                      {apt.complex.name}
+                    </Badge>
+                  </div>
+                )}
               </div>
               
+              {/* Content Section */}
               <div className="p-4">
-                <h3 className="font-semibold text-lg mb-2">
-                  {apt.title?.uz || 'No Title'}
+                <h3 className="font-semibold text-lg mb-2 truncate">
+                  {getTitle(apt)}
                 </h3>
                 
-                <div className="space-y-1 text-sm text-gray-600">
-                  <p>Price: ${apt.price?.toLocaleString()}</p>
-                  <p>Rooms: {apt.rooms}</p>
-                  <p>Area: {apt.area} m²</p>
-                  <p>Complex: {apt.complex?.name || 'None'}</p>
+                <div className="space-y-2 text-sm text-gray-600 mb-4">
+                  <div className="flex justify-between">
+                    <span>Price:</span>
+                    <span className="font-semibold text-gray-900">${apt.price?.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Rooms:</span>
+                    <span>{apt.rooms}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Area:</span>
+                    <span>{apt.area} m²</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Listed:</span>
+                    <span>{new Date(apt.createdAt).toLocaleDateString()}</span>
+                  </div>
                 </div>
 
-                <div className="flex justify-between mt-4">
-                  <Link to={`/dashboard/seller/apartments/${apt.id}`}>
-                    <Button variant="outline" size="sm">Edit</Button>
-                  </Link>
-                  <Link to={`/apartments/${apt.id}`}>
-                    <Button variant="ghost" size="sm">View</Button>
-                  </Link>
+                {/* Action Buttons */}
+                <div className="flex justify-between border-t pt-4">
+                  <div className="flex gap-2">
+                    <Link to={`/apartments/${apt.id}`}>
+                      <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                        <Eye className="h-4 w-4" />
+                        View
+                      </Button>
+                    </Link>
+                    <Link to={`/dashboard/seller/apartments/${apt.id}/edit`}>
+                      <Button variant="outline" size="sm" className="flex items-center gap-1">
+                        <Edit3 className="h-4 w-4" />
+                        Edit
+                      </Button>
+                    </Link>
+                  </div>
                   <Button
                     variant="destructive"
                     size="sm"
                     onClick={() => handleDelete(apt.id)}
                     disabled={deletingId === apt.id}
+                    className="flex items-center gap-1"
                   >
+                    <Trash2 className="h-4 w-4" />
                     {deletingId === apt.id ? 'Deleting...' : 'Delete'}
                   </Button>
                 </div>

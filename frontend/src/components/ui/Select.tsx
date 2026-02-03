@@ -7,7 +7,7 @@ interface SelectOption {
 }
 
 interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'onChange'> {
-  options: SelectOption[];
+  options?: SelectOption[];
   value: string;
   onChange: (value: string) => void;
   error?: string;
@@ -21,8 +21,27 @@ export const Select: React.FC<SelectProps> = ({
   error,
   label,
   className,
+  children,
   ...props
 }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onChange(e.target.value);
+  };
+
+  const renderOptions = () => {
+    // Agar options prop berilgan bo'lsa, ulardan foydalanamiz
+    if (options && options.length > 0) {
+      return options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ));
+    }
+    
+    // Aks holda children ni qaytaramiz
+    return children;
+  };
+
   return (
     <div className="w-full">
       {label && (
@@ -32,7 +51,7 @@ export const Select: React.FC<SelectProps> = ({
       )}
       <select
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={handleChange}
         className={cn(
           'w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
           error ? 'border-red-300' : 'border-gray-300',
@@ -40,11 +59,7 @@ export const Select: React.FC<SelectProps> = ({
         )}
         {...props}
       >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
+        {renderOptions()}
       </select>
       {error && (
         <p className="mt-1 text-sm text-red-600">{error}</p>

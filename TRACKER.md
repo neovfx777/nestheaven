@@ -11,7 +11,7 @@
 
 ## IN PROGRESS
 
-
+check seller dashboard and add functionalties
 
 --------
 
@@ -20,15 +20,16 @@
 
 ### Web MVP
 
-Verify all analytics module files exist
+create the listing creation page and tune the functions
 
-Run database migrations and seeding
+test if the listings are appearing in the home page correctly
 
-Test API endpoints with Postman/curl
+test if the listinngs are showing up inside the complex 
 
-Start frontend development server
+create and test the search function of  listings ,   (for all users or admins )
 
-Test complete user flows (registration → browsing → favorites → dashboard)
+
+
 
 
 
