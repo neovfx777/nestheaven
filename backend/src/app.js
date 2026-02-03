@@ -5,6 +5,9 @@ const env = require('./config/env');
 const { errorHandler } = require('./middleware/errorHandler');
 const routes = require('./routes');
 
+// YANGI: Status routes import qilamiz
+const statusRoutes = require('./modules/apartments/status.routes');
+
 const app = express();
 
 const corsOptions = {
@@ -19,6 +22,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(process.cwd(), env.UPLOAD_DIR)));
 
 app.use('/api', routes);
+
+// YANGI: Status routes ni qo'shamiz
+app.use('/api/apartment-status', statusRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

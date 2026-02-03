@@ -19,6 +19,37 @@ async function getById(req, res, next) {
   }
 }
 
+// Seller o'z listlarini olish
+async function getMyListings(req, res, next) {
+  try {
+    const sellerId = req.user.id;
+    const { 
+      page = 1, 
+      limit = 10, 
+      status,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = req.query;
+
+    const result = await apartmentsService.getMyListings({
+      sellerId,
+      page: Number(page),
+      limit: Number(limit),
+      status,
+      sortBy,
+      sortOrder
+    });
+    
+    // Frontend array kutayotganligi uchun to'g'ri formatda qaytaramiz
+    res.json({ 
+      success: true, 
+      data: result 
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function create(req, res, next) {
   try {
     const result = await apartmentsService.create(req.validated, req.user);
@@ -86,6 +117,7 @@ async function uploadImages(req, res, next) {
 module.exports = {
   list,
   getById,
+  getMyListings,
   create,
   update,
   remove,
