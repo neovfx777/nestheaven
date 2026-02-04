@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { EyeOff, CheckCircle, XCircle, AlertTriangle, Filter, Eye, Users, Shield } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { AdminApartments } from './admin/AdminApartments';
+import { ComplexList } from './admin/ComplexList';
+import { AnalyticsDashboard } from './admin/AnalyticsDashboard';
 import { UserManagement } from './admin/UserManagement';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -14,32 +16,57 @@ const AdminDashboard = () => {
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('apartments');
 
-  // Fetch real statistics
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  // Fetch real statistics - YANGI VA XAVFSIZ VERSIYA
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      // Get all apartments for statistics
-      const apartments = await apartmentsApi.getApartments({ limit: 1000 });
-      
-      // Calculate statistics
-      const allApartments = apartments.apartments;
-      const activeCount = allApartments.filter(a => a.status === 'ACTIVE').length;
-      const hiddenCount = allApartments.filter(a => a.status === 'HIDDEN').length;
-      const soldCount = allApartments.filter(a => a.status === 'SOLD').length;
-      
-      // For pending reviews, we need to implement this in backend
-      const pendingReviews = allApartments.filter(a => 
-        a.status === 'ACTIVE' && !a.images?.[0] // Example: apartments without images
-      ).length;
+      try {
+        // O'zaro chaqiruvlardan qochish uchun oddiyroq yondashuv
+        const apartmentsResponse = await apartmentsApi.getAllApartments({ 
+          limit: 500 // 500 ta bilan cheklaymiz, server yukini kamaytiramiz
+        });
+        
+        const allApartments = apartmentsResponse.apartments || [];
+        
+        // Statuslarni birlashtiramiz (backend katta/kichik harflar bilan qaytarishi mumkin)
+        const activeCount = allApartments.filter(a => 
+          a.status?.toUpperCase() === 'ACTIVE' || a.status === 'active'
+        ).length;
+        
+        const hiddenCount = allApartments.filter(a => 
+          a.status?.toUpperCase() === 'HIDDEN' || a.status === 'hidden'
+        ).length;
+        
+        const soldCount = allApartments.filter(a => 
+          a.status?.toUpperCase() === 'SOLD' || a.status === 'sold'
+        ).length;
+        
+        // Pending reviews uchun oddiyroq hisob
+        const pendingReviews = allApartments.filter(a => 
+          (a.status?.toUpperCase() === 'ACTIVE' || a.status === 'active') && 
+          (!a.images || a.images.length === 0)
+        ).length;
 
-      return {
-        pendingReviews,
-        activeListings: activeCount,
-        hiddenListings: hiddenCount,
-        soldListings: soldCount,
-        totalListings: allApartments.length,
-      };
+        return {
+          pendingReviews,
+          activeListings: activeCount,
+          hiddenListings: hiddenCount,
+          soldListings: soldCount,
+          totalListings: allApartments.length,
+        };
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+        return {
+          pendingReviews: 0,
+          activeListings: 0,
+          hiddenListings: 0,
+          soldListings: 0,
+          totalListings: 0,
+        };
+      }
     },
+    retry: 1, // 1 marta qayta urinish
+    staleTime: 5 * 60 * 1000, // 5 daqiqa
   });
 
   const statsData = stats || {
@@ -52,6 +79,10 @@ const AdminDashboard = () => {
 
   // Check if user can access user management
   const canAccessUserManagement = user?.role === 'OWNER_ADMIN' || user?.role === 'MANAGER_ADMIN';
+
+  // Admin uchun komplekslar va analytics access
+  const canAccessComplexes = user?.role === 'ADMIN' || user?.role === 'MANAGER_ADMIN' || user?.role === 'OWNER_ADMIN';
+  const canAccessAnalytics = user?.role === 'ADMIN' || user?.role === 'MANAGER_ADMIN' || user?.role === 'OWNER_ADMIN';
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -140,22 +171,28 @@ const AdminDashboard = () => {
       {/* Main Content with Tabs */}
       <Card className="mb-8">
         <div className="border-b border-gray-200">
-          <nav className="flex">
-            {['apartments', 'users', 'flagged', 'reports'].map((tab) => {
-              // Hide users tab if user doesn't have permission
-              if (tab === 'users' && !canAccessUserManagement) return null;
+          <nav className="flex flex-wrap">
+            {[
+              { id: 'apartments', label: 'Apartments', visible: true },
+              { id: 'complexes', label: 'Complexes', visible: canAccessComplexes },
+              { id: 'analytics', label: 'Analytics', visible: canAccessAnalytics },
+              { id: 'users', label: 'Users', visible: canAccessUserManagement },
+              { id: 'flagged', label: 'Flagged', visible: true },
+              { id: 'reports', label: 'Reports', visible: true },
+            ].map((tab) => {
+              if (!tab.visible) return null;
               
               return (
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === tab
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                    activeTab === tab.id
                       ? 'border-primary-500 text-primary-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  {tab.label}
                 </button>
               );
             })}
@@ -164,6 +201,10 @@ const AdminDashboard = () => {
 
         <div className="p-6">
           {activeTab === 'apartments' && <AdminApartments />}
+          
+          {activeTab === 'complexes' && canAccessComplexes && <ComplexList />}
+          
+          {activeTab === 'analytics' && canAccessAnalytics && <AnalyticsDashboard />}
           
           {activeTab === 'users' && canAccessUserManagement && <UserManagement />}
           
@@ -254,17 +295,17 @@ const AdminDashboard = () => {
               </div>
             </button>
 
-            {canAccessUserManagement && (
+            {canAccessComplexes && (
               <button
-                onClick={() => setActiveTab('users')}
+                onClick={() => setActiveTab('complexes')}
                 className="p-4 bg-white border border-blue-100 rounded-lg text-left hover:border-blue-300 hover:bg-blue-50 transition-colors"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <Users className="h-5 w-5 text-purple-600" />
-                  <div className="font-medium text-blue-800">Manage Users</div>
+                  <Shield className="h-5 w-5 text-purple-600" />
+                  <div className="font-medium text-blue-800">Manage Complexes</div>
                 </div>
                 <div className="text-sm text-blue-700">
-                  Manage user accounts and permissions
+                  Manage housing complexes and developers
                 </div>
               </button>
             )}

@@ -2,14 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apartmentsApi } from '../../../api/apartments'; // FIXED: apartmentsApi (with 's')
+import { apartmentsApi } from '../../../api/apartments';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
 import { Input } from '../../../components/ui/Input';
 import { Textarea } from '../../../components/ui/Textarea';
 import { Select } from '../../../components/ui/Select';
 import { ImageUpload } from '../../../components/ui/ImageUpload';
+import { MultiLanguageInput } from '../../../components/ui/MultiLanguageInput';
 import { toast } from 'react-hot-toast';
+import { 
+  Globe, 
+  DollarSign, 
+  Home, 
+  Layers, 
+  Ruler, 
+  Building2, 
+  Hash,
+  MapPin,
+  Phone,
+  Send,
+  Mail,
+  ChevronRight,
+  CheckCircle,
+  AlertCircle
+} from 'lucide-react';
 
 interface ApartmentFormData {
   title: { uz: string; ru: string; en: string };
@@ -18,6 +35,7 @@ interface ApartmentFormData {
   rooms: number;
   area: number;
   floor: number;
+  totalFloors: number;
   complexId: string;
   address: string;
   developer: string;
@@ -62,6 +80,14 @@ const validateApartment = (data: ApartmentFormData) => {
     errors.floor = 'Floor must be greater than 0';
   }
   
+  if (!data.totalFloors || data.totalFloors <= 0) {
+    errors.totalFloors = 'Total floors must be greater than 0';
+  }
+  
+  if (data.floor > data.totalFloors) {
+    errors.floor = 'Floor cannot be greater than total floors';
+  }
+  
   if (!data.address?.trim()) {
     errors.address = 'Address is required';
   }
@@ -83,6 +109,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
   const queryClient = useQueryClient();
   const [newImages, setNewImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<ImageType[]>([]);
+  const [activeSection, setActiveSection] = useState<'basic' | 'details' | 'media' | 'contact'>('basic');
   
   const { data: complexes = [] } = useQuery<Complex[]>({
     queryKey: ['complexes'],
@@ -100,7 +127,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
 
   const { data: apartment, isLoading } = useQuery({
     queryKey: ['apartment', id],
-    queryFn: () => apartmentsApi.getById(id!), // FIXED: apartmentsApi
+    queryFn: () => apartmentsApi.getById(id!),
     enabled: mode === 'edit' && !!id
   });
 
@@ -112,6 +139,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
       rooms: 1,
       area: 0,
       floor: 1,
+      totalFloors: 1,
       complexId: '',
       address: '',
       developer: '',
@@ -131,6 +159,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
         rooms: apartment.rooms || 1,
         area: apartment.area || 0,
         floor: apartment.floor || 1,
+        totalFloors: apartment.totalFloors || 1,
         complexId: apartment.complexId || '',
         address: apartment.address || '',
         developer: apartment.developer || '',
@@ -153,7 +182,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
   }, [apartment, form, mode]);
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => apartmentsApi.create(data), // FIXED: apartmentsApi
+    mutationFn: (data: any) => apartmentsApi.create(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['seller-apartments'] });
       
@@ -172,7 +201,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => 
-      apartmentsApi.update(id, data), // FIXED: apartmentsApi
+      apartmentsApi.update(id, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['apartment', id] });
       queryClient.invalidateQueries({ queryKey: ['seller-apartments'] });
@@ -247,239 +276,491 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
     );
   }
 
+  const sections = [
+    { id: 'basic', label: 'Basic Information', icon: <Home className="h-5 w-5" /> },
+    { id: 'details', label: 'Technical Details', icon: <Layers className="h-5 w-5" /> },
+    { id: 'media', label: 'Media & Images', icon: <Building2 className="h-5 w-5" /> },
+    { id: 'contact', label: 'Contact Info', icon: <Phone className="h-5 w-5" /> },
+  ];
+
   return (
-    <div className="max-w-4xl mx-auto">
-      <Card className="p-6">
-        <h2 className="text-2xl font-bold mb-6">
-          {mode === 'create' ? 'Create New Apartment' : 'Edit Apartment'}
-        </h2>
+    <div className="max-w-7xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">
+          {mode === 'create' ? 'Create New Apartment Listing' : 'Edit Apartment Listing'}
+        </h1>
+        <p className="text-gray-600 mt-2">
+          Fill in the details below. Fields marked with * are required.
+        </p>
+      </div>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Basic Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Basic Information *</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Title (Uzbek)</label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border rounded-md"
-                  value={form.watch('title.uz')}
-                  onChange={(e) => form.setValue('title.uz', e.target.value)}
-                  placeholder="Uzbek title"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Title (Russian)</label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border rounded-md"
-                  value={form.watch('title.ru')}
-                  onChange={(e) => form.setValue('title.ru', e.target.value)}
-                  placeholder="Russian title"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Title (English)</label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border rounded-md"
-                  value={form.watch('title.en')}
-                  onChange={(e) => form.setValue('title.en', e.target.value)}
-                  placeholder="English title"
-                />
-              </div>
-            </div>
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Left Sidebar Navigation */}
+        <div className="lg:w-64 flex-shrink-0">
+          <Card className="p-4 sticky top-6">
+            <nav className="space-y-1">
+              {sections.map((section) => (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => setActiveSection(section.id as any)}
+                  className={`
+                    w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium
+                    transition-colors
+                    ${activeSection === section.id 
+                      ? 'bg-primary-50 text-primary-700 border border-primary-200' 
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                    }
+                  `}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={`
+                      p-1.5 rounded-md
+                      ${activeSection === section.id 
+                        ? 'bg-primary-100 text-primary-600' 
+                        : 'bg-gray-100 text-gray-600'
+                      }
+                    `}>
+                      {section.icon}
+                    </div>
+                    <span>{section.label}</span>
+                  </div>
+                  {activeSection === section.id && (
+                    <ChevronRight className="h-4 w-4 text-primary-500" />
+                  )}
+                </button>
+              ))}
+            </nav>
 
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">Description</label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Progress Summary */}
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <h4 className="text-sm font-medium text-gray-900 mb-3">Progress</h4>
+              <div className="space-y-3">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Uzbek</label>
-                  <Textarea
-                    value={form.watch('description.uz')}
-                    onChange={(e) => form.setValue('description.uz', e.target.value)}
-                    placeholder="Uzbek description"
-                    rows={3}
-                  />
+                  <div className="flex justify-between text-xs text-gray-600 mb-1">
+                    <span>Language Content</span>
+                    <span>
+                      {Object.values(form.watch('title')).filter(v => v?.trim()).length}/3
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+                    <div 
+                      className="bg-primary-600 h-1.5 rounded-full"
+                      style={{ 
+                        width: `${(Object.values(form.watch('title')).filter(v => v?.trim()).length / 3) * 100}%` 
+                      }}
+                    ></div>
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Russian</label>
-                  <Textarea
-                    value={form.watch('description.ru')}
-                    onChange={(e) => form.setValue('description.ru', e.target.value)}
-                    placeholder="Russian description"
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">English</label>
-                  <Textarea
-                    value={form.watch('description.en')}
-                    onChange={(e) => form.setValue('description.en', e.target.value)}
-                    placeholder="English description"
-                    rows={3}
-                  />
+                  <div className="flex justify-between text-xs text-gray-600 mb-1">
+                    <span>Required Fields</span>
+                    <span>5/8</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+                    <div className="bg-green-600 h-1.5 rounded-full" style={{ width: '62.5%' }}></div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Input
-                label="Price ($) *"
-                type="number"
-                {...form.register('price', { valueAsNumber: true })}
-                min="0"
-                required
-              />
-
-              <Input
-                label="Rooms *"
-                type="number"
-                {...form.register('rooms', { valueAsNumber: true })}
-                min="1"
-                required
-              />
-
-              <Input
-                label="Area (m²) *"
-                type="number"
-                {...form.register('area', { valueAsNumber: true })}
-                min="0"
-                step="0.1"
-                required
-              />
-
-              <Input
-                label="Floor *"
-                type="number"
-                {...form.register('floor', { valueAsNumber: true })}
-                min="1"
-                required
-              />
+            {/* Quick Tips */}
+            <div className="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-100">
+              <div className="flex items-start space-x-2">
+                <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5" />
+                <div className="text-xs text-blue-700">
+                  <div className="font-medium">Tip:</div>
+                  <div>Complete all language versions for better reach</div>
+                </div>
+              </div>
             </div>
+          </Card>
+        </div>
 
-            <Select
-              label="Complex (Optional)"
-              options={[
-                { value: '', label: 'None - Standalone Apartment' },
-                ...(complexes?.map(c => ({ value: c.id, label: c.name })) || [])
-              ]}
-              value={form.watch('complexId')}
-              onChange={(value) => form.setValue('complexId', value)}
-            />
+        {/* Main Form Content */}
+        <div className="flex-1">
+          <Card className="p-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              {/* Section 1: Language Content */}
+              <div className={`${activeSection === 'basic' ? 'block' : 'hidden'}`}>
+                <div className="mb-8">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="p-2 bg-primary-100 rounded-lg">
+                      <Globe className="h-6 w-6 text-primary-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">Multi-Language Content</h3>
+                      <p className="text-gray-600">
+                        Enter title and description in Uzbek, Russian, and English
+                      </p>
+                    </div>
+                  </div>
 
-            <Input
-              label="Developer *"
-              {...form.register('developer')}
-              required
-              placeholder="e.g., UzTurizm, Qal'asiz"
-            />
-          </div>
+                  {/* SINGLE MultiLanguageInput Component with BOTH Description and Title */}
+                  <MultiLanguageInput
+                    descriptionValue={form.watch('description')}
+                    titleValue={form.watch('title')}
+                    onDescriptionChange={(value) => form.setValue('description', value)}
+                    onTitleChange={(value) => form.setValue('title', value)}
+                    descriptionPlaceholder={{
+                      uz: 'Uy haqida batafsil ma\'lumot...',
+                      ru: 'Подробная информация о квартире...',
+                      en: 'Detailed information about the apartment...'
+                    }}
+                    titlePlaceholder={{
+                      uz: 'Misol: Yangi uy, Chilonzor tumani',
+                      ru: 'Пример: Новая квартира, район Чиланзар',
+                      en: 'Example: New apartment, Chilanzar district'
+                    }}
+                    required={true}
+                  />
+                </div>
 
-          {/* Location */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Location *</h3>
-            
-            <Input
-              label="Address *"
-              {...form.register('address')}
-              required
-              placeholder="Full address including city, district, street"
-            />
-          </div>
+                <div className="flex justify-between pt-6 border-t border-gray-200">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActiveSection('details')}
+                    className="flex items-center space-x-2"
+                  >
+                    <span>Next: Technical Details</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
 
-          {/* Contact Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Contact Information *</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Phone *"
-                {...form.register('contactPhone')}
-                required
-                placeholder="+998901234567"
-              />
+              {/* Section 2: Technical Details (Universal Fields) */}
+              <div className={`${activeSection === 'details' ? 'block' : 'hidden'}`}>
+                <div className="mb-8">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Layers className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">Technical Details</h3>
+                      <p className="text-gray-600">
+                        Universal properties that are the same in all languages
+                      </p>
+                    </div>
+                  </div>
 
-              <Input
-                label="Telegram (Optional)"
-                {...form.register('contactTelegram')}
-                placeholder="@username"
-              />
+                  {/* Price and Basic Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div>
+                      <Input
+                        label={
+                          <div className="flex items-center space-x-2">
+                            <DollarSign className="h-4 w-4 text-gray-500" />
+                            <span>Price ($) *</span>
+                          </div>
+                        }
+                        type="number"
+                        {...form.register('price', { valueAsNumber: true })}
+                        min="0"
+                        required
+                        placeholder="e.g., 150000"
+                      />
+                    </div>
 
-              <Input
-                label="Email (Optional)"
-                type="email"
-                {...form.register('contactEmail')}
-                placeholder="email@example.com"
-              />
-            </div>
-          </div>
+                    <div>
+                      <Input
+                        label={
+                          <div className="flex items-center space-x-2">
+                            <Home className="h-4 w-4 text-gray-500" />
+                            <span>Rooms *</span>
+                          </div>
+                        }
+                        type="number"
+                        {...form.register('rooms', { valueAsNumber: true })}
+                        min="1"
+                        required
+                        placeholder="e.g., 3"
+                      />
+                    </div>
 
-          {/* Images */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Images</h3>
-            <p className="text-sm text-gray-600 mb-2">
-              Upload high-quality photos of the apartment (minimum 3 recommended)
-            </p>
-            <ImageUpload
-              existingImages={existingImages}
-              newImages={newImages}
-              onNewImagesChange={setNewImages}
-              onImageDelete={handleDeleteImage}
-              onReorder={handleReorderImages}
-              maxFiles={20}
-            />
-          </div>
+                    <div>
+                      <Input
+                        label={
+                          <div className="flex items-center space-x-2">
+                            <Ruler className="h-4 w-4 text-gray-500" />
+                            <span>Area (m²) *</span>
+                          </div>
+                        }
+                        type="number"
+                        {...form.register('area', { valueAsNumber: true })}
+                        min="0"
+                        step="0.1"
+                        required
+                        placeholder="e.g., 85.5"
+                      />
+                    </div>
 
-          {/* Status (for edit mode) */}
-          {mode === 'edit' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Status</h3>
-              <Select
-                label="Status"
-                options={[
-                  { value: 'active', label: 'Active' },
-                  { value: 'hidden', label: 'Hidden' },
-                  { value: 'sold', label: 'Sold' }
-                ]}
-                value={form.watch('status') || 'active'}
-                onChange={(value) => form.setValue('status', value)}
-              />
-            </div>
-          )}
+                    <div>
+                      <Input
+                        label={
+                          <div className="flex items-center space-x-2">
+                            <Hash className="h-4 w-4 text-gray-500" />
+                            <span>Floor *</span>
+                          </div>
+                        }
+                        type="number"
+                        {...form.register('floor', { valueAsNumber: true })}
+                        min="1"
+                        required
+                        placeholder="e.g., 5"
+                      />
+                    </div>
+                  </div>
 
-          {/* Submit Buttons */}
-          <div className="flex justify-end space-x-4 pt-6 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate('/dashboard/seller/listings')}
-            >
-              Cancel
-            </Button>
-            
-            <Button
-              type="submit"
-              disabled={createMutation.isPending || updateMutation.isPending}
-              className="min-w-[150px]"
-            >
-              {createMutation.isPending || updateMutation.isPending ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Saving...
-                </span>
-              ) : (
-                mode === 'create' ? 'Create Apartment' : 'Update Apartment'
-              )}
-            </Button>
-          </div>
-        </form>
-      </Card>
+                  {/* Additional Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <Input
+                      label="Total Floors in Building *"
+                      type="number"
+                      {...form.register('totalFloors', { valueAsNumber: true })}
+                      min="1"
+                      required
+                      placeholder="e.g., 9"
+                    />
+
+                    <Select
+                      label="Complex (Optional)"
+                      options={[
+                        { value: '', label: 'Standalone Apartment' },
+                        ...(complexes?.map(c => ({ value: c.id, label: c.name })) || [])
+                      ]}
+                      value={form.watch('complexId')}
+                      onChange={(value) => form.setValue('complexId', value)}
+                    />
+                  </div>
+
+                  <div className="space-y-6">
+                    <Input
+                      label="Developer / Construction Company *"
+                      {...form.register('developer')}
+                      required
+                      placeholder="e.g., UzTurizm, Qal'asiz"
+                    />
+
+                    <Textarea
+                      label="Full Address *"
+                      {...form.register('address')}
+                      required
+                      rows={2}
+                      placeholder="Full address including district, street, and building number"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-between pt-6 border-t border-gray-200">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActiveSection('basic')}
+                  >
+                    Back: Language Content
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActiveSection('media')}
+                    className="flex items-center space-x-2"
+                  >
+                    <span>Next: Media & Images</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Section 3: Media & Images */}
+              <div className={`${activeSection === 'media' ? 'block' : 'hidden'}`}>
+                <div className="mb-8">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Building2 className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">Media & Images</h3>
+                      <p className="text-gray-600">
+                        Upload high-quality photos of the apartment
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <p className="text-sm text-gray-600 mb-4">
+                      Upload at least 3 high-quality photos. Recommended: exterior, living room, kitchen, bedrooms, bathroom.
+                    </p>
+                    <ImageUpload
+                      existingImages={existingImages}
+                      newImages={newImages}
+                      onNewImagesChange={setNewImages}
+                      onImageDelete={handleDeleteImage}
+                      onReorder={handleReorderImages}
+                      maxFiles={20}
+                    />
+                  </div>
+
+                  {/* Status (for edit mode) */}
+                  {mode === 'edit' && (
+                    <div className="mt-8">
+                      <Select
+                        label="Listing Status"
+                        options={[
+                          { value: 'active', label: 'Active' },
+                          { value: 'hidden', label: 'Hidden' },
+                          { value: 'sold', label: 'Sold' }
+                        ]}
+                        value={form.watch('status') || 'active'}
+                        onChange={(value) => form.setValue('status', value)}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-between pt-6 border-t border-gray-200">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActiveSection('details')}
+                  >
+                    Back: Technical Details
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActiveSection('contact')}
+                    className="flex items-center space-x-2"
+                  >
+                    <span>Next: Contact Info</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Section 4: Contact Information */}
+              <div className={`${activeSection === 'contact' ? 'block' : 'hidden'}`}>
+                <div className="mb-8">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <Phone className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">Contact Information</h3>
+                      <p className="text-gray-600">
+                        How potential buyers can contact you
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Input
+                      label={
+                        <div className="flex items-center space-x-2">
+                          <Phone className="h-4 w-4 text-gray-500" />
+                          <span>Phone Number *</span>
+                        </div>
+                      }
+                      {...form.register('contactPhone')}
+                      required
+                      placeholder="+998 90 123 45 67"
+                    />
+
+                    <Input
+                      label={
+                        <div className="flex items-center space-x-2">
+                          <Send className="h-4 w-4 text-gray-500" />
+                          <span>Telegram Username</span>
+                        </div>
+                      }
+                      {...form.register('contactTelegram')}
+                      placeholder="@username"
+                    />
+
+                    <Input
+                      label={
+                        <div className="flex items-center space-x-2">
+                          <Mail className="h-4 w-4 text-gray-500" />
+                          <span>Email Address</span>
+                        </div>
+                      }
+                      type="email"
+                      {...form.register('contactEmail')}
+                      placeholder="email@example.com"
+                    />
+
+                    <Input
+                      label={
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="h-4 w-4 text-gray-500" />
+                          <span>Location Reference</span>
+                        </div>
+                      }
+                      value={form.watch('address')}
+                      onChange={(e) => form.setValue('address', e.target.value)}
+                      placeholder="Nearby landmark or metro station"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-between pt-6 border-t border-gray-200">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActiveSection('media')}
+                  >
+                    Back: Media & Images
+                  </Button>
+                </div>
+              </div>
+
+              {/* Submit Buttons - Always visible at bottom */}
+              <div className="pt-8 border-t border-gray-200 mt-8">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => navigate('/dashboard/seller/listings')}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center space-x-4">
+                    <div className="text-sm text-gray-600 hidden md:block">
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <span>All changes are saved automatically</span>
+                      </div>
+                    </div>
+                    
+                    <Button
+                      type="submit"
+                      disabled={createMutation.isPending || updateMutation.isPending}
+                      className="min-w-[180px]"
+                    >
+                      {createMutation.isPending || updateMutation.isPending ? (
+                        <span className="flex items-center justify-center">
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Saving...
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center">
+                          {mode === 'create' ? 'Publish Listing' : 'Update Listing'}
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

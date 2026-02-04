@@ -9,7 +9,7 @@ export interface Apartment {
   area: number;
   floor: number;
   totalFloors?: number;
-  status: 'ACTIVE' | 'HIDDEN' | 'SOLD' | 'active' | 'hidden' | 'sold'; // Ikkala formatni qo'shdim
+  status: 'ACTIVE' | 'HIDDEN' | 'SOLD' | 'active' | 'hidden' | 'sold';
   complexId: string;
   sellerId: string;
   complex?: {
@@ -36,7 +36,7 @@ export interface Apartment {
     fullName: string;
     email: string;
   };
-  // Legacy fields for backward compatibility
+  // Legacy fields
   titleUz?: string;
   titleRu?: string;
   titleEn?: string;
@@ -83,56 +83,6 @@ export interface ApartmentDetail {
   coverImage: string | null;
   createdAt: string;
   updatedAt: string;
-  // Legacy fields for backward compatibility
-  titleUz?: string;
-  titleRu?: string;
-  titleEn?: string;
-  descriptionUz?: string;
-  descriptionRu?: string;
-  descriptionEn?: string;
-  address?: string;
-  developerName?: string;
-  developerId?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  airQualityIndex?: number | null;
-  airQualitySource?: string | null;
-  infrastructure?: any;
-  investmentGrowthPercent?: number | null;
-  contactPhone?: string;
-  contactTelegram?: string | null;
-  contactWhatsapp?: string | null;
-  contactEmail?: string | null;
-  multiLanguageContent?: {
-    uz: {
-      title: string;
-      description: string | null;
-      materials: string | null;
-      infrastructureNote: string | null;
-      investmentGrowthNote: string | null;
-    };
-    ru: {
-      title: string;
-      description: string | null;
-      materials: string | null;
-      infrastructureNote: string | null;
-      investmentGrowthNote: string | null;
-    };
-    en: {
-      title: string;
-      description: string | null;
-      materials: string | null;
-      infrastructureNote: string | null;
-      investmentGrowthNote: string | null;
-    };
-  };
-  installmentOptions?: any;
-  contactInfo?: {
-    phone: string;
-    telegram: string | null;
-    whatsapp: string | null;
-    email: string | null;
-  };
 }
 
 export interface PaginatedResponse<T> {
@@ -154,7 +104,7 @@ export interface FilterParams {
   maxRooms?: number;
   minArea?: number;
   maxArea?: number;
-  status?: 'active' | 'hidden' | 'sold';
+  status?: 'active' | 'hidden' | 'sold' | 'ACTIVE' | 'HIDDEN' | 'SOLD';
   complexId?: string;
   developerName?: string;
   search?: string;
@@ -171,8 +121,6 @@ export interface Complex {
   _count?: {
     apartments: number;
   };
-  // Legacy fields for backward compatibility
-  nameString?: string;
 }
 
 export interface CreateApartmentData {
@@ -183,26 +131,16 @@ export interface CreateApartmentData {
   area: number;
   floor: number;
   address: string;
-  latitude?: number;
-  longitude?: number;
   developerName: string;
-  developerId?: string;
-  complexId?: string;
-  airQualityIndex?: number;
-  airQualitySource?: string;
-  infrastructure?: any;
-  infrastructureNote?: { uz: string; ru: string; en: string };
-  investmentGrowthPercent?: number;
-  investmentGrowthNote?: { uz: string; ru: string; en: string };
   contactPhone: string;
   contactTelegram?: string;
   contactWhatsapp?: string;
   contactEmail?: string;
-  installmentOptions?: any;
   materials?: { uz: string; ru: string; en: string };
+  complexId?: string;
 }
 
-export interface UpdateApartmentData extends Partial<CreateApartmentData> {}
+export interface UpdateApartmentData extends Partial<CreateApartmentData> { }
 
 export interface AdminStats {
   totalListings: number;
@@ -215,7 +153,6 @@ export interface AdminStats {
   flaggedContent: number;
 }
 
-// Seller listings response interface
 export interface SellerListingsResponse {
   success: boolean;
   data: {
@@ -230,21 +167,94 @@ export interface SellerListingsResponse {
 }
 
 export const apartmentsApi = {
-  // Get apartments with filtering
+  // Get apartments with filtering - MUHIM O'ZGARTIRISH
   getApartments: async (params: FilterParams = {}): Promise<PaginatedResponse<Apartment>> => {
     try {
-      const response = await apiClient.get<{ success: boolean; data: PaginatedResponse<Apartment> }>('/apartments', { params });
-      return response.data.data || { apartments: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
-    } catch (error) {
+      // ADMIN uchun max limit 1000, oddiy foydalanuvchilar uchun 100
+      const isAdminRequest = params.limit && params.limit > 100;
+
+      // Limitni string bo'lsa numberga aylantiramiz
+      const processedParams = {
+        ...params,
+        limit: params.limit ? parseInt(params.limit.toString()) : 20,
+        page: params.page ? parseInt(params.page.toString()) : 1
+      };
+
+      // Admin uchun yuborayotgan requestda limit 1000 bo'lsa, backend bizning yangi validatsiyamizda (1000 gacha) qabul qiladi
+      const response = await apiClient.get<{ success: boolean; data: PaginatedResponse<Apartment> }>('/apartments', {
+        params: processedParams
+      });
+
+      return response.data.data || {
+        apartments: [],
+        pagination: {
+          page: processedParams.page || 1,
+          limit: processedParams.limit || 20,
+          total: 0,
+          totalPages: 0
+        }
+      };
+    } catch (error: any) {
       console.error('Failed to fetch apartments:', error);
-      return { apartments: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
+
+      // Agar 400 xatosi bo'lsa (masalan, limit juda katta)
+      if (error.response?.status === 400) {
+        // Limitni kamaytirib qayta urinib ko'ramiz
+        const retryParams = { ...params, limit: 100 };
+        try {
+          const retryResponse = await apiClient.get<{ success: boolean; data: PaginatedResponse<Apartment> }>('/apartments', {
+            params: retryParams
+          });
+          return retryResponse.data.data || { apartments: [], pagination: { page: 1, limit: 100, total: 0, totalPages: 0 } };
+        } catch (retryError) {
+          console.error('Retry also failed:', retryError);
+        }
+      }
+
+      return {
+        apartments: [],
+        pagination: {
+          page: params.page || 1,
+          limit: params.limit || 20,
+          total: 0,
+          totalPages: 0
+        }
+      };
     }
   },
 
-  // Get apartment by ID
+  // Admin uchun maxsus method - butun listni olish
+  getAllApartments: async (params: FilterParams = {}): Promise<PaginatedResponse<Apartment>> => {
+    return apartmentsApi.getApartments({ ...params, limit: 1000 });
+  },
+
   getApartmentById: async (id: string): Promise<ApartmentDetail> => {
-    const response = await apiClient.get<{ success: boolean; data: ApartmentDetail }>(`/apartments/${id}`);
-    return response.data.data;
+    try {
+      const response = await apiClient.get<{ success: boolean; data: ApartmentDetail }>(`/apartments/${id}`);
+
+      if (response.data.success) {
+        return response.data.data;
+      } else {
+        throw new Error('Failed to fetch apartment details');
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch apartment by ID:', error);
+
+      // Agar backend noto'g'ri formatda qaytarsa, biz structure'ni to'ldiramiz
+      if (error.response?.data) {
+        const data = error.response.data;
+        if (data.data) {
+          // Backend { success: true, data: apartment } formatida qaytarsa
+          return data.data;
+        } else if (data.success && data.data) {
+          return data.data;
+        } else if (data.apartment) {
+          return data.apartment as ApartmentDetail;
+        }
+      }
+
+      throw error;
+    }
   },
 
   // Get complexes
@@ -283,10 +293,10 @@ export const apartmentsApi = {
   // Create apartment (seller only)
   createApartment: async (data: CreateApartmentData, images: File[] = []): Promise<ApartmentDetail> => {
     const formData = new FormData();
-    
+
     // Append apartment data as JSON
     formData.append('apartment', JSON.stringify(data));
-    
+
     // Append images
     images.forEach(image => {
       formData.append('images', image);
@@ -312,20 +322,17 @@ export const apartmentsApi = {
     return response.data;
   },
 
-  // Get seller's apartments - MUHIM O'ZGARTIRISH
+  // Get seller's apartments
   getMyListings: async (): Promise<Apartment[]> => {
     try {
       const response = await apiClient.get<SellerListingsResponse>('/apartments/seller/my');
-      
-      // Backend response formatini tekshiramiz
+
       if (response.data.success && response.data.data) {
-        // Backend { success: true, data: { apartments: [], pagination: {} } } formatida qaytaradi
         return response.data.data.apartments || [];
       } else if (response.data.success && Array.isArray(response.data.data)) {
-        // Agar to'g'ridan-to'g'ri array qaytarsa
         return response.data.data;
       }
-      
+
       return [];
     } catch (error) {
       console.error('Failed to fetch seller listings:', error);
@@ -368,61 +375,30 @@ export const apartmentsApi = {
   },
 
   // === ADMIN METHODS ===
-  
-  // Get all apartments for admin (includes hidden)
-  getAllApartments: async (params: FilterParams = {}): Promise<PaginatedResponse<Apartment>> => {
-    const response = await apiClient.get<{ success: boolean; data: PaginatedResponse<Apartment> }>(
-      '/apartments', 
-      { 
-        params: { 
-          ...params, 
-          status: params.status || undefined // Don't filter by default for admin
-        } 
-      }
-    );
-    return response.data.data;
+
+  // Get apartments by status for admin
+  getApartmentsByStatus: async (status: string, params: FilterParams = {}): Promise<PaginatedResponse<Apartment>> => {
+    return apartmentsApi.getAllApartments({ ...params, status });
   },
 
   // Get admin statistics
   getAdminStats: async (): Promise<AdminStats> => {
-    const response = await apiClient.get<{ success: boolean; data: AdminStats }>('/admin/stats');
-    return response.data.data;
-  },
-
-  // Get apartments by status for admin
-  getApartmentsByStatus: async (status: string, params: FilterParams = {}): Promise<PaginatedResponse<Apartment>> => {
-    const response = await apiClient.get<{ success: boolean; data: PaginatedResponse<Apartment> }>(
-      '/apartments', 
-      { 
-        params: { 
-          ...params, 
-          status 
-        } 
-      }
-    );
-    return response.data.data;
-  },
-
-  // Get apartments needing review (admin)
-  getPendingReviews: async (params: FilterParams = {}): Promise<PaginatedResponse<Apartment>> => {
-    // This endpoint needs to be implemented in backend
-    // For now, we'll filter active apartments without images or with incomplete info
-    const allApartments = await apartmentsApi.getAllApartments(params);
-    const pending = allApartments.apartments.filter(apt => {
-      // Simple logic: apartments that might need review
-      return apt.status === 'active' && (!apt.coverImage || !apt.title?.uz || !apt.title?.ru || !apt.title?.en);
-    });
-    
-    return {
-      apartments: pending,
-      pagination: allApartments.pagination
-    };
-  },
-
-  // Get flagged content (admin)
-  getFlaggedContent: async (): Promise<any[]> => {
-    const response = await apiClient.get<{ success: boolean; data: any[] }>('/admin/flagged-content');
-    return response.data.data;
+    try {
+      const response = await apiClient.get<{ success: boolean; data: AdminStats }>('/admin/stats');
+      return response.data.data;
+    } catch (error) {
+      console.error('Failed to fetch admin stats:', error);
+      return {
+        totalListings: 0,
+        activeListings: 0,
+        hiddenListings: 0,
+        soldListings: 0,
+        pendingReviews: 0,
+        todayApprovals: 0,
+        todayRejections: 0,
+        flaggedContent: 0
+      };
+    }
   },
 
   // Export apartments data (admin)

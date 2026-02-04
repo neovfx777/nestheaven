@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
-// Layouts - FIXED IMPORTS
+// Layouts
 import Layout from './components/layout/Layout';
 import DashboardLayout from './pages/dashboard/DashboardLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -18,16 +18,20 @@ import RegisterPage from './pages/auth/RegisterPage';
 
 // Dashboard pages
 import DashboardPage from './pages/dashboard/DashboardPage';
+import UserDashboard from './pages/dashboard/UserDashboard';
+import SellerDashboard from './pages/dashboard/SellerDashboard';
+import AdminDashboard from './pages/dashboard/AdminDashboard';
+import ManagerDashboard from './pages/dashboard/ManagerDashboard';
+import OwnerDashboard from './pages/dashboard/OwnerDashboard';
 import FavoritesPage from './pages/dashboard/FavoritesPage';
-import { Overview } from './pages/dashboard/Overview';
 
-// Admin dashboard pages - FIXED: Changed to named imports
+// Admin dashboard pages
 import { ComplexList } from './pages/dashboard/admin/ComplexList';
 import { ComplexForm } from './pages/dashboard/admin/ComplexForm';
 import { AnalyticsDashboard } from './pages/dashboard/admin/AnalyticsDashboard';
 import { UserManagement } from './pages/dashboard/admin/UserManagement';
 
-// Seller dashboard pages - ADDED IMPORTS
+// Seller dashboard pages
 import { SellerApartmentList } from './pages/dashboard/seller/ApartmentList';
 import { ApartmentForm } from './pages/dashboard/seller/ApartmentForm';
 
@@ -61,6 +65,7 @@ function App() {
           <Route path="complexes" element={<ComplexesPage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
 
         {/* Dashboard routes (protected) */}
@@ -73,9 +78,14 @@ function App() {
           }
         >
           <Route index element={<DashboardPage />} />
+          <Route path="user" element={<UserDashboard />} />
+          <Route path="seller" element={<SellerDashboard />} />
+          <Route path="admin" element={<AdminDashboard />} />
+          <Route path="manager" element={<ManagerDashboard />} />
+          <Route path="owner" element={<OwnerDashboard />} />
           <Route path="favorites" element={<FavoritesPage />} />
           
-          {/* Seller routes - ADDED THESE */}
+          {/* Seller routes */}
           <Route
             path="seller/listings"
             element={
@@ -144,8 +154,15 @@ function App() {
           />
         </Route>
 
-        {/* 404 - Should be outside all layouts */}
-        <Route path="*" element={<NotFoundPage />} />
+        {/* Direct protected routes without dashboard layout */}
+        <Route
+          path="/apartments/:id"
+          element={
+            <Layout>
+              <ApartmentDetailPage />
+            </Layout>
+          }
+        />
       </Routes>
     </Router>
   );
