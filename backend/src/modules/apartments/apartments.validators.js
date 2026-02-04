@@ -37,16 +37,20 @@ const updateApartmentSchema = z.object({
   }).refine((b) => Object.keys(b).length > 0, { message: 'At least one field to update' }),
 });
 
+// ADMIN DASHBOARD UCHUN MAX LIMIT QO'SHDIK
 const listSchema = z.object({
   query: z.object({
     page: z.coerce.number().int().min(1).optional().default(1),
-    limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+    limit: z.coerce.number().int().min(1).max(1000).optional().default(20), // 1000 gacha ruxsat
     complexId: z.string().optional(),
     minPrice: z.coerce.number().optional(),
     maxPrice: z.coerce.number().optional(),
     rooms: z.coerce.number().int().optional(),
-    status: z.enum(['active', 'hidden', 'sold']).optional(),
+    status: z.enum(['active', 'hidden', 'sold', 'ACTIVE', 'HIDDEN', 'SOLD']).optional(), // Ikkala formatni qabul qilish
     lang: z.enum(['uz', 'ru', 'en']).optional(),
+    search: z.string().optional(),
+    sortBy: z.enum(['price', 'area', 'rooms', 'createdAt', 'updatedAt']).optional(),
+    sortOrder: z.enum(['asc', 'desc']).optional(),
   }),
 });
 
@@ -125,4 +129,5 @@ module.exports = {
   validateGetById,
   validateMarkSold,
   validateHideUnhide,
+  listSchema, // Export qo'shdik
 };
