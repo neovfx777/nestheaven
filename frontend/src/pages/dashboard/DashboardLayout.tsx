@@ -96,10 +96,10 @@ const DashboardLayout = () => {
       roles: ['USER'],
     },
 
-    // SELLER - Added Manage Listings
+    // SELLER - FIXED: Changed from '/dashboard/seller' to '/dashboard/seller/listings'
     {
       name: 'Manage Listings',
-      href: '/dashboard/seller',
+      href: '/dashboard/seller/listings',
       icon: List,
       roles: ['SELLER'],
     },
@@ -211,7 +211,7 @@ const DashboardLayout = () => {
           <nav className="p-4 space-y-1">
             {filteredNavigation.map(item => (
               <Link
-                key={`${item.name}-${item.href}`} // FIX: Added href to make unique
+                key={`${item.name}-${item.href}`}
                 to={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={`

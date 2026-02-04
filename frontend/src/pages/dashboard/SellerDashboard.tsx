@@ -323,6 +323,7 @@ const SellerDashboard = () => {
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* FIXED: Changed to correct route */}
                 <Link to="/dashboard/seller/listings">
                   <Card className="p-4 border hover:border-primary-500 transition-colors cursor-pointer">
                     <div className="flex items-center gap-3">
@@ -382,7 +383,6 @@ const SellerDashboard = () => {
                   className="md:w-64"
                 />
                 
-                {/* YANGI: Select component options prop bilan ishlatilgan */}
                 <Select
                   value={statusFilter}
                   onChange={(value) => setStatusFilter(value)}
