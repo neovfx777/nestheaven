@@ -31,9 +31,20 @@ model User {
 
 model Complex {
   id          String   @id @default(cuid())
-  name        String   // JSON: { uz, ru, en }
-  address     String?  // JSON: { uz, ru, en }
+  name        String   // Project title, JSON: { uz, ru, en }
+  address     String?  // Human-readable address, JSON: { uz, ru, en }
   city        String
+
+  // Project-level details (Complex != listing)
+  description           String?  // Long-form description about the project / developer vision
+  permissions           String?  @map("permissions")              // JSON array of 3 permission files (metadata + URLs)
+  latitude              Float?   @map("latitude")
+  longitude             Float?   @map("longitude")
+  walkabilityScore      Int?     @map("walkability_score")        // 1–10
+  airQualityScore       Int?     @map("air_quality_score")        // 1–10 or AQI-like value
+  airQualityNote        String?  @map("air_quality_note")         // Optional explanatory note / source
+  nearbyInfrastructure  String?  @map("nearby_infrastructure")    // Free-text description of nearby infrastructure
+
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
