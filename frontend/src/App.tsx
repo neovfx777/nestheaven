@@ -11,6 +11,7 @@ import HomePage from './pages/HomePage';
 import ApartmentsPage from './pages/apartments/ApartmentsPage';
 import ApartmentDetailPage from './pages/apartments/ApartmentDetailPage';
 import ComplexesPage from './pages/ComplexesPage';
+import ComplexDetailPage from './pages/ComplexDetailPage';
 
 // Auth pages
 import LoginPage from './pages/auth/LoginPage';
@@ -39,6 +40,7 @@ import { ApartmentForm } from './pages/dashboard/seller/ApartmentForm';
 
 // Misc
 import NotFoundPage from './pages/NotFoundPage';
+import ModerationLogsPage from './pages/dashboard/manager/ModerationLogsPage';
 
 function App() {
   return (
@@ -64,7 +66,10 @@ function App() {
             <Route index element={<ApartmentsPage />} />
             <Route path=":id" element={<ApartmentDetailPage />} />
           </Route>
-          <Route path="complexes" element={<ComplexesPage />} />
+          <Route path="complexes">
+            <Route index element={<ComplexesPage />} />
+            <Route path=":id" element={<ComplexDetailPage />} />
+          </Route>
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
           <Route path="*" element={<NotFoundPage />} />
@@ -86,6 +91,24 @@ function App() {
           <Route path="manager" element={<ManagerDashboard />} />
           <Route path="owner" element={<OwnerDashboard />} />
           <Route path="favorites" element={<FavoritesPage />} />
+          
+          {/* Manager / Owner: Admin management & moderation logs */}
+          <Route
+            path="manager/admins"
+            element={
+              <ProtectedRoute requireRole={['MANAGER_ADMIN', 'OWNER_ADMIN']}>
+                <UserManagement mode="admins" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="manager/logs"
+            element={
+              <ProtectedRoute requireRole={['MANAGER_ADMIN', 'OWNER_ADMIN']}>
+                <ModerationLogsPage />
+              </ProtectedRoute>
+            }
+          />
           
           {/* Seller routes */}
           <Route
@@ -118,7 +141,7 @@ function App() {
             path="admin/users"
             element={
               <ProtectedRoute requireRole={['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN']}>
-                <UserManagement />
+                <UserManagement mode="users" />
               </ProtectedRoute>
             }
           />
@@ -141,7 +164,7 @@ function App() {
           <Route
             path="admin/complexes/new"
             element={
-              <ProtectedRoute requireRole={['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN']}>
+              <ProtectedRoute requireRole={['MANAGER_ADMIN', 'OWNER_ADMIN']}>
                 <ComplexForm />
               </ProtectedRoute>
             }
@@ -149,7 +172,7 @@ function App() {
           <Route
             path="admin/complexes/:id/edit"
             element={
-              <ProtectedRoute requireRole={['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN']}>
+              <ProtectedRoute requireRole={['MANAGER_ADMIN', 'OWNER_ADMIN']}>
                 <ComplexForm />
               </ProtectedRoute>
             }

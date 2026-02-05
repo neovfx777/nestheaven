@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Users, Plus, Edit, Trash2, Search, 
@@ -45,7 +45,16 @@ interface UsersResponse {
   };
 }
 
-export function UserManagement() {
+interface UserManagementProps {
+  /**
+   * Mode:
+   * - "users": faqat oddiy foydalanuvchilar (USER, SELLER)
+   * - "admins": faqat admin rollar (ADMIN, MANAGER_ADMIN, OWNER_ADMIN)
+   */
+  mode?: 'users' | 'admins';
+}
+
+export function UserManagement({ mode = 'users' }: UserManagementProps) {
   const { user, token } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -119,6 +128,17 @@ export function UserManagement() {
   const users = usersData?.users || [];
   const totalUsers = usersData?.total || 0;
   const searchInfo = usersData?.search || { term: null, by: 'all', performed: false };
+
+  // Mode bo'yicha ko'rinadigan userlar
+  const visibleUsers = useMemo(() => {
+    if (mode === 'admins') {
+      return users.filter((u) =>
+        ['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'].includes(u.role)
+      );
+    }
+    // default: faqat USER va SELLER
+    return users.filter((u) => ['USER', 'SELLER'].includes(u.role));
+  }, [users, mode]);
 
   // Create user mutation
   const createUserMutation = useMutation({
@@ -277,8 +297,14 @@ export function UserManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-600">Manage users and their permissions</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {mode === 'admins' ? 'Admin Management' : 'User Management'}
+          </h1>
+          <p className="text-gray-600">
+            {mode === 'admins'
+              ? 'Manage admin roles (ADMIN, MANAGER_ADMIN, OWNER_ADMIN)'
+              : 'Manage regular users and sellers'}
+          </p>
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
@@ -319,14 +345,20 @@ export function UserManagement() {
               <Select
                 value={roleFilter}
                 onChange={(value) => setRoleFilter(value)}
-                options={[
-                  { value: 'all', label: 'All Roles' },
-                  { value: 'USER', label: 'Users' },
-                  { value: 'SELLER', label: 'Sellers' },
-                  { value: 'ADMIN', label: 'Admins' },
-                  { value: 'MANAGER_ADMIN', label: 'Managers' },
-                  { value: 'OWNER_ADMIN', label: 'Owners' }
-                ]}
+                options={
+                  mode === 'admins'
+                    ? [
+                        { value: 'all', label: 'All Admin Roles' },
+                        { value: 'ADMIN', label: 'Admins' },
+                        { value: 'MANAGER_ADMIN', label: 'Managers' },
+                        { value: 'OWNER_ADMIN', label: 'Owners' },
+                      ]
+                    : [
+                        { value: 'all', label: 'All Roles' },
+                        { value: 'USER', label: 'Users' },
+                        { value: 'SELLER', label: 'Sellers' },
+                      ]
+                }
                 className="w-40"
               />
               <div className="flex gap-2">
@@ -389,10 +421,11 @@ export function UserManagement() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between">
             <CardTitle className="flex items-center gap-2 mb-4 sm:mb-0">
               <Users className="w-5 h-5" />
-              Users ({totalUsers})
+              {mode === 'admins' ? 'Admins' : 'Users'} ({visibleUsers.length})
             </CardTitle>
             <div className="text-sm text-gray-500">
-              Showing {users.length} user{users.length !== 1 ? 's' : ''}
+              Showing {visibleUsers.length}{' '}
+              {mode === 'admins' ? 'admin(s)' : 'user(s)'}
             </div>
           </div>
         </CardHeader>
@@ -402,7 +435,7 @@ export function UserManagement() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mr-3"></div>
               <span className="text-gray-600">Loading users...</span>
             </div>
-          ) : users.length === 0 ? (
+          ) : visibleUsers.length === 0 ? (
             <div className="text-center py-12">
               <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
                 <Users className="w-8 h-8 text-gray-400" />
@@ -435,7 +468,7 @@ export function UserManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((user: User) => (
+                  {visibleUsers.map((user: User) => (
                     <tr key={user.id} className="border-b hover:bg-gray-50">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">

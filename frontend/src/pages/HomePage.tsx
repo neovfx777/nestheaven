@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Building2, Loader2, MapPin, Calendar, TrendingUp } from 'lucide-react';
 import { ApartmentCarousel } from '../components/apartments/ApartmentCarousel';
-import { apartmentsApi, Apartment } from '../api/apartments';
+import { apartmentsApi, Apartment, Complex } from '../api/apartments';
 import { defaultComplexData, defaultApartmentsData } from '../data/defaultData';
 import { DefaultApartmentData } from '../data/types';
 import { useAuthStore } from '../stores/authStore';
@@ -88,6 +88,31 @@ const HomePage = () => {
     ? recommendedApartments.map(convertToApiFormat)
     : recommendedApartments;
 
+  // Complexes for home page (API + fallback to default data)
+  const {
+    data: complexesData,
+  } = useQuery({
+    queryKey: ['complexes', 'home'],
+    queryFn: apartmentsApi.getComplexes,
+    retry: 1,
+  });
+
+  const homeComplexes: Complex[] =
+    complexesData && complexesData.length > 0
+      ? complexesData.slice(0, 4)
+      : [
+          {
+            id: 'default-complex',
+            name: defaultComplexData.name,
+            address: defaultComplexData.address,
+            city: defaultComplexData.city,
+            coverImage: defaultComplexData.coverImage,
+            _count: {
+              apartments: defaultComplexData.totalApartments,
+            },
+          },
+        ];
+
   return (
     <div className="min-h-screen">
       {/* Hero Section with Complex Info */}
@@ -132,6 +157,83 @@ const HomePage = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Complexes Grid Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">
+                Yangi turar-joy komplekslari
+              </h2>
+              <p className="text-gray-600">
+                NestHeaven platformasidagi mashhur loyihalar
+              </p>
+            </div>
+            <Link
+              to="/complexes"
+              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Barcha komplekslarni ko‘rish
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {homeComplexes.map((complex) => {
+              const complexName =
+                (complex.name as any)?.en ||
+                (complex.name as any)?.uz ||
+                (complex.name as any)?.ru ||
+                (typeof complex.name === 'string' ? complex.name : 'Kompleks');
+
+              const complexAddress =
+                (complex.address as any)?.en ||
+                (complex.address as any)?.uz ||
+                (complex.address as any)?.ru ||
+                (typeof complex.address === 'string'
+                  ? complex.address
+                  : '');
+
+              return (
+                <Link
+                  key={complex.id}
+                  to={`/complexes/${complex.id}`}
+                  className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow block"
+                >
+                  {complex.coverImage && (
+                    <div className="h-40 w-full overflow-hidden">
+                      <img
+                        src={complex.coverImage}
+                        alt={complexName}
+                        className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  )}
+                  <div className="p-5">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                      {complexName}
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-3">
+                      {complexAddress}
+                    </p>
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <Building2 className="h-4 w-4 text-blue-600" />
+                        <span>
+                          {complex._count?.apartments ?? 0} ta kvartira
+                        </span>
+                      </div>
+                      <span className="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+                        {complex.city}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
