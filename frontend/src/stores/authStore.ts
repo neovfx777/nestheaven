@@ -107,18 +107,29 @@ export const useAuthStore = create<AuthState>()(
           
           if (error.response) {
             // Axios error with response
-            message = error.response.data?.error || 
-                     error.response.data?.message || 
-                     error.response.statusText ||
-                     message;
+            message =
+              error.response.data?.error ||
+              error.response.data?.message ||
+              error.response.statusText ||
+              message;
+
+            // Friendly/localized message for invalid credentials
+            if (
+              error.response.status === 401 ||
+              message.toLowerCase().includes('invalid email or password')
+            ) {
+              message = "Email yoki parol noto'g'ri";
+            }
           } else if (error.message) {
             // Standard Error object
-            message = error.message;
+            if (error.message.toLowerCase().includes('invalid email or password')) {
+              message = "Email yoki parol noto'g'ri";
+            } else {
+              message = error.message;
+            }
           }
 
-          set({
-            error: message,
-          });
+          set({ error: message });
           throw error;
         } finally {
           // Always stop loading, even if something unexpected happens
@@ -175,17 +186,28 @@ export const useAuthStore = create<AuthState>()(
           let message = 'Registration failed. Please try again.';
           
           if (error.response) {
-            message = error.response.data?.error || 
-                     error.response.data?.message || 
-                     error.response.statusText ||
-                     message;
+            message =
+              error.response.data?.error ||
+              error.response.data?.message ||
+              error.response.statusText ||
+              message;
+
+            // Friendly message for duplicate email
+            if (
+              error.response.status === 409 ||
+              message.toLowerCase().includes('email already registered')
+            ) {
+              message = 'Bu email bilan foydalanuvchi allaqachon mavjud';
+            }
           } else if (error.message) {
-            message = error.message;
+            if (error.message.toLowerCase().includes('email already registered')) {
+              message = 'Bu email bilan foydalanuvchi allaqachon mavjud';
+            } else {
+              message = error.message;
+            }
           }
 
-          set({
-            error: message,
-          });
+          set({ error: message });
           throw error;
         } finally {
           set({ isLoading: false });

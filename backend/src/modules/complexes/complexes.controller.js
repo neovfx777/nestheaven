@@ -13,7 +13,7 @@ async function getById(req, res, next) {
   try {
     const { id } = req.validated.params;
     const result = await complexesService.getById(id);
-    res.json(result);
+    res.json({ success: true, data: result });
   } catch (err) {
     next(err);
   }

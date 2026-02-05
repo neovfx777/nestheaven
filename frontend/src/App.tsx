@@ -23,6 +23,8 @@ import SellerDashboard from './pages/dashboard/SellerDashboard';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import ManagerDashboard from './pages/dashboard/ManagerDashboard';
 import OwnerDashboard from './pages/dashboard/OwnerDashboard';
+import OwnerSettingsPage from './pages/dashboard/owner/OwnerSettingsPage';
+import OwnerBillingPage from './pages/dashboard/owner/OwnerBillingPage';
 import FavoritesPage from './pages/dashboard/FavoritesPage';
 
 // Admin dashboard pages
@@ -149,6 +151,24 @@ function App() {
             element={
               <ProtectedRoute requireRole={['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN']}>
                 <ComplexForm />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Owner admin routes */}
+          <Route
+            path="owner/settings"
+            element={
+              <ProtectedRoute requireRole={['OWNER_ADMIN']}>
+                <OwnerSettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="owner/billing"
+            element={
+              <ProtectedRoute requireRole={['OWNER_ADMIN']}>
+                <OwnerBillingPage />
               </ProtectedRoute>
             }
           />
