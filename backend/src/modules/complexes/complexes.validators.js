@@ -21,7 +21,11 @@ const createComplexSchema = z.object({
     description: z.string().min(1, 'Description is required'),
 
     // Human-readable address; we still support i18n JSON format under the hood
-    address: z.union([i18nSchema, z.string()]).min(1, 'Address is required'),
+    // Note: length validation only applies to plain string variant
+    address: z.union([
+      i18nSchema,
+      z.string().min(1, 'Address is required'),
+    ]),
 
     city: z.string().min(1, 'City is required'),
 

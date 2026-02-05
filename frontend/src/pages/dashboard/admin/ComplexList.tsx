@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
@@ -17,14 +17,7 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { Badge } from '../../../components/ui/Badge';
-import { Complex } from '../../../api/apartments';
-
-interface ComplexStats {
-  totalComplexes: number;
-  complexesWithApartments: number;
-  complexesWithActiveApartments: number;
-  averageApartmentsPerComplex: number;
-}
+import { useAuthStore } from '../../../stores/authStore';
 
 interface ComplexFilters {
   search: string;
@@ -49,40 +42,71 @@ export function ComplexList() {
   const [selectedComplexes, setSelectedComplexes] = useState<Set<string>>(new Set());
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const queryClient = useQueryClient();
+  const { token } = useAuthStore();
 
-  // Fetch complexes with filters
-  const { data: complexesData, isLoading } = useQuery({
-    queryKey: ['admin-complexes', filters],
+  // Backend complex format (simplified)
+  interface BackendComplex {
+    id: string;
+    title: string | { uz?: string; ru?: string; en?: string };
+    description?: string;
+    address?: string | { uz?: string; ru?: string; en?: string };
+    city: string;
+    createdAt: string;
+    _count?: {
+      apartments?: number;
+    };
+  }
+
+  // Fetch all complexes (public endpoint)
+  const { data: complexesResponse, isLoading } = useQuery<{
+    success: boolean;
+    data: BackendComplex[];
+  }>({
+    queryKey: ['admin-complexes'],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== '') {
-          params.append(key, String(value));
-        }
-      });
-      
-      const response = await fetch(`/api/complexes/admin/filtered?${params}`);
+      const response = await fetch('/api/complexes');
       if (!response.ok) throw new Error('Failed to fetch complexes');
       return response.json();
-    }
+    },
   });
 
-  // Fetch complex statistics
-  const { data: stats } = useQuery<ComplexStats>({
-    queryKey: ['complex-stats'],
-    queryFn: async () => {
-      const response = await fetch('/api/complexes/admin/stats');
-      if (!response.ok) throw new Error('Failed to fetch stats');
-      const data = await response.json();
-      return data.data;
+  const complexes: BackendComplex[] = complexesResponse?.data || [];
+
+  // Derived statistics
+  const stats = useMemo(() => {
+    if (!complexes.length) {
+      return {
+        totalComplexes: 0,
+        complexesWithApartments: 0,
+        complexesWithActiveApartments: 0,
+        averageApartmentsPerComplex: 0,
+      };
     }
-  });
+    const totalComplexes = complexes.length;
+    const complexesWithApartments = complexes.filter(
+      (c) => (c._count?.apartments || 0) > 0
+    ).length;
+    const totalApartments = complexes.reduce(
+      (sum, c) => sum + (c._count?.apartments || 0),
+      0
+    );
+    return {
+      totalComplexes,
+      complexesWithApartments,
+      complexesWithActiveApartments: complexesWithApartments,
+      averageApartmentsPerComplex:
+        totalComplexes > 0 ? totalApartments / totalComplexes : 0,
+    };
+  }, [complexes]);
 
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await fetch(`/api/complexes/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (!response.ok) throw new Error('Failed to delete complex');
       return response.json();
@@ -110,36 +134,99 @@ export function ComplexList() {
   };
 
   const handleSelectAll = () => {
-    if (selectedComplexes.size === complexesData?.data.complexes.length) {
+    const ids = filteredComplexes.map((c) => c.id);
+    if (selectedComplexes.size === ids.length) {
       setSelectedComplexes(new Set());
     } else {
-      const allIds = complexesData?.data.complexes.map((c: Complex) => c.id) || [];
-      setSelectedComplexes(new Set(allIds));
+      setSelectedComplexes(new Set(ids));
     }
   };
 
   const handleBulkDelete = () => {
     if (selectedComplexes.size === 0) return;
-    
+
     // Check if any selected complexes have apartments
-    const complexesWithApartments = complexesData?.data.complexes.filter(
-      (c: Complex) => selectedComplexes.has(c.id) && c._count?.apartments > 0
+    const complexesWithApartments = filteredComplexes.filter(
+      (c) => selectedComplexes.has(c.id) && (c._count?.apartments || 0) > 0
     );
-    
-    if (complexesWithApartments?.length > 0) {
-      alert(`Cannot delete ${complexesWithApartments.length} complex(es) with apartments. Remove apartments first.`);
+
+    if (complexesWithApartments.length > 0) {
+      alert(
+        `Cannot delete ${complexesWithApartments.length} complex(es) with apartments. Remove apartments first.`
+      );
       return;
     }
-    
+
     setShowDeleteModal(true);
   };
 
   const confirmBulkDelete = async () => {
-    const promises = Array.from(selectedComplexes).map(id =>
+    const promises = Array.from(selectedComplexes).map((id) =>
       deleteMutation.mutateAsync(id)
     );
     await Promise.all(promises);
   };
+
+  // Apply filters client-side
+  const filteredComplexes = useMemo(() => {
+    let list = [...complexes];
+
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      list = list.filter((c) => {
+        const title =
+          typeof c.title === 'string'
+            ? c.title
+            : c.title?.en || c.title?.uz || c.title?.ru || '';
+        return title.toLowerCase().includes(q);
+      });
+    }
+
+    if (filters.hasApartments === 'true') {
+      list = list.filter((c) => (c._count?.apartments || 0) > 0);
+    } else if (filters.hasApartments === 'false') {
+      list = list.filter((c) => (c._count?.apartments || 0) === 0);
+    }
+
+    // Sort
+    list.sort((a, b) => {
+      const dir = filters.sortOrder === 'asc' ? 1 : -1;
+      if (filters.sortBy === 'name') {
+        const nameA =
+          typeof a.title === 'string'
+            ? a.title
+            : a.title?.en || a.title?.uz || a.title?.ru || '';
+        const nameB =
+          typeof b.title === 'string'
+            ? b.title
+            : b.title?.en || b.title?.uz || b.title?.ru || '';
+        return nameA.localeCompare(nameB) * dir;
+      }
+      if (filters.sortBy === 'createdAt') {
+        return (
+          (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) *
+          dir
+        );
+      }
+      if (filters.sortBy === 'apartmentCount') {
+        const aCount = a._count?.apartments || 0;
+        const bCount = b._count?.apartments || 0;
+        return (aCount - bCount) * dir;
+      }
+      return 0;
+    });
+
+    return list;
+  }, [complexes, filters]);
+
+  // Pagination
+  const paginatedComplexes = useMemo(() => {
+    const start = (filters.page - 1) * filters.limit;
+    const end = start + filters.limit;
+    return filteredComplexes.slice(start, end);
+  }, [filteredComplexes, filters.page, filters.limit]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredComplexes.length / filters.limit));
 
   return (
     <div className="space-y-6">
@@ -191,8 +278,8 @@ export function ComplexList() {
           <div className="bg-white rounded-lg border p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">With Active Listings</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.complexesWithActiveApartments}</p>
+                <p className="text-sm font-medium text-gray-600">With Listings</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.complexesWithApartments}</p>
               </div>
               <Check className="w-8 h-8 text-green-500" />
             </div>
@@ -268,7 +355,7 @@ export function ComplexList() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
             <p className="mt-2 text-gray-600">Loading complexes...</p>
           </div>
-        ) : complexesData?.data.complexes.length === 0 ? (
+        ) : filteredComplexes.length === 0 ? (
           <div className="p-8 text-center">
             <Building className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900">No complexes found</h3>
@@ -309,87 +396,102 @@ export function ComplexList() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {complexesData?.data.complexes.map((complex: Complex & { _count: any }) => (
-                    <tr key={complex.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedComplexes.has(complex.id)}
-                          onChange={() => handleSelectComplex(complex.id)}
-                          className="rounded border-gray-300"
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          {complex.image ? (
-                            <img
-                              src={`/uploads/${complex.image}`}
-                              alt={complex.name}
-                              className="w-10 h-10 rounded object-cover"
-                            />
-                          ) : (
+                  {paginatedComplexes.map((complex) => {
+                    const title =
+                      typeof complex.title === 'string'
+                        ? complex.title
+                        : complex.title?.en ||
+                          complex.title?.uz ||
+                          complex.title?.ru ||
+                          '';
+                    return (
+                      <tr key={complex.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedComplexes.has(complex.id)}
+                            onChange={() => handleSelectComplex(complex.id)}
+                            className="rounded border-gray-300"
+                          />
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
                               <Building className="w-5 h-5 text-gray-400" />
                             </div>
-                          )}
-                          <div>
-                            <div className="font-medium text-gray-900">{complex.name}</div>
-                            <div className="text-sm text-gray-500">ID: {complex.id.slice(0, 8)}</div>
+                            <div>
+                              <div className="font-medium text-gray-900">{title}</div>
+                              <div className="text-sm text-gray-500">
+                                {complex.city} • ID: {complex.id.slice(0, 8)}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge variant={complex._count?.apartments > 0 ? 'default' : 'secondary'}>
-                          {complex._count?.apartments || 0} apartments
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge variant={complex._count?.apartmentsActive > 0 ? 'success' : 'secondary'}>
-                          {complex._count?.apartmentsActive || 0} active
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {new Date(complex.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <Link to={`/dashboard/admin/complexes/${complex.id}/edit`}>
-                            <Button variant="ghost" size="sm">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </Link>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              if (complex._count?.apartments > 0) {
-                                alert('Cannot delete complex with apartments. Remove apartments first.');
-                              } else {
-                                deleteMutation.mutate(complex.id);
-                              }
-                            }}
-                            disabled={deleteMutation.isPending}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge
+                            variant={
+                              (complex._count?.apartments || 0) > 0 ? 'default' : 'secondary'
+                            }
                           >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            {complex._count?.apartments || 0} apartments
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm text-gray-500">N/A</span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {new Date(complex.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <Link to={`/dashboard/admin/complexes/${complex.id}/edit`}>
+                              <Button variant="ghost" size="sm">
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            </Link>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                if (complex._count?.apartments && complex._count.apartments > 0) {
+                                  alert(
+                                    'Cannot delete complex with apartments. Remove apartments first.'
+                                  );
+                                } else {
+                                  deleteMutation.mutate(complex.id);
+                                }
+                              }}
+                              disabled={deleteMutation.isPending}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
             
             {/* Pagination */}
-            {complexesData?.data.pagination.totalPages > 1 && (
+            {totalPages > 1 && (
               <div className="px-6 py-4 border-t">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-700">
-                    Showing <span className="font-medium">{((filters.page - 1) * filters.limit) + 1}</span> to{' '}
+                    Showing{' '}
                     <span className="font-medium">
-                      {Math.min(filters.page * filters.limit, complexesData.data.pagination.total)}
-                    </span> of{' '}
-                    <span className="font-medium">{complexesData.data.pagination.total}</span> complexes
+                      {(filters.page - 1) * filters.limit + 1}
+                    </span>{' '}
+                    to{' '}
+                    <span className="font-medium">
+                      {Math.min(filters.page * filters.limit, filteredComplexes.length)}
+                    </span>{' '}
+                    of{' '}
+                    <span className="font-medium">
+                      {filteredComplexes.length}
+                    </span>{' '}
+                    complexes
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -404,7 +506,7 @@ export function ComplexList() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleFilterChange('page', filters.page + 1)}
-                      disabled={filters.page >= complexesData.data.pagination.totalPages}
+                      disabled={filters.page >= totalPages}
                     >
                       Next
                     </Button>
