@@ -10,7 +10,6 @@ import {
   Phone,
   Mail,
   Share2,
-  Heart,
   User,
   Calendar,
   Shield,
@@ -23,11 +22,12 @@ import { apartmentsApi } from '../../api/apartments';
 import { ApartmentDetail as ApartmentDetailType } from '../../api/apartments';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
+import { FavoriteButton } from '../../components/apartments/FavoriteButton';
+import { toast } from 'react-hot-toast';
 
 const ApartmentDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [isSaved, setIsSaved] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
 
   // Fetch apartment details
@@ -109,6 +109,27 @@ const ApartmentDetailPage = () => {
       month: 'long',
       day: 'numeric',
     });
+  };
+
+  const handleShare = async () => {
+    try {
+      const url = window.location.href;
+      const title = getTitle(apartment);
+      const text = `Uy: ${title}`;
+
+      if (navigator.share) {
+        await navigator.share({ title, text, url });
+      } else if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(url);
+        toast.success('Link copied to clipboard');
+      } else {
+        // Fallback: simple prompt
+        window.prompt('Copy this link:', url);
+      }
+    } catch (error: any) {
+      console.error('Share failed:', error);
+      toast.error('Could not share this listing');
+    }
   };
 
   // Helper function to get title text
@@ -237,15 +258,18 @@ const ApartmentDetailPage = () => {
 
                 {/* Action Buttons */}
                 <div className="flex space-x-4 pt-6">
+                  <div className="flex-1">
+                    <FavoriteButton
+                      apartmentId={apartment.id}
+                      size="md"
+                      showText={true}
+                    />
+                  </div>
                   <Button
                     variant="outline"
-                    onClick={() => setIsSaved(!isSaved)}
                     className="flex-1"
+                    onClick={handleShare}
                   >
-                    <Heart className={`h-5 w-5 mr-2 ${isSaved ? 'fill-red-500 text-red-500' : ''}`} />
-                    {isSaved ? 'Saved' : 'Save'}
-                  </Button>
-                  <Button variant="outline" className="flex-1">
                     <Share2 className="h-5 w-5 mr-2" />
                     Share
                   </Button>

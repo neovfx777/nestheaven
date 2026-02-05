@@ -9,7 +9,7 @@ import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import { Modal } from '../../../components/ui/Modal';
-import { useAuthStore } from '../../../stores/authStore';
+import { usersApi } from '../../../api/users';
 
 interface User {
   id: string;
@@ -30,21 +30,6 @@ interface CreateUserForm {
   phone?: string;
 }
 
-interface UsersResponse {
-  users: User[];
-  total: number;
-  filters: {
-    role: string | null;
-    searchTerm: string | null;
-    searchBy: string;
-  };
-  search: {
-    term: string | null;
-    by: string;
-    performed: boolean;
-  };
-}
-
 interface UserManagementProps {
   /**
    * Mode:
@@ -55,7 +40,6 @@ interface UserManagementProps {
 }
 
 export function UserManagement({ mode = 'users' }: UserManagementProps) {
-  const { user, token } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [searchBy, setSearchBy] = useState('all');
@@ -90,39 +74,19 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
   };
 
   // Fetch users with search
-  const { 
-    data: usersData, 
-    isLoading, 
-    error, 
+  const {
+    data: usersData,
+    isLoading,
+    error,
     refetch,
-    isRefetching 
+    isRefetching,
   } = useQuery({
-    queryKey: ['admin-users', roleFilter, searchTerm, searchBy],
+    queryKey: ['admin-users', mode, roleFilter, searchTerm, searchBy],
     queryFn: async () => {
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-      
       const queryParams = buildQueryParams();
-      const queryString = Object.keys(queryParams).length > 0 
-        ? `?${new URLSearchParams(queryParams).toString()}`
-        : '';
-      
-      const url = `/api/admin/users${queryString}`;
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to fetch users: ${response.status}`);
-      }
-      const data = await response.json();
-      return data as UsersResponse;
+      return usersApi.getAdminUsers(queryParams);
     },
-    enabled: false, // IMPORTANT: Disable automatic fetching
+    enabled: false, // manual refetch control
   });
 
   const users = usersData?.users || [];
@@ -143,19 +107,7 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (userData: CreateUserForm) => {
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-      const response = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(userData)
-      });
-      if (!response.ok) throw new Error('Failed to create user');
-      return response.json();
+      return usersApi.createAdminUser(userData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
@@ -174,19 +126,7 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
   // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: async ({ id, ...userData }: Partial<User> & { id: string }) => {
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-      const response = await fetch(`/api/admin/users/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(userData)
-      });
-      if (!response.ok) throw new Error('Failed to update user');
-      return response.json();
+      return usersApi.updateAdminUser(id, userData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
@@ -197,17 +137,7 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (id: string) => {
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-      const response = await fetch(`/api/admin/users/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (!response.ok) throw new Error('Failed to delete user');
-      return response.json();
+      return usersApi.deleteAdminUser(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });

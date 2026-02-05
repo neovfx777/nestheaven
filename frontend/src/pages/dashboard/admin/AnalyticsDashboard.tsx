@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Users, Home, Building, TrendingUp, DollarSign, 
   BarChart3, PieChart as PieChartIcon, Eye
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/Card';
-import { useAuthStore } from '../../../stores/authStore';
+import apiClient from '../../../api/client';
 
 // Color palette
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
@@ -16,22 +16,17 @@ const STATUS_COLORS = {
 };
 
 export function AnalyticsDashboard() {
-  const { token } = useAuthStore();
-
   // Fetch analytics data from backend
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ['analytics-stats'],
     queryFn: async () => {
-      if (!token) {
-        throw new Error('No authentication token found');
+      const response = await apiClient.get<{ success: boolean; data: any }>(
+        '/analytics/stats'
+      );
+      if (!response.data?.success) {
+        throw new Error('Failed to fetch analytics');
       }
-      const response = await fetch('/api/analytics/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (!response.ok) throw new Error('Failed to fetch analytics');
-      return response.json();
+      return response.data;
     }
   });
 
