@@ -19,7 +19,10 @@ async function list(data, reqUser) {
     const { page = 1, limit = 20, complexId, minPrice, maxPrice, rooms, status } = data.query;
     const skip = (page - 1) * limit;
 
-    console.log('List query params:', { page, limit, complexId, minPrice, maxPrice, rooms, status });
+    console.log('🔍 Apartments list called:', { 
+      page, limit, complexId, minPrice, maxPrice, rooms, status, 
+      userRole: reqUser?.role || 'anonymous' 
+    });
 
     const where = {};
     
@@ -36,11 +39,11 @@ async function list(data, reqUser) {
       where.status = { in: ['active', 'sold'] };
     }
 
-    console.log('Where clause:', JSON.stringify(where, null, 2));
+    console.log('📋 Where clause:', JSON.stringify(where, null, 2));
 
     // Avval count, keyin findMany
     const total = await prisma.apartment.count({ where });
-    console.log('Total apartments:', total);
+    console.log('📊 Total apartments:', total);
 
     const items = await prisma.apartment.findMany({
       where,
