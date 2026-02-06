@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Filter, Search, X } from 'lucide-react';
 import { Complex } from '../../api/apartments';
+import VoiceSearch from '../ui/VoiceSearch';
 
 interface FilterParams {
   minPrice: string;
@@ -56,22 +57,35 @@ const ApartmentFilters = ({
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
       {/* Search Bar */}
       <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyPress={handleKeyPress}
+        <div className="space-y-3">
+          {/* Voice Search */}
+          <VoiceSearch 
+            onSearch={(query) => {
+              setSearchInput(query);
+              onSearch(query);
+            }}
             placeholder="Search apartments by title, description, or address..."
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="mb-3"
           />
-          <button
-            onClick={handleSearch}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-primary-600 text-white px-4 py-1.5 rounded-md hover:bg-primary-700 transition-colors"
-          >
-            Search
-          </button>
+          
+          {/* Traditional Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Or type your search here..."
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+            <button
+              onClick={handleSearch}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-primary-600 text-white px-4 py-1.5 rounded-md hover:bg-primary-700 transition-colors"
+            >
+              Search
+            </button>
+          </div>
         </div>
       </div>
 
@@ -188,7 +202,7 @@ const ApartmentFilters = ({
               <option value="">All Complexes</option>
               {complexes.map((complex) => (
                 <option key={complex.id} value={complex.id}>
-                  {complex.name} ({complex._count.apartments})
+                  {typeof complex.name === 'string' ? complex.name : complex.name?.en || 'Unknown Complex'} ({complex._count?.apartments || 0})
                 </option>
               ))}
             </select>
