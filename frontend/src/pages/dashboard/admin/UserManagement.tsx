@@ -528,7 +528,6 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
               value={createForm.password}
               onChange={(e) => setCreateForm({...createForm, password: e.target.value})}
               required
-              minLength={6}
             />
           </div>
           <div>
