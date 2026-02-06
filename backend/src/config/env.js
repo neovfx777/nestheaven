@@ -7,5 +7,5 @@ module.exports = {
   JWT_SECRET: process.env.JWT_SECRET || 'default-secret-change-me',
   UPLOAD_DIR: process.env.UPLOAD_DIR || 'uploads',
   MAX_FILE_SIZE_MB: parseInt(process.env.MAX_FILE_SIZE_MB, 10) || 10,
-  CORS_ORIGINS: process.env.CORS_ORIGINS || '*',
+  CORS_ORIGINS: process.env.CORS_ORIGINS || 'http://localhost:5173,http://45.92.173.175:5173,http://45.92.173.175:3000',
 };
