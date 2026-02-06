@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "build": "echo 'Backend build completed successfully'",
+    "build": "mkdir -p dist && cp -r src/* dist/ && cp package*.json dist/ && cp -r prisma dist/ && echo 'Backend build completed - dist folder created'",
     "db:generate": "npx prisma generate",
     "db:migrate": "npx prisma migrate deploy",
     "db:push": "npx prisma db push",
