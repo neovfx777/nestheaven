@@ -6,6 +6,7 @@ import { Building2, Loader2, Filter, Save } from 'lucide-react';
 import ApartmentCard from '../../components/apartments/ApartmentCard';
 import ApartmentFilters from '../../components/apartments/ApartmentFilters';
 import { SaveSearchModal } from '../../components/apartments/SaveSearchModal';
+import { Modal } from '../../components/ui/Modal';
 import { apartmentsApi, FilterParams as ApiFilterParams } from '../../api/apartments';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -27,6 +28,7 @@ const ApartmentsPage = () => {
   });
 
   const [showSaveSearchModal, setShowSaveSearchModal] = useState(false);
+  const [showFoundModal, setShowFoundModal] = useState(false);
   const { isAuthenticated } = useAuthStore();
 
   const page = parseInt(searchParams.get('page') || '1');
@@ -126,6 +128,16 @@ const ApartmentsPage = () => {
     });
   };
 
+  const matchesRoomFilter = (apartment: any) => {
+    const minRooms = filters.minRooms ? parseInt(filters.minRooms) : undefined;
+    const maxRooms = filters.maxRooms ? parseInt(filters.maxRooms) : undefined;
+    if (minRooms !== undefined && !Number.isNaN(minRooms) && apartment.rooms < minRooms) return false;
+    if (maxRooms !== undefined && !Number.isNaN(maxRooms) && apartment.rooms > maxRooms) return false;
+    return true;
+  };
+
+  const displayedApartments = apartmentsData?.apartments.filter(matchesRoomFilter) || [];
+
   /* =========================
      Loading & Error States
      ========================= */
@@ -210,8 +222,21 @@ const ApartmentsPage = () => {
         onReset={handleReset}
       />
 
+      {/* Found banner */}
+      {displayedApartments.length ? (
+        <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 font-semibold flex items-center justify-between gap-3">
+          <span>Topildi: {displayedApartments.length} ta e'lon</span>
+          <button
+            onClick={() => setShowFoundModal(true)}
+            className="text-sm font-semibold px-3 py-1.5 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors"
+          >
+            Ko'rish
+          </button>
+        </div>
+      ) : null}
+
       {/* Results */}
-      {apartmentsData?.apartments.length === 0 ? (
+      {displayedApartments.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border">
           <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold mb-2">
@@ -227,7 +252,7 @@ const ApartmentsPage = () => {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-            {apartmentsData?.apartments.map(apartment => (
+            {displayedApartments.map(apartment => (
               <ApartmentCard
                 key={apartment.id}
                 apartment={apartment}
@@ -243,6 +268,36 @@ const ApartmentsPage = () => {
         onClose={() => setShowSaveSearchModal(false)}
         filters={filters}
       />
+
+      {/* Found apartments modal */}
+      <Modal isOpen={showFoundModal} onClose={() => setShowFoundModal(false)} size="xl">
+        <div className="p-4 md:p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Topilgan e'lonlar</h3>
+              <p className="text-sm text-gray-600">
+                Jami: {displayedApartments.length} ta
+              </p>
+            </div>
+            <button
+              onClick={() => setShowFoundModal(false)}
+              className="text-sm px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+            >
+              Yopish
+            </button>
+          </div>
+
+          {displayedApartments.length ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto pr-1">
+              {displayedApartments.map((apartment) => (
+                <ApartmentCard key={apartment.id} apartment={apartment} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-sm text-gray-600">Hech narsa topilmadi.</div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -2,12 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Search } from 'lucide-react';
 
 interface VoiceSearchProps {
-  onSearch: (query: string) => void;
+  onSearch: (query: string) => void | Promise<void>;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }
 
-const VoiceSearch = ({ onSearch, placeholder = "Search...", className = "" }: VoiceSearchProps) => {
+const VoiceSearch = ({ onSearch, placeholder = "Search...", className = "", disabled = false }: VoiceSearchProps) => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [isSupported, setIsSupported] = useState(true);
@@ -67,7 +68,7 @@ const VoiceSearch = ({ onSearch, placeholder = "Search...", className = "" }: Vo
   }, [onSearch]);
 
   const toggleListening = () => {
-    if (!isSupported || !recognitionRef.current) return;
+    if (disabled || !isSupported || !recognitionRef.current) return;
 
     if (isListening) {
       recognitionRef.current.stop();
@@ -113,6 +114,7 @@ const VoiceSearch = ({ onSearch, placeholder = "Search...", className = "" }: Vo
           onChange={(e) => setTranscript(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleManualSearch()}
           placeholder={placeholder}
+          disabled={disabled}
           className={`w-full px-3 py-2 pr-10 border rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
             isListening 
               ? 'border-red-400 bg-red-50 animate-pulse' 
@@ -125,10 +127,13 @@ const VoiceSearch = ({ onSearch, placeholder = "Search...", className = "" }: Vo
       <button
         onClick={toggleListening}
         className={`p-2 rounded-full transition-all duration-200 ${
-          isListening
-            ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
-            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          disabled
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            : isListening
+              ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
         }`}
+        disabled={disabled}
         title={isListening ? "Stop recording" : "Start voice search"}
       >
         {isListening ? (

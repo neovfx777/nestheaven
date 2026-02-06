@@ -48,6 +48,19 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
     }
   };
 
+  const formatStatus = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'Faol';
+      case 'sold':
+        return 'Sotilgan';
+      case 'hidden':
+        return 'Yashirilgan';
+      default:
+        return status;
+    }
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -59,6 +72,26 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
 
   const handleFavoriteToggle = (newIsFavorite: boolean) => {
     setIsFavorite(newIsFavorite);
+  };
+
+  const pickLocalized = (value: any) => {
+    if (!value) return undefined;
+    if (typeof value === 'string') {
+      // Try to parse JSONified translations if present
+      if (value.trim().startsWith('{')) {
+        try {
+          const parsed = JSON.parse(value);
+          return parsed.uz || parsed.ru || parsed.en || parsed.default || value;
+        } catch {
+          return value;
+        }
+      }
+      return value;
+    }
+    if (typeof value === 'object') {
+      return value.uz || value.ru || value.en;
+    }
+    return undefined;
   };
 
   return (
@@ -84,7 +117,7 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
         
         {/* Status Badge */}
         <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide ${getStatusColor(apartment.status)}`}>
-          {apartment.status}
+          {formatStatus(apartment.status)}
         </div>
         
         {/* Price Badge */}
@@ -108,19 +141,7 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
         {/* Title */}
         <h3 className="font-bold text-xl text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
           <Link to={`/apartments/${apartment.id}`} className="hover:underline">
-            {(() => {
-              const title = apartment.title;
-              if (typeof title === 'object' && title && 'en' in title) return title.en;
-              if (typeof title === 'string' && title && title.startsWith('{')) {
-                try {
-                  const parsed = JSON.parse(title);
-                  return parsed.en || parsed.uz || parsed.ru || 'Apartment';
-                } catch {
-                  return 'Apartment';
-                }
-              }
-              return title || apartment.titleEn || apartment.titleUz || 'Apartment';
-            })()}
+            {pickLocalized(apartment.title) || apartment.titleUz || apartment.titleEn || 'Uy'}
           </Link>
         </h3>
 
@@ -128,19 +149,7 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
         <div className="flex items-center text-gray-600 text-sm mb-4">
           <MapPin className="h-4 w-4 mr-2 text-red-500 flex-shrink-0" />
           <span className="line-clamp-1 font-medium">
-            {(() => {
-              const address = apartment.complex?.address;
-              if (typeof address === 'object' && address && 'en' in address) return address.en;
-              if (typeof address === 'string' && address && address.startsWith('{')) {
-                try {
-                  const parsed = JSON.parse(address);
-                  return parsed.en || parsed.uz || parsed.ru || 'Location not specified';
-                } catch {
-                  return apartment.address || 'Location not specified';
-                }
-              }
-              return address || apartment.address || 'Location not specified';
-            })()}
+            {pickLocalized(apartment.complex?.address) || apartment.address || 'Manzil koʼrsatilmagan'}
           </span>
         </div>
 
@@ -148,20 +157,7 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
         {apartment.complex && (
           <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-sm font-semibold mb-4 border border-blue-100">
             <Building2 className="h-3 w-3 mr-1.5" />
-            {(() => {
-              const name = apartment.complex.name;
-              if (typeof name === 'string') return name;
-              if (typeof name === 'object' && name && 'en' in name) return name.en;
-              if (typeof name === 'string' && name && name.startsWith('{')) {
-                try {
-                  const parsed = JSON.parse(name);
-                  return parsed.en || parsed.uz || parsed.ru || 'Complex';
-                } catch {
-                  return 'Complex';
-                }
-              }
-              return 'Complex';
-            })()}
+            {pickLocalized(apartment.complex.name) || 'Kompleks'}
           </div>
         )}
 
@@ -172,7 +168,7 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
               <Bed className="h-4 w-4 mr-1" />
               <span className="font-bold text-lg">{apartment.rooms}</span>
             </div>
-            <div className="text-xs text-gray-600 font-medium">Rooms</div>
+            <div className="text-xs text-gray-600 font-medium">Xona</div>
           </div>
 
           <div className="text-center bg-gray-50 rounded-lg py-3">
@@ -188,7 +184,7 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
               <Layers className="h-4 w-4 mr-1" />
               <span className="font-bold text-lg">{apartment.floor}</span>
             </div>
-            <div className="text-xs text-gray-600 font-medium">Floor</div>
+            <div className="text-xs text-gray-600 font-medium">Qavat</div>
           </div>
         </div>
 

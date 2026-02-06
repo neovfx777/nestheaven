@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Filter, Search, X } from 'lucide-react';
 import { Complex } from '../../api/apartments';
+import { interpretVoiceQuery, isVoiceAiConfigured } from '../../utils/voiceSearchAi';
 import VoiceSearch from '../ui/VoiceSearch';
 
 interface FilterParams {
@@ -34,18 +35,147 @@ const ApartmentFilters = ({
 }: ApartmentFiltersProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchInput, setSearchInput] = useState(filters.search);
+  const [isAiSearching, setIsAiSearching] = useState(false);
+  const [aiMessage, setAiMessage] = useState<string | null>(null);
+  const voiceAiEnabled = isVoiceAiConfigured();
+
+  const pickName = (name: any) => {
+    if (!name) return '';
+    if (typeof name === 'string') return name;
+    if (typeof name === 'object') return name.uz || name.ru || name.en || '';
+    return '';
+  };
+
+  const findComplexIdByName = (spoken: string) => {
+    const lowerQuery = spoken.toLowerCase();
+    const match = complexes.find((c) => {
+      const candidate = pickName(c.name).toLowerCase();
+      return candidate && (lowerQuery.includes(candidate) || candidate.includes(lowerQuery));
+    });
+    return match?.id;
+  };
+
+  const extractRooms = (text: string) => {
+    const m = text.match(/(\d+)\s*xona[a-z]*/i);
+    return m ? parseInt(m[1]) : undefined;
+  };
+
+  const extractArea = (text: string) => {
+    const m = text.match(/(\d+(?:[.,]\d+)?)\s*(kv\\.?.?m|m2|metr|metre|kvadrat)/i);
+    if (!m) return undefined;
+    const num = Number(m[1].replace(',', '.'));
+    return Number.isNaN(num) ? undefined : num;
+  };
 
   const handleInputChange = (field: keyof FilterParams, value: string) => {
     onFilterChange({ ...filters, [field]: value });
   };
 
   const handleSearch = () => {
+    setAiMessage(null);
     onSearch(searchInput);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSearch();
+    }
+  };
+
+  const handleVoiceSearch = async (query: string) => {
+    const spoken = query.trim();
+    setSearchInput(spoken);
+    setAiMessage(null);
+
+    if (!spoken) return;
+
+    if (!voiceAiEnabled) {
+      const rooms = extractRooms(spoken);
+      const area = extractArea(spoken);
+      const complexId = findComplexIdByName(spoken) || filters.complexId;
+
+      const nextFilters = {
+        ...filters,
+        search: spoken,
+        minRooms: rooms ? rooms.toString() : '',
+        maxRooms: rooms ? rooms.toString() : '',
+        minArea: area ? area.toString() : '',
+        maxArea: area ? area.toString() : '',
+        complexId,
+        sortBy: rooms ? 'rooms' : filters.sortBy,
+        sortOrder: rooms ? 'asc' : filters.sortOrder,
+      };
+
+      onFilterChange(nextFilters);
+      return;
+    }
+
+    setIsAiSearching(true);
+    try {
+      const aiFilters = await interpretVoiceQuery(spoken);
+      const resolvedSearch = (aiFilters.search ?? spoken).trim();
+      setSearchInput(resolvedSearch);
+
+      // Fallback: if AI missed some fields, enrich from speech
+      const spokenRooms = extractRooms(spoken);
+      if (aiFilters.minRooms === undefined && aiFilters.maxRooms === undefined && spokenRooms !== undefined) {
+        aiFilters.minRooms = spokenRooms;
+        aiFilters.maxRooms = spokenRooms;
+      }
+      if (aiFilters.minArea === undefined && aiFilters.maxArea === undefined) {
+        const spokenArea = extractArea(spoken);
+        if (spokenArea !== undefined) {
+          aiFilters.minArea = spokenArea;
+        }
+      }
+      if (!aiFilters.complexName) {
+        const complexId = findComplexIdByName(spoken);
+        if (complexId) {
+          aiFilters.complexName = pickName(complexes.find(c => c.id === complexId)?.name);
+        }
+      }
+
+      const matchedComplexId =
+        aiFilters.complexName
+          ? findComplexIdByName(aiFilters.complexName)
+          : findComplexIdByName(spoken) || filters.complexId;
+
+      const nextFilters: FilterParams = {
+        ...filters,
+        search: resolvedSearch,
+        minPrice: aiFilters.minPrice !== undefined ? aiFilters.minPrice.toString() : '',
+        maxPrice: aiFilters.maxPrice !== undefined ? aiFilters.maxPrice.toString() : '',
+        minRooms: aiFilters.minRooms !== undefined ? aiFilters.minRooms.toString() : '',
+        maxRooms: aiFilters.maxRooms !== undefined ? aiFilters.maxRooms.toString() : '',
+        minArea: aiFilters.minArea !== undefined ? aiFilters.minArea.toString() : '',
+        maxArea: aiFilters.maxArea !== undefined ? aiFilters.maxArea.toString() : '',
+        developerName: aiFilters.developerName ?? '',
+        complexId: matchedComplexId ?? '',
+        sortBy: aiFilters.sortBy ?? filters.sortBy,
+        sortOrder: aiFilters.sortOrder ?? filters.sortOrder,
+      };
+
+      // If user asked for specific rooms, prioritize those results first
+      const roomsSpecified = aiFilters.minRooms !== undefined || aiFilters.maxRooms !== undefined;
+      if (roomsSpecified) {
+        nextFilters.sortBy = 'rooms';
+        nextFilters.sortOrder = 'asc';
+      }
+      // If area specified but no room request, sort by area asc
+      const areaSpecified = aiFilters.minArea !== undefined || aiFilters.maxArea !== undefined;
+      if (!roomsSpecified && areaSpecified) {
+        nextFilters.sortBy = 'area';
+        nextFilters.sortOrder = 'asc';
+      }
+
+      onFilterChange(nextFilters);
+      setAiMessage("AI qidiruvi asosida filtrlar qo'llandi.");
+    } catch (error) {
+      console.error('AI voice search failed', error);
+      setAiMessage("AI ishlamadi, oddiy qidiruv qo'llandi.");
+      onFilterChange({ ...filters, search: spoken });
+    } finally {
+      setIsAiSearching(false);
     }
   };
 
@@ -60,13 +190,22 @@ const ApartmentFilters = ({
         <div className="space-y-3">
           {/* Voice Search */}
           <VoiceSearch 
-            onSearch={(query) => {
-              setSearchInput(query);
-              onSearch(query);
-            }}
+            onSearch={handleVoiceSearch}
             placeholder="Search apartments by title, description, or address..."
+            disabled={isAiSearching}
             className="mb-3"
           />
+          {voiceAiEnabled ? (
+            <p className="text-xs text-gray-500">
+              {isAiSearching
+                ? 'AI qidiryapti...'
+                : aiMessage || "Ovozli buyruqdan so'ng AI filtrlashga yordam beradi."}
+            </p>
+          ) : (
+            <p className="text-xs text-amber-600">
+              AI kaliti topilmadi. VITE_OPENROUTER_API_KEY qo'shilmagani uchun oddiy ovozli qidiruv ishlaydi.
+            </p>
+          )}
           
           {/* Traditional Search Bar */}
           <div className="relative">
