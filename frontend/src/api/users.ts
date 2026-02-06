@@ -156,6 +156,7 @@ export const usersApi = {
     role?: string;
     searchTerm?: string;
     searchBy?: string;
+    mode?: string;
   }): Promise<AdminUsersResponse> => {
     const response = await apiClient.get<{ success: boolean; data: AdminUsersResponse }>('/admin/users', {
       params,
