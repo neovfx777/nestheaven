@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 // Create axios instance
 // Default backend URL points to local development API; can be overridden via VITE_API_URL
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://45.92.173.175:3000/api',
   headers: {
     'Content-Type': 'application/json',
   },
