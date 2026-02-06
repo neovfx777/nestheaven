@@ -49,36 +49,39 @@ async function createUser(data, reqUser) {
 }
 
 async function listUsers(filters, reqUser) {
-  const { roleFilter, searchTerm, searchBy } = filters;
+  const { roleFilter, searchTerm, searchBy, mode } = filters;
   const isOwnerAdmin = reqUser.role === ROLES.OWNER_ADMIN;
   const isManagerAdmin = reqUser.role === ROLES.MANAGER_ADMIN;
 
-  // Build the where clause
   const where = {};
   
-  // Add role filter if specified
-  if (roleFilter) {
-    where.role = roleFilter;
-  }
-  
-  // If Manager Admin, can only see ADMINS (unless searching)
   if (isManagerAdmin && !isOwnerAdmin) {
-    // If no specific role filter is set, limit to ADMIN role
     if (!roleFilter) {
       where.role = ROLES.ADMIN;
     }
-    // If role filter is set, ensure it's not higher than ADMIN
     else if (roleFilter === ROLES.MANAGER_ADMIN || roleFilter === ROLES.OWNER_ADMIN) {
       const err = new Error('Forbidden');
       err.statusCode = 403;
       throw err;
     }
+  } else {
+    if (mode === 'users') {
+      where.role = {
+        in: [ROLES.USER, ROLES.SELLER]
+      };
+    } else if (mode === 'admins') {
+      where.role = {
+        in: [ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN]
+      };
+    }
+    
+    if (roleFilter) {
+      where.role = roleFilter;
+    }
   }
   
-  // Add search filter if searchTerm is provided
   if (searchTerm && searchTerm.trim() !== '') {
     const searchTermLower = searchTerm.toLowerCase().trim();
-    
     // For SQLite, we use string functions for case-insensitive search
     // SQLite doesn't support mode: 'insensitive' directly
     

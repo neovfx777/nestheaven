@@ -10,6 +10,7 @@ import { Select } from '../../../components/ui/Select';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import { Modal } from '../../../components/ui/Modal';
 import { usersApi } from '../../../api/users';
+import { useAuthStore } from '../../../stores/authStore';
 
 interface User {
   id: string;
@@ -40,6 +41,7 @@ interface UserManagementProps {
 }
 
 export function UserManagement({ mode = 'users' }: UserManagementProps) {
+  const { token } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [searchBy, setSearchBy] = useState('all');
@@ -60,6 +62,13 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
   // Build query parameters
   const buildQueryParams = () => {
     const params: Record<string, string> = {};
+    
+    // Add mode parameter to filter users on backend
+    if (mode === 'admins') {
+      params.mode = 'admins';
+    } else {
+      params.mode = 'users';
+    }
     
     if (roleFilter !== 'all') {
       params.role = roleFilter;
@@ -83,8 +92,34 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
   } = useQuery({
     queryKey: ['admin-users', mode, roleFilter, searchTerm, searchBy],
     queryFn: async () => {
-      const queryParams = buildQueryParams();
-      return usersApi.getAdminUsers(queryParams);
+      try {
+        const queryParams = buildQueryParams();
+        console.log('🚀 Frontend calling API with params:', queryParams);
+        const result = await usersApi.getAdminUsers(queryParams);
+        console.log('📥 Frontend received result:', result);
+        console.log('📥 Response structure check:', {
+          hasUsers: !!result?.users,
+          usersLength: result?.users?.length || 0,
+          hasTotal: !!result?.total,
+          total: result?.total
+        });
+        // Ensure we always return a valid response structure
+        return result || {
+          users: [],
+          total: 0,
+          filters: { role: null, searchTerm: null, searchBy: 'all' },
+          search: { term: null, by: 'all', performed: false }
+        };
+      } catch (error) {
+        console.error('❌ Failed to fetch users:', error);
+        // Return a default response structure on error
+        return {
+          users: [],
+          total: 0,
+          filters: { role: null, searchTerm: null, searchBy: 'all' },
+          search: { term: null, by: 'all', performed: false }
+        };
+      }
     },
     enabled: false, // manual refetch control
   });

@@ -14,19 +14,24 @@ async function listUsers(req, res, next) {
     const roleFilter = req.query.role || null;
     const searchTerm = req.query.searchTerm || null;
     const searchBy = req.query.searchBy || 'all'; // Default to searching all fields
+    const mode = req.query.mode || 'all'; // Default to all users
     
     const result = await adminService.listUsers({
       roleFilter,
       searchTerm,
-      searchBy
+      searchBy,
+      mode
     }, req.user);
     
     res.json({
-      ...result,
-      search: {
-        term: searchTerm,
-        by: searchBy,
-        performed: !!searchTerm
+      success: true,
+      data: {
+        ...result,
+        search: {
+          term: searchTerm,
+          by: searchBy,
+          performed: !!searchTerm
+        }
       }
     });
   } catch (err) {
