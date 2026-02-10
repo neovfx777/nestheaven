@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, X, AlertTriangle, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { Check, X, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
 import { Textarea } from '../../../components/ui/Textarea';
@@ -25,7 +25,6 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
   const operationOptions = [
     { value: 'HIDDEN', label: 'Hide Apartments', description: 'Hide selected apartments from public view' },
     { value: 'ACTIVE', label: 'Unhide Apartments', description: 'Make selected apartments visible' },
-    { value: 'SOLD', label: 'Mark as Sold', description: 'Mark selected apartments as sold' },
   ];
 
   const handleBulkOperation = async () => {
@@ -53,8 +52,6 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
         return <EyeOff className="h-5 w-5 text-gray-600" />;
       case 'ACTIVE':
         return <Eye className="h-5 w-5 text-green-600" />;
-      case 'SOLD':
-        return <CheckCircle className="h-5 w-5 text-blue-600" />;
       default:
         return null;
     }

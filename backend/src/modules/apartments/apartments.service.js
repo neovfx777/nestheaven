@@ -13,19 +13,70 @@ function getVisibleStatusesForRole(role) {
   return ['active', 'sold'];
 }
 
+function parseJsonMaybe(val, fallback) {
+  if (!val) return fallback;
+  if (typeof val === 'string') {
+    try {
+      return JSON.parse(val);
+    } catch {
+      return val;
+    }
+  }
+  return val;
+}
+
+function formatComplexSummary(complex) {
+  if (!complex) return null;
+
+  const name = parseJsonMaybe(complex.name, { uz: '', ru: '', en: '' });
+  const address = parseJsonMaybe(complex.address, null);
+  const title =
+    complex.title ||
+    (typeof name === 'string'
+      ? name
+      : name?.en || name?.uz || name?.ru || '');
+  const locationText =
+    complex.locationText ||
+    (typeof address === 'string'
+      ? address
+      : address?.en || address?.uz || address?.ru || '');
+
+  const bannerImageUrl = complex.bannerImageUrl || null;
+
+  return {
+    ...complex,
+    name,
+    address,
+    title,
+    locationText,
+    bannerImageUrl,
+    walkabilityRating: complex.walkabilityRating ?? complex.walkabilityScore ?? null,
+    airQualityRating: complex.airQualityRating ?? complex.airQualityScore ?? null,
+    coverImage: bannerImageUrl,
+  };
+}
+
+function getAddressText(complexSummary) {
+  if (!complexSummary) return '';
+  if (complexSummary.locationText) return complexSummary.locationText;
+  const address = complexSummary.address;
+  if (typeof address === 'string') return address;
+  return address?.en || address?.uz || address?.ru || '';
+}
+
 // LIST funksiyasini soddalashtiramiz (500 xatosini bartaraf qilish uchun)
 async function list(data, reqUser) {
   try {
     const { page = 1, limit = 20, complexId, minPrice, maxPrice, rooms, status } = data.query;
     const skip = (page - 1) * limit;
 
-    console.log('🔍 Apartments list called:', { 
-      page, limit, complexId, minPrice, maxPrice, rooms, status, 
-      userRole: reqUser?.role || 'anonymous' 
+    console.log('Apartments list called:', {
+      page, limit, complexId, minPrice, maxPrice, rooms, status,
+      userRole: reqUser?.role || 'anonymous'
     });
 
     const where = {};
-    
+
     if (complexId) where.complexId = complexId;
     if (minPrice != null) where.price = { gte: parseFloat(minPrice) };
     if (maxPrice != null) where.price = { lte: parseFloat(maxPrice) };
@@ -39,11 +90,10 @@ async function list(data, reqUser) {
       where.status = { in: ['active', 'sold'] };
     }
 
-    console.log('📋 Where clause:', JSON.stringify(where, null, 2));
+    console.log('Where clause:', JSON.stringify(where, null, 2));
 
-    // Avval count, keyin findMany
     const total = await prisma.apartment.count({ where });
-    console.log('📊 Total apartments:', total);
+    console.log('Total apartments:', total);
 
     const items = await prisma.apartment.findMany({
       where,
@@ -57,6 +107,13 @@ async function list(data, reqUser) {
             name: true,
             city: true,
             address: true,
+            title: true,
+            locationText: true,
+            bannerImageUrl: true,
+            walkabilityRating: true,
+            airQualityRating: true,
+            walkabilityScore: true,
+            airQualityScore: true,
           }
         },
         images: {
@@ -76,37 +133,25 @@ async function list(data, reqUser) {
 
     console.log('Found apartments:', items.length);
 
-    // Format apartments (JSON string'larini object'ga aylantirish)
     const formattedApartments = items.map(apartment => {
       try {
-        const title = typeof apartment.title === 'string' 
-          ? JSON.parse(apartment.title) 
+        const title = typeof apartment.title === 'string'
+          ? JSON.parse(apartment.title)
           : apartment.title || { uz: '', ru: '', en: '' };
-        
+
         const description = apartment.description && typeof apartment.description === 'string'
           ? JSON.parse(apartment.description)
           : apartment.description;
-        
-        const address = apartment.complex?.address && typeof apartment.complex.address === 'string'
-          ? JSON.parse(apartment.complex.address)
-          : apartment.complex?.address;
 
-        const complexName = apartment.complex?.name && typeof apartment.complex.name === 'string'
-          ? JSON.parse(apartment.complex.name)
-          : apartment.complex?.name || { uz: '', ru: '', en: '' };
+        const complexSummary = formatComplexSummary(apartment.complex);
 
         return {
           ...apartment,
           title,
           description,
-          address: address?.en || address?.uz || address?.ru || '',
-          complex: apartment.complex ? {
-            ...apartment.complex,
-            name: complexName,
-            address: address
-          } : null,
+          address: getAddressText(complexSummary),
+          complex: complexSummary,
           coverImage: apartment.images?.[0]?.url || null,
-          // Legacy fields for compatibility
           titleUz: title.uz,
           titleRu: title.ru,
           titleEn: title.en,
@@ -142,7 +187,7 @@ async function list(data, reqUser) {
 async function getById(id, reqUser) {
   try {
     console.log('Getting apartment by ID:', id);
-    
+
     const apartment = await prisma.apartment.findUnique({
       where: { id },
       include: {
@@ -152,6 +197,13 @@ async function getById(id, reqUser) {
             name: true,
             city: true,
             address: true,
+            title: true,
+            locationText: true,
+            bannerImageUrl: true,
+            walkabilityRating: true,
+            airQualityRating: true,
+            walkabilityScore: true,
+            airQualityScore: true,
           }
         },
         images: {
@@ -175,7 +227,6 @@ async function getById(id, reqUser) {
       throw err;
     }
 
-    // Check visibility
     const visibleStatuses = getVisibleStatusesForRole(reqUser?.role || 'USER');
     if (!visibleStatuses.includes(apartment.status)) {
       const err = new Error('Apartment not found');
@@ -183,30 +234,23 @@ async function getById(id, reqUser) {
       throw err;
     }
 
-    // Parse JSON fields
-    const title = typeof apartment.title === 'string' 
-      ? JSON.parse(apartment.title) 
+    const title = typeof apartment.title === 'string'
+      ? JSON.parse(apartment.title)
       : apartment.title || { uz: '', ru: '', en: '' };
-    
+
     const description = apartment.description && typeof apartment.description === 'string'
       ? JSON.parse(apartment.description)
       : apartment.description;
-    
+
     const materials = apartment.materials && typeof apartment.materials === 'string'
       ? JSON.parse(apartment.materials)
       : apartment.materials;
-    
+
     const infrastructureNote = apartment.infrastructureNote && typeof apartment.infrastructureNote === 'string'
       ? JSON.parse(apartment.infrastructureNote)
       : apartment.infrastructureNote;
-    
-    const complexName = apartment.complex?.name && typeof apartment.complex.name === 'string'
-      ? JSON.parse(apartment.complex.name)
-      : apartment.complex?.name || { uz: '', ru: '', en: '' };
-    
-    const complexAddress = apartment.complex?.address && typeof apartment.complex.address === 'string'
-      ? JSON.parse(apartment.complex.address)
-      : apartment.complex?.address;
+
+    const complexSummary = formatComplexSummary(apartment.complex);
 
     return {
       ...apartment,
@@ -214,16 +258,11 @@ async function getById(id, reqUser) {
       description,
       materials,
       infrastructureNote,
-      complex: apartment.complex ? {
-        ...apartment.complex,
-        name: complexName,
-        address: complexAddress
-      } : null,
-      // Legacy fields for compatibility
+      complex: complexSummary,
       titleUz: title.uz,
       titleRu: title.ru,
       titleEn: title.en,
-      address: complexAddress?.en || complexAddress?.uz || complexAddress?.ru || '',
+      address: getAddressText(complexSummary),
       seller: apartment.seller ? {
         ...apartment.seller,
         fullName: `${apartment.seller.firstName || ''} ${apartment.seller.lastName || ''}`.trim()
@@ -275,6 +314,13 @@ async function getMyListings(options) {
             name: true,
             city: true,
             address: true,
+            title: true,
+            locationText: true,
+            bannerImageUrl: true,
+            walkabilityRating: true,
+            airQualityRating: true,
+            walkabilityScore: true,
+            airQualityScore: true,
           }
         },
         images: {
@@ -284,23 +330,20 @@ async function getMyListings(options) {
       },
     });
 
-    // Format apartments
     const formattedApartments = items.map(apartment => {
       try {
-        const title = typeof apartment.title === 'string' 
-          ? JSON.parse(apartment.title) 
+        const title = typeof apartment.title === 'string'
+          ? JSON.parse(apartment.title)
           : apartment.title || { uz: '', ru: '', en: '' };
-        
-        const address = apartment.complex?.address && typeof apartment.complex.address === 'string'
-          ? JSON.parse(apartment.complex.address)
-          : apartment.complex?.address;
+
+        const complexSummary = formatComplexSummary(apartment.complex);
 
         return {
           ...apartment,
           title,
-          address: address?.en || address?.uz || address?.ru || '',
+          address: getAddressText(complexSummary),
+          complex: complexSummary,
           coverImage: apartment.images?.[0]?.url || null,
-          // Legacy fields
           titleUz: title.uz,
           titleRu: title.ru,
           titleEn: title.en,
@@ -335,15 +378,17 @@ async function create(data, reqUser) {
       throw err;
     }
 
-    // Check if complex exists
-    const complex = await prisma.complex.findUnique({ 
-      where: { id: data.body.complexId } 
-    });
-    
-    if (!complex) {
-      const err = new Error('Complex not found');
-      err.statusCode = 404;
-      throw err;
+    let complexId = data.body.complexId ?? null;
+    if (complexId) {
+      const complex = await prisma.complex.findUnique({
+        where: { id: complexId }
+      });
+
+      if (!complex) {
+        const err = new Error('Complex not found');
+        err.statusCode = 404;
+        throw err;
+      }
     }
 
     const title = ensureI18n(data.body.title);
@@ -353,7 +398,7 @@ async function create(data, reqUser) {
 
     const apartment = await prisma.apartment.create({
       data: {
-        complexId: data.body.complexId,
+        complexId,
         sellerId: reqUser.id,
         price: parseFloat(data.body.price),
         area: parseFloat(data.body.area),
@@ -371,7 +416,15 @@ async function create(data, reqUser) {
           select: {
             id: true,
             name: true,
-            city: true
+            city: true,
+            address: true,
+            title: true,
+            locationText: true,
+            bannerImageUrl: true,
+            walkabilityRating: true,
+            airQualityRating: true,
+            walkabilityScore: true,
+            airQualityScore: true,
           }
         },
         images: true,
@@ -384,6 +437,7 @@ async function create(data, reqUser) {
       description: description,
       materials: materials,
       infrastructureNote: infrastructureNote,
+      complex: formatComplexSummary(apartment.complex),
     };
   } catch (error) {
     console.error('Error in create:', error);
@@ -394,10 +448,10 @@ async function create(data, reqUser) {
 // UPDATE apartment
 async function update(id, data, reqUser) {
   try {
-    const apartment = await prisma.apartment.findUnique({ 
-      where: { id } 
+    const apartment = await prisma.apartment.findUnique({
+      where: { id }
     });
-    
+
     if (!apartment) {
       const err = new Error('Apartment not found');
       err.statusCode = 404;
@@ -405,8 +459,7 @@ async function update(id, data, reqUser) {
     }
 
     const isOwner = apartment.sellerId === reqUser.id;
-    const isOwnerAdmin = reqUser.role === 'OWNER_ADMIN';
-
+    const isOwnerAdmin = reqUser.role === ROLES.OWNER_ADMIN;
     if (!isOwner && !isOwnerAdmin) {
       const err = new Error('Forbidden');
       err.statusCode = 403;
@@ -414,25 +467,40 @@ async function update(id, data, reqUser) {
     }
 
     const updates = {};
-    if (data.body.complexId !== undefined) updates.complexId = data.body.complexId;
+
+    if (data.body.complexId !== undefined) {
+      if (data.body.complexId === null) {
+        updates.complexId = null;
+      } else {
+        const complex = await prisma.complex.findUnique({
+          where: { id: data.body.complexId }
+        });
+        if (!complex) {
+          const err = new Error('Complex not found');
+          err.statusCode = 404;
+          throw err;
+        }
+        updates.complexId = data.body.complexId;
+      }
+    }
     if (data.body.price !== undefined) updates.price = parseFloat(data.body.price);
     if (data.body.area !== undefined) updates.area = parseFloat(data.body.area);
     if (data.body.rooms !== undefined) updates.rooms = parseInt(data.body.rooms);
     if (data.body.floor !== undefined) updates.floor = data.body.floor !== null ? parseInt(data.body.floor) : null;
     if (data.body.totalFloors !== undefined) updates.totalFloors = data.body.totalFloors !== null ? parseInt(data.body.totalFloors) : null;
-    
+
     if (data.body.title !== undefined) {
       updates.title = JSON.stringify(ensureI18n(data.body.title));
     }
-    
+
     if (data.body.description !== undefined) {
       updates.description = data.body.description ? JSON.stringify(ensureI18n(data.body.description)) : null;
     }
-    
+
     if (data.body.materials !== undefined) {
       updates.materials = data.body.materials ? JSON.stringify(ensureI18n(data.body.materials)) : null;
     }
-    
+
     if (data.body.infrastructureNote !== undefined) {
       updates.infrastructureNote = data.body.infrastructureNote ? JSON.stringify(ensureI18n(data.body.infrastructureNote)) : null;
     }
@@ -445,26 +513,33 @@ async function update(id, data, reqUser) {
           select: {
             id: true,
             name: true,
-            city: true
+            city: true,
+            address: true,
+            title: true,
+            locationText: true,
+            bannerImageUrl: true,
+            walkabilityRating: true,
+            airQualityRating: true,
+            walkabilityScore: true,
+            airQualityScore: true,
           }
         },
         images: true,
       },
     });
 
-    // Parse JSON fields for response
-    const title = typeof updated.title === 'string' 
-      ? JSON.parse(updated.title) 
+    const title = typeof updated.title === 'string'
+      ? JSON.parse(updated.title)
       : updated.title || { uz: '', ru: '', en: '' };
-    
+
     const description = updated.description && typeof updated.description === 'string'
       ? JSON.parse(updated.description)
       : updated.description;
-    
+
     const materials = updated.materials && typeof updated.materials === 'string'
       ? JSON.parse(updated.materials)
       : updated.materials;
-    
+
     const infrastructureNote = updated.infrastructureNote && typeof updated.infrastructureNote === 'string'
       ? JSON.parse(updated.infrastructureNote)
       : updated.infrastructureNote;
@@ -475,6 +550,7 @@ async function update(id, data, reqUser) {
       description: description,
       materials: materials,
       infrastructureNote: infrastructureNote,
+      complex: formatComplexSummary(updated.complex),
     };
   } catch (error) {
     console.error('Error in update:', error);
@@ -485,10 +561,10 @@ async function update(id, data, reqUser) {
 // DELETE apartment
 async function remove(id, reqUser) {
   try {
-    const apartment = await prisma.apartment.findUnique({ 
-      where: { id } 
+    const apartment = await prisma.apartment.findUnique({
+      where: { id }
     });
-    
+
     if (!apartment) {
       const err = new Error('Apartment not found');
       err.statusCode = 404;
@@ -515,18 +591,21 @@ async function remove(id, reqUser) {
 // MARK AS SOLD
 async function markSold(id, reqUser) {
   try {
-    const apartment = await prisma.apartment.findUnique({ 
-      where: { id } 
+    const apartment = await prisma.apartment.findUnique({
+      where: { id }
     });
-    
+
     if (!apartment) {
       const err = new Error('Apartment not found');
       err.statusCode = 404;
       throw err;
     }
 
-    if (apartment.sellerId !== reqUser.id) {
-      const err = new Error('You can only mark your own apartments as sold');
+    const isOwner = apartment.sellerId === reqUser.id;
+    const isOwnerAdmin = reqUser.role === 'OWNER_ADMIN';
+
+    if (!isOwner && !isOwnerAdmin) {
+      const err = new Error('Forbidden');
       err.statusCode = 403;
       throw err;
     }
@@ -539,43 +618,41 @@ async function markSold(id, reqUser) {
           select: {
             id: true,
             name: true,
-            city: true
+            city: true,
+            address: true,
+            title: true,
+            locationText: true,
+            bannerImageUrl: true,
+            walkabilityRating: true,
+            airQualityRating: true,
+            walkabilityScore: true,
+            airQualityScore: true,
           }
         },
         images: true,
       },
     });
 
-    const title = typeof updated.title === 'string' 
-      ? JSON.parse(updated.title) 
-      : updated.title || { uz: '', ru: '', en: '' };
-
-    return {
-      ...updated,
-      title: title,
-    };
+    return updated;
   } catch (error) {
     console.error('Error in markSold:', error);
     throw error;
   }
 }
 
-// HIDE/UNHIDE (admin only)
+// HIDE / UNHIDE
 async function hideUnhide(id, data, reqUser) {
   try {
-    const apartment = await prisma.apartment.findUnique({ 
-      where: { id } 
-    });
-    
-    if (!apartment) {
-      const err = new Error('Apartment not found');
-      err.statusCode = 404;
+    if (![ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN].includes(reqUser.role)) {
+      const err = new Error('Forbidden');
+      err.statusCode = 403;
       throw err;
     }
 
-    if (!['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'].includes(reqUser.role)) {
-      const err = new Error('Only admins can hide/unhide apartments');
-      err.statusCode = 403;
+    const apartment = await prisma.apartment.findUnique({ where: { id } });
+    if (!apartment) {
+      const err = new Error('Apartment not found');
+      err.statusCode = 404;
       throw err;
     }
 
@@ -587,77 +664,56 @@ async function hideUnhide(id, data, reqUser) {
           select: {
             id: true,
             name: true,
-            city: true
+            city: true,
+            address: true,
+            title: true,
+            locationText: true,
+            bannerImageUrl: true,
+            walkabilityRating: true,
+            airQualityRating: true,
+            walkabilityScore: true,
+            airQualityScore: true,
           }
         },
         images: true,
       },
     });
 
-    const title = typeof updated.title === 'string' 
-      ? JSON.parse(updated.title) 
-      : updated.title || { uz: '', ru: '', en: '' };
-
-    return {
-      ...updated,
-      title: title,
-    };
+    return updated;
   } catch (error) {
     console.error('Error in hideUnhide:', error);
     throw error;
   }
 }
 
-// ADD IMAGES
+// Add images
 async function addImages(apartmentId, urls, reqUser) {
   try {
-    const apartment = await prisma.apartment.findUnique({ 
-      where: { id: apartmentId } 
-    });
-    
+    const apartment = await prisma.apartment.findUnique({ where: { id: apartmentId } });
     if (!apartment) {
       const err = new Error('Apartment not found');
       err.statusCode = 404;
       throw err;
     }
 
-    if (apartment.sellerId !== reqUser.id && reqUser.role !== 'OWNER_ADMIN') {
+    const isOwner = apartment.sellerId === reqUser.id;
+    const isOwnerAdmin = reqUser.role === 'OWNER_ADMIN';
+
+    if (!isOwner && !isOwnerAdmin) {
       const err = new Error('Forbidden');
       err.statusCode = 403;
       throw err;
     }
 
-    // Get max order
-    const maxOrderResult = await prisma.apartmentImage.aggregate({
-      where: { apartmentId },
-      _max: { order: true },
-    });
-    
-    let order = (maxOrderResult._max.order ?? -1) + 1;
-
-    // Create images
-    await prisma.apartmentImage.createMany({
-      data: urls.map((url) => ({ 
-        apartmentId, 
-        url, 
-        order: order++ 
+    const created = await prisma.apartmentImage.createMany({
+      data: urls.map((url, idx) => ({
+        apartmentId,
+        url,
+        order: idx,
       })),
     });
 
-    const images = await prisma.apartmentImage.findMany({
-      where: { apartmentId },
-      orderBy: { order: 'asc' },
-    });
-
-    const title = typeof apartment.title === 'string' 
-      ? JSON.parse(apartment.title) 
-      : apartment.title || { uz: '', ru: '', en: '' };
-
-    return {
-      ...apartment,
-      images: images,
-      title: title,
-    };
+    return created;
   } catch (error) {
     console.error('Error in addImages:', error);
     throw error;
@@ -666,8 +722,8 @@ async function addImages(apartmentId, urls, reqUser) {
 
 module.exports = {
   list,
-  getMyListings,
   getById,
+  getMyListings,
   create,
   update,
   remove,

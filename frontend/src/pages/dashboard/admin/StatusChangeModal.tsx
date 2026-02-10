@@ -18,6 +18,7 @@ export const StatusChangeModal: React.FC<StatusChangeModalProps> = ({
   onClose,
   onStatusChange,
 }) => {
+  const normalizedCurrent = currentStatus?.toUpperCase() || '';
   const [status, setStatus] = useState('');
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,8 +26,7 @@ export const StatusChangeModal: React.FC<StatusChangeModalProps> = ({
   const statusOptions = [
     { value: 'ACTIVE', label: 'Active', description: 'Make apartment visible to users' },
     { value: 'HIDDEN', label: 'Hidden', description: 'Hide apartment from public view' },
-    { value: 'SOLD', label: 'Sold', description: 'Mark apartment as sold' },
-  ].filter(option => option.value !== currentStatus);
+  ].filter(option => option.value !== normalizedCurrent);
 
   const handleSubmit = async () => {
     if (!status) {
@@ -58,14 +58,12 @@ export const StatusChangeModal: React.FC<StatusChangeModalProps> = ({
   const getActionDescription = () => {
     if (!status) return '';
     
-    const from = currentStatus.toLowerCase();
+    const from = normalizedCurrent.toLowerCase();
     const to = status.toLowerCase();
     
     const descriptions: Record<string, string> = {
       'active->hidden': 'Hiding this apartment will remove it from public listings.',
-      'active->sold': 'Marking as sold will show it as sold to users.',
       'hidden->active': 'Unhiding will make this apartment visible to users.',
-      'hidden->sold': 'Marking a hidden apartment as sold.',
       'sold->active': 'Changing from sold back to active.',
       'sold->hidden': 'Hiding a sold apartment.',
     };

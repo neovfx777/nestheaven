@@ -38,6 +38,7 @@ async function createUser(data, reqUser) {
       id: true,
       email: true,
       role: true,
+      isActive: true,
       firstName: true,
       lastName: true,
       phone: true,
@@ -51,33 +52,29 @@ async function createUser(data, reqUser) {
 async function listUsers(filters, reqUser) {
   const { roleFilter, searchTerm, searchBy, mode } = filters;
   const isOwnerAdmin = reqUser.role === ROLES.OWNER_ADMIN;
-  const isManagerAdmin = reqUser.role === ROLES.MANAGER_ADMIN;
 
   const where = {};
-  
-  if (isManagerAdmin && !isOwnerAdmin) {
-    if (!roleFilter) {
-      where.role = ROLES.ADMIN;
-    }
-    else if (roleFilter === ROLES.MANAGER_ADMIN || roleFilter === ROLES.OWNER_ADMIN) {
+
+  const allowedRoles = isOwnerAdmin
+    ? [ROLES.USER, ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN]
+    : [ROLES.USER, ROLES.SELLER, ROLES.ADMIN];
+
+  let scopedRoles = allowedRoles;
+  if (mode === 'users') {
+    scopedRoles = allowedRoles.filter((role) => [ROLES.USER, ROLES.SELLER].includes(role));
+  } else if (mode === 'admins') {
+    scopedRoles = allowedRoles.filter((role) => [ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN].includes(role));
+  }
+
+  if (roleFilter) {
+    if (!scopedRoles.includes(roleFilter)) {
       const err = new Error('Forbidden');
       err.statusCode = 403;
       throw err;
     }
+    where.role = roleFilter;
   } else {
-    if (mode === 'users') {
-      where.role = {
-        in: [ROLES.USER, ROLES.SELLER]
-      };
-    } else if (mode === 'admins') {
-      where.role = {
-        in: [ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN]
-      };
-    }
-    
-    if (roleFilter) {
-      where.role = roleFilter;
-    }
+    where.role = scopedRoles.length === 1 ? scopedRoles[0] : { in: scopedRoles };
   }
   
   if (searchTerm && searchTerm.trim() !== '') {
@@ -159,6 +156,7 @@ async function listUsers(filters, reqUser) {
       id: true,
       email: true,
       role: true,
+      isActive: true,
       firstName: true,
       lastName: true,
       phone: true,
@@ -222,6 +220,7 @@ async function getUserById(id, reqUser) {
       id: true,
       email: true,
       role: true,
+      isActive: true,
       firstName: true,
       lastName: true,
       phone: true,
@@ -236,7 +235,7 @@ async function getUserById(id, reqUser) {
   }
 
   // Check permissions
-  if (reqUser.role === ROLES.MANAGER_ADMIN && user.role !== ROLES.ADMIN) {
+  if (reqUser.role === ROLES.MANAGER_ADMIN && [ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN].includes(user.role)) {
     const err = new Error('Forbidden');
     err.statusCode = 403;
     throw err;
@@ -253,19 +252,49 @@ async function updateUser(id, data, reqUser) {
     throw err;
   }
 
-  // Check permissions
-  if (reqUser.role === ROLES.MANAGER_ADMIN && existingUser.role !== ROLES.ADMIN) {
-    const err = new Error('Forbidden');
-    err.statusCode = 403;
-    throw err;
+  // Manager admin cannot manage other managers or owner
+  if (reqUser.role === ROLES.MANAGER_ADMIN) {
+    if ([ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN].includes(existingUser.role)) {
+      const err = new Error('Forbidden');
+      err.statusCode = 403;
+      throw err;
+    }
   }
 
   const updates = {};
   if (data.body.firstName !== undefined) updates.firstName = data.body.firstName;
   if (data.body.lastName !== undefined) updates.lastName = data.body.lastName;
   if (data.body.phone !== undefined) updates.phone = data.body.phone;
-  if (data.body.role !== undefined && canCreateRole(reqUser.role, data.body.role)) {
+  if (data.body.role !== undefined) {
+    if (!canCreateRole(reqUser.role, data.body.role)) {
+      const err = new Error('Cannot assign this role');
+      err.statusCode = 403;
+      throw err;
+    }
     updates.role = data.body.role;
+  }
+
+  if (data.body.isActive !== undefined) {
+    if (reqUser.id === existingUser.id && data.body.isActive === false) {
+      const err = new Error('You cannot deactivate yourself');
+      err.statusCode = 400;
+      throw err;
+    }
+    if (reqUser.role === ROLES.MANAGER_ADMIN) {
+      if ([ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN].includes(existingUser.role)) {
+        const err = new Error('Forbidden');
+        err.statusCode = 403;
+        throw err;
+      }
+    }
+    updates.isActive = data.body.isActive;
+    if (data.body.isActive === false) {
+      updates.deactivatedAt = new Date();
+      updates.deactivatedById = reqUser.id;
+    } else {
+      updates.deactivatedAt = null;
+      updates.deactivatedById = null;
+    }
   }
 
   return prisma.user.update({
@@ -275,6 +304,7 @@ async function updateUser(id, data, reqUser) {
       id: true,
       email: true,
       role: true,
+      isActive: true,
       firstName: true,
       lastName: true,
       phone: true,
@@ -292,6 +322,12 @@ async function deleteUser(id, reqUser) {
   }
 
   // Check permissions - can't delete users with equal or higher role
+  if (reqUser.id === existingUser.id) {
+    const err = new Error('You cannot delete yourself');
+    err.statusCode = 400;
+    throw err;
+  }
+
   if (!canCreateRole(reqUser.role, existingUser.role)) {
     const err = new Error('Cannot delete user with equal or higher role');
     err.statusCode = 403;

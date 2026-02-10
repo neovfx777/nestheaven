@@ -16,6 +16,7 @@ interface User {
   id: string;
   email: string;
   role: string;
+  isActive?: boolean;
   firstName?: string;
   lastName?: string;
   phone?: string;
@@ -41,7 +42,7 @@ interface UserManagementProps {
 }
 
 export function UserManagement({ mode = 'users' }: UserManagementProps) {
-  const { token } = useAuthStore();
+  const { token, user: currentUser } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [searchBy, setSearchBy] = useState('all');
@@ -56,6 +57,40 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
     lastName: '',
     phone: ''
   });
+
+  const roleOptions = useMemo(() => {
+    if (currentUser?.role === 'OWNER_ADMIN') {
+      return [
+        { value: 'USER', label: 'User' },
+        { value: 'SELLER', label: 'Seller' },
+        { value: 'ADMIN', label: 'Admin' },
+        { value: 'MANAGER_ADMIN', label: 'Manager Admin' },
+      ];
+    }
+    if (currentUser?.role === 'MANAGER_ADMIN') {
+      return [
+        { value: 'USER', label: 'User' },
+        { value: 'SELLER', label: 'Seller' },
+      ];
+    }
+    return [{ value: 'USER', label: 'User' }];
+  }, [currentUser?.role]);
+
+  const canDeleteUsers = currentUser?.role === 'OWNER_ADMIN';
+
+  const createRoleOptions = useMemo(() => {
+    if (mode === 'admins') {
+      return roleOptions.filter((opt) => ['ADMIN', 'MANAGER_ADMIN'].includes(opt.value));
+    }
+    return roleOptions.filter((opt) => ['USER', 'SELLER'].includes(opt.value));
+  }, [mode, roleOptions]);
+
+  const canCreateInMode = useMemo(() => {
+    if (mode === 'admins') {
+      return createRoleOptions.length > 0;
+    }
+    return true;
+  }, [mode, createRoleOptions]);
 
   const queryClient = useQueryClient();
 
@@ -215,6 +250,14 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
     }
   };
 
+  const handleToggleActive = (user: User) => {
+    const nextActive = user.isActive === false ? true : false;
+    const label = nextActive ? 'activate' : 'deactivate';
+    if (window.confirm(`Are you sure you want to ${label} this user?`)) {
+      updateUserMutation.mutate({ id: user.id, isActive: nextActive });
+    }
+  };
+
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'OWNER_ADMIN': return 'bg-purple-100 text-purple-800';
@@ -241,6 +284,15 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
       refetch();
     }
   }, [token]);
+
+  useEffect(() => {
+    if (!createRoleOptions.some((opt) => opt.value === createForm.role)) {
+      setCreateForm((prev) => ({
+        ...prev,
+        role: createRoleOptions[0]?.value || 'USER',
+      }));
+    }
+  }, [createRoleOptions]);
 
   // Refetch when searchTerm or roleFilter changes
   useEffect(() => {
@@ -271,10 +323,12 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
               : 'Manage regular users and sellers'}
           </p>
         </div>
-        <Button onClick={() => setIsCreateModalOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add User
-        </Button>
+        {canCreateInMode && (
+          <Button onClick={() => setIsCreateModalOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add User
+          </Button>
+        )}
       </div>
 
       {/* Filters */}
@@ -427,6 +481,7 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
                   <tr className="border-b">
                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">User</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Role</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Status</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Contact</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Created</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Actions</th>
@@ -455,6 +510,17 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
                           {getRoleLabel(user.role)}
                         </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        {user.isActive === false ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                            Deactivated
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                            Active
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-4">
                         <div className="space-y-1">
@@ -488,11 +554,21 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="text-red-600 hover:text-red-700"
+                            onClick={() => handleToggleActive(user)}
+                            className={user.isActive === false ? 'text-green-600 hover:text-green-700' : 'text-orange-600 hover:text-orange-700'}
                           >
-                            <Trash2 className="w-3 h-3" />
+                            {user.isActive === false ? 'Activate' : 'Deactivate'}
                           </Button>
+                          {canDeleteUsers && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteUser(user.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -535,12 +611,7 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
             <Select
               value={createForm.role}
               onChange={(value) => setCreateForm({...createForm, role: value})}
-              options={[
-                { value: 'USER', label: 'User' },
-                { value: 'SELLER', label: 'Seller' },
-                { value: 'ADMIN', label: 'Admin' },
-                { value: 'MANAGER_ADMIN', label: 'Manager Admin' }
-              ]}
+              options={createRoleOptions}
               required
             />
           </div>
@@ -603,16 +674,15 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-              <Select
-                value={editingUser.role}
-                onChange={(value) => setEditingUser({...editingUser, role: value})}
-                options={[
-                  { value: 'USER', label: 'User' },
-                  { value: 'SELLER', label: 'Seller' },
-                  { value: 'ADMIN', label: 'Admin' },
-                  { value: 'MANAGER_ADMIN', label: 'Manager Admin' }
-                ]}
-              />
+              {roleOptions.some((opt) => opt.value === editingUser.role) ? (
+                <Select
+                  value={editingUser.role}
+                  onChange={(value) => setEditingUser({...editingUser, role: value})}
+                  options={roleOptions}
+                />
+              ) : (
+                <Input value={editingUser.role} disabled />
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>

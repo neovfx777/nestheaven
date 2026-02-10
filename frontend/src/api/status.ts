@@ -39,8 +39,16 @@ export const statusApi = {
     status: string, 
     reason?: string
   ) => {
-    const response = await apiClient.put(`/apartments/${apartmentId}/status`, {
-      status,
+    const normalized = status.toLowerCase();
+    if (normalized === 'sold') {
+      const response = await apiClient.post(`/apartments/${apartmentId}/sold`, {
+        reason,
+      });
+      return response.data;
+    }
+
+    const response = await apiClient.patch(`/apartments/${apartmentId}/visibility`, {
+      status: normalized,
       reason,
     });
     return response.data;
@@ -74,15 +82,25 @@ export const statusApi = {
     status: string, 
     reason?: string
   ): Promise<BulkStatusResponse> => {
-    const response = await apiClient.post<{ 
-      success: boolean; 
-      data: BulkStatusResponse 
-    }>('/apartments/bulk/status', {
-      apartmentIds,
-      status,
-      reason,
+    const results = await Promise.allSettled(
+      apartmentIds.map((apartmentId) => statusApi.changeStatus(apartmentId, status, reason))
+    );
+
+    const errors: BulkStatusResponse['errors'] = [];
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        errors.push({
+          apartmentId: apartmentIds[index],
+          error: result.reason?.message || 'Failed to update status',
+        });
+      }
     });
-    return response.data.data;
+
+    return {
+      successful: apartmentIds.length - errors.length,
+      failed: errors.length,
+      errors,
+    };
   },
 
   // Mark as sold (seller only)
@@ -92,7 +110,7 @@ export const statusApi = {
     soldDate?: string, 
     buyerInfo?: string
   ) => {
-    const response = await apiClient.post(`/apartments/${apartmentId}/mark-sold`, {
+    const response = await apiClient.post(`/apartments/${apartmentId}/sold`, {
       soldPrice,
       soldDate,
       buyerInfo,

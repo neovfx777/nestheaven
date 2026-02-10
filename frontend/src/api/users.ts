@@ -33,6 +33,7 @@ export interface AdminUser {
   id: string;
   email: string;
   role: string;
+  isActive?: boolean;
   firstName?: string;
   lastName?: string;
   phone?: string;
@@ -68,6 +69,7 @@ export interface UpdateUserData {
   lastName?: string;
   phone?: string;
   role?: string;
+  isActive?: boolean;
 }
 
 export const usersApi = {

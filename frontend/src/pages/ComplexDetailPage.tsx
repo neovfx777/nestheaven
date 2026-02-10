@@ -11,6 +11,7 @@ import {
   Info,
 } from 'lucide-react';
 import { apartmentsApi, Apartment, Complex } from '../api/apartments';
+import { getAssetUrl } from '../api/client';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 
@@ -82,11 +83,36 @@ const ComplexDetailPage = () => {
     (complex.name as any)?.ru ||
     (typeof complex.name === 'string' ? complex.name : 'Kompleks');
 
+  const complexTitle =
+    (typeof complex.title === 'string' && complex.title) ||
+    (complex.title as any)?.en ||
+    (complex.title as any)?.uz ||
+    (complex.title as any)?.ru ||
+    complexName;
+
   const complexAddress =
+    (typeof complex.locationText === 'string' && complex.locationText) ||
+    (complex.locationText as any)?.en ||
+    (complex.locationText as any)?.uz ||
+    (complex.locationText as any)?.ru ||
     (complex.address as any)?.en ||
     (complex.address as any)?.uz ||
     (complex.address as any)?.ru ||
     (typeof complex.address === 'string' ? complex.address : '');
+
+  const bannerUrl = getAssetUrl(
+    complex.bannerImageUrl || complex.coverImage || null
+  );
+  const permissionLinks = [
+    { label: 'Permission 1', url: complex.permission1Url },
+    { label: 'Permission 2', url: complex.permission2Url },
+    { label: 'Permission 3', url: complex.permission3Url },
+  ]
+    .map((item) => ({ ...item, url: getAssetUrl(item.url || null) }))
+    .filter((item) => item.url);
+
+  const amenities = complex.amenities || [];
+  const nearbyPlaces = complex.nearbyPlaces || [];
 
   const totalApartments =
     complex._count?.apartments ?? apartments.length ?? 0;
@@ -114,6 +140,15 @@ const ComplexDetailPage = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {bannerUrl && (
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+            <img
+              src={bannerUrl}
+              alt={complexTitle}
+              className="w-full h-64 md:h-80 object-cover"
+            />
+          </div>
+        )}
         {/* Header / Hero */}
         <Card>
           <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -123,7 +158,7 @@ const ComplexDetailPage = () => {
               </div>
               <div>
                 <CardTitle className="text-2xl md:text-3xl">
-                  {complexName}
+                  {complexTitle}
                 </CardTitle>
                 <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-600">
                   <span className="inline-flex items-center gap-1">
@@ -136,7 +171,7 @@ const ComplexDetailPage = () => {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3 text-sm text-gray-700">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm text-gray-700">
               <div className="bg-gray-50 rounded-lg px-4 py-3">
                 <div className="text-xs text-gray-500 mb-1">Kvartiralar soni</div>
                 <div className="text-lg font-semibold">
@@ -147,8 +182,107 @@ const ComplexDetailPage = () => {
                 <div className="text-xs text-gray-500 mb-1">Status</div>
                 <div className="text-lg font-semibold">Faol loyiha</div>
               </div>
+              <div className="bg-gray-50 rounded-lg px-4 py-3">
+                <div className="text-xs text-gray-500 mb-1">Walkability</div>
+                <div className="text-lg font-semibold">
+                  {complex.walkabilityRating ?? '—'}/10
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-lg px-4 py-3">
+                <div className="text-xs text-gray-500 mb-1">Air quality</div>
+                <div className="text-lg font-semibold">
+                  {complex.airQualityRating ?? '—'}/10
+                </div>
+              </div>
             </div>
           </CardHeader>
+        </Card>
+
+        {/* Complex info */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Kompleks haqida</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm text-gray-700">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <div className="text-xs text-gray-500 mb-1">Manzil</div>
+                <div>{complexAddress || '—'}</div>
+                {(complex.locationLat != null || complex.locationLng != null) && (
+                  <div className="text-xs text-gray-500 mt-2">
+                    Koordinatalar: {complex.locationLat ?? '—'},{' '}
+                    {complex.locationLng ?? '—'}
+                  </div>
+                )}
+              </div>
+              <div>
+                <div className="text-xs text-gray-500 mb-1">Baholar</div>
+                <div>Walkability: {complex.walkabilityRating ?? '—'}/10</div>
+                <div>Air quality: {complex.airQualityRating ?? '—'}/10</div>
+              </div>
+            </div>
+
+            {complex.nearbyNote && (
+              <div>
+                <div className="text-xs text-gray-500 mb-1">Atrof</div>
+                <div>{complex.nearbyNote}</div>
+              </div>
+            )}
+
+            {amenities.length > 0 && (
+              <div>
+                <div className="text-xs text-gray-500 mb-2">Ichki imkoniyatlar</div>
+                <div className="flex flex-wrap gap-2">
+                  {amenities.map((item) => (
+                    <span
+                      key={item}
+                      className="px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {nearbyPlaces.length > 0 && (
+              <div>
+                <div className="text-xs text-gray-500 mb-2">Yaqin joylar</div>
+                <div className="space-y-2">
+                  {nearbyPlaces.map((place, idx) => (
+                    <div key={`${place.name}-${idx}`} className="flex flex-wrap gap-2">
+                      <span className="font-medium">{place.name}</span>
+                      <span className="text-gray-500">
+                        {place.distanceMeters} m
+                      </span>
+                      {place.note && (
+                        <span className="text-gray-500">({place.note})</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {permissionLinks.length > 0 && (
+              <div>
+                <div className="text-xs text-gray-500 mb-2">Ruxsatnomalar</div>
+                <div className="flex flex-wrap gap-3">
+                  {permissionLinks.map((item) => (
+                    <a
+                      key={item.label}
+                      href={item.url as string}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                    >
+                      {item.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
         </Card>
 
         {/* Info about materials / infrastructure (overall) */}

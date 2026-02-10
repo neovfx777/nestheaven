@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
-  Search, Filter, Eye, EyeOff, CheckCircle, XCircle, 
-  AlertTriangle, MoreVertical, RefreshCw, Download 
+  Search, Filter, Eye, EyeOff, CheckCircle,
+  AlertTriangle, RefreshCw
 } from 'lucide-react';
 import { apartmentsApi } from '../../../api/apartments';
 import { statusApi } from '../../../api/status';
@@ -97,7 +97,8 @@ export const AdminApartments: React.FC = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    const normalized = status?.toUpperCase();
+    switch (normalized) {
       case 'ACTIVE':
         return <Badge variant="success">Active</Badge>;
       case 'HIDDEN':
@@ -110,7 +111,8 @@ export const AdminApartments: React.FC = () => {
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
+    const normalized = status?.toUpperCase();
+    switch (normalized) {
       case 'ACTIVE':
         return <Eye className="h-4 w-4 text-green-600" />;
       case 'HIDDEN':

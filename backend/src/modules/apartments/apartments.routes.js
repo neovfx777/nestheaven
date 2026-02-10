@@ -27,9 +27,10 @@ router.get('/seller/my', authMiddleware, requireSeller, apartmentsController.get
 router.post('/', authMiddleware, requireSeller, validateCreate, apartmentsController.create);
 router.post('/:id/sold', authMiddleware, requireSeller, validateMarkSold, apartmentsController.markSold);
 
-// Yangilash/O'chirish (seller o'z listlarini, owner_admin hammasini)
+// Yangilash (seller o'z listlarini, owner_admin hammasini)
 router.patch('/:id', authMiddleware, requireRoles(ROLES.SELLER, ROLES.OWNER_ADMIN), validateUpdate, apartmentsController.update);
-router.delete('/:id', authMiddleware, requireRoles(ROLES.SELLER, ROLES.OWNER_ADMIN), validateGetById, apartmentsController.remove);
+// Faqat owner admin butkul o'chira oladi
+router.delete('/:id', authMiddleware, requireRoles(ROLES.OWNER_ADMIN), validateGetById, apartmentsController.remove);
 
 // Admin uchun route'lar
 router.patch('/:id/visibility', authMiddleware, requireAdmin, validateHideUnhide, apartmentsController.hideUnhide);

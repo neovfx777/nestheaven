@@ -109,13 +109,19 @@ const DashboardLayout = () => {
       name: 'User Management',
       href: '/dashboard/admin/users',
       icon: Users,
-      roles: ['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'],
+      roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'],
+    },
+    {
+      name: 'Complexes',
+      href: '/dashboard/admin/complexes',
+      icon: Building2,
+      roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'],
     },
     {
       name: 'Analytics',
       href: '/dashboard/admin/analytics',
       icon: BarChart3,
-      roles: ['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'],
+      roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'],
     },
 
     // MANAGER_ADMIN

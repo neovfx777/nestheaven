@@ -1,4 +1,4 @@
-const { ROLES, hasRoleOrAbove } = require('../utils/roles');
+const { ROLES } = require('../utils/roles');
 
 /**
  * Require at least one of the given roles
@@ -21,7 +21,7 @@ function requireUser(req, res, next) {
 }
 
 function requireSeller(req, res, next) {
-  return requireRoles(ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN)(req, res, next);
+  return requireRoles(ROLES.SELLER, ROLES.OWNER_ADMIN)(req, res, next);
 }
 
 function requireAdmin(req, res, next) {

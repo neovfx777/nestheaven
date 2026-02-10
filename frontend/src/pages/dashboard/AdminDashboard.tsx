@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { EyeOff, CheckCircle, XCircle, AlertTriangle, Filter, Eye, Users, Shield } from 'lucide-react';
+import { EyeOff, CheckCircle, AlertTriangle, Filter, Eye, Shield } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { AdminApartments } from './admin/AdminApartments';
 import { ComplexList } from './admin/ComplexList';
@@ -10,7 +9,6 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useQuery } from '@tanstack/react-query';
 import { apartmentsApi } from '../../api/apartments';
-import { statusApi } from '../../api/status';
 
 const AdminDashboard = () => {
   const { user } = useAuthStore();
@@ -77,12 +75,10 @@ const AdminDashboard = () => {
     totalListings: 0,
   };
 
-  // Check if user can access user management
+  // Manager/Owner-only areas (admin role should only moderate listings)
   const canAccessUserManagement = user?.role === 'OWNER_ADMIN' || user?.role === 'MANAGER_ADMIN';
-
-  // Admin uchun komplekslar va analytics access
-  const canAccessComplexes = user?.role === 'ADMIN' || user?.role === 'MANAGER_ADMIN' || user?.role === 'OWNER_ADMIN';
-  const canAccessAnalytics = user?.role === 'ADMIN' || user?.role === 'MANAGER_ADMIN' || user?.role === 'OWNER_ADMIN';
+  const canAccessComplexes = user?.role === 'MANAGER_ADMIN' || user?.role === 'OWNER_ADMIN';
+  const canAccessAnalytics = user?.role === 'MANAGER_ADMIN' || user?.role === 'OWNER_ADMIN';
 
   return (
     <div className="max-w-7xl mx-auto">

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card';
 import { useAuthStore } from '../../stores/authStore';
+import apiClient from '../../api/client';
 
 export function Overview() {
   const { user, token } = useAuthStore();
@@ -13,16 +14,9 @@ export function Overview() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['overview-stats'],
     queryFn: async () => {
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-      const response = await fetch('/api/analytics/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (!response.ok) return null;
-      return response.json();
+      if (!token) return null;
+      const response = await apiClient.get('/analytics/stats');
+      return response.data;
     }
   });
 

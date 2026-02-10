@@ -9,6 +9,7 @@ export interface LoginResponse {
       email: string;
       fullName: string;
       role: string;
+      isActive?: boolean;
     };
     token: string;
   };
@@ -22,6 +23,7 @@ export interface RegisterResponse {
       email: string;
       fullName: string;
       role: string;
+      isActive?: boolean;
       createdAt: string;
     };
     token: string;
@@ -36,6 +38,7 @@ export interface ProfileResponse {
     fullName: string;
     phone: string | null;
     role: string;
+    isActive?: boolean;
     createdAt: string;
     updatedAt: string;
   };

@@ -1,7 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Building2, User, LogIn, MapPin, TrendingUp, Calendar } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { defaultComplexData } from '../../data/defaultData';
+import { broadcastsApi } from '../../api/broadcasts';
 
 const Header = () => {
   const { isAuthenticated, user } = useAuthStore();
@@ -9,6 +11,19 @@ const Header = () => {
   const isHomePage = location.pathname === '/';
 
   const complexData = defaultComplexData;
+
+  const { data: broadcasts } = useQuery({
+    queryKey: ['broadcasts', 'latest'],
+    queryFn: () => broadcastsApi.getBroadcasts(1),
+    staleTime: 60 * 1000,
+    retry: 1,
+  });
+
+  const latestBroadcast = broadcasts?.[0];
+  const bannerTitle = latestBroadcast?.title || 'Yangi uy-joylar keldi!';
+  const bannerMessage =
+    latestBroadcast?.message ||
+    'Premium kvartiralarni ko‘rib chiqing va 15% gacha chegirma oling!';
 
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -91,13 +106,13 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Advertising Banner */}
+      {/* Advertising/Broadcast Banner */}
       <div className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 text-white">
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-center gap-3 text-sm md:text-base">
             <span className="font-bold animate-pulse">🔥</span>
             <span className="font-semibold">
-              Yangi uy-joylar keldi! Premium kvartiralarni ko'rib chiqing va 15% gacha chegirma oling!
+              {bannerTitle} {bannerMessage}
             </span>
             <Link
               to="/apartments"

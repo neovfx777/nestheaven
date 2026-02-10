@@ -1,10 +1,32 @@
 import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Shield, Users, Settings, BarChart3, Globe, CreditCard, Server, Bell } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
+import { broadcastsApi } from '../../api/broadcasts';
+import { Input } from '../../components/ui/Input';
+import { Textarea } from '../../components/ui/Textarea';
+import { Button } from '../../components/ui/Button';
 
 const OwnerDashboard = () => {
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('overview');
+  const [broadcastForm, setBroadcastForm] = useState({ title: '', message: '' });
+  const queryClient = useQueryClient();
+
+  const { data: broadcasts } = useQuery({
+    queryKey: ['broadcasts', 'owner'],
+    queryFn: () => broadcastsApi.getBroadcasts(5),
+    staleTime: 30 * 1000,
+  });
+
+  const createBroadcastMutation = useMutation({
+    mutationFn: (data: { title: string; message: string }) =>
+      broadcastsApi.createBroadcast({ ...data, isActive: true }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['broadcasts'] });
+      setBroadcastForm({ title: '', message: '' });
+    },
+  });
 
   // Mock data
   const mockSystemStats = {
@@ -46,6 +68,50 @@ const OwnerDashboard = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Broadcast Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <Bell className="h-5 w-5 text-purple-600" />
+          <h3 className="text-lg font-semibold text-gray-900">Broadcast Message</h3>
+        </div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!broadcastForm.title.trim() || !broadcastForm.message.trim()) return;
+            createBroadcastMutation.mutate(broadcastForm);
+          }}
+          className="space-y-3"
+        >
+          <Input
+            placeholder="Title"
+            value={broadcastForm.title}
+            onChange={(e) => setBroadcastForm({ ...broadcastForm, title: e.target.value })}
+          />
+          <Textarea
+            placeholder="Message"
+            value={broadcastForm.message}
+            onChange={(e) => setBroadcastForm({ ...broadcastForm, message: e.target.value })}
+            rows={3}
+          />
+          <div className="flex justify-end">
+            <Button type="submit" disabled={createBroadcastMutation.isPending}>
+              {createBroadcastMutation.isPending ? 'Sending...' : 'Send Broadcast'}
+            </Button>
+          </div>
+        </form>
+        {broadcasts && broadcasts.length > 0 && (
+          <div className="mt-6 space-y-3">
+            <div className="text-sm font-medium text-gray-700">Recent Broadcasts</div>
+            {broadcasts.map((b) => (
+              <div key={b.id} className="border border-gray-200 rounded-lg p-3 text-sm">
+                <div className="font-semibold text-gray-900">{b.title}</div>
+                <div className="text-gray-600">{b.message}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* System Overview Cards */}

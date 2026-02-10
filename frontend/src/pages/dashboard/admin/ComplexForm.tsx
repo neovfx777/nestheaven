@@ -1,43 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import axios from 'axios';
 import { AlertCircle, Check } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Textarea } from '../../../components/ui/Textarea';
-import { useAuthStore } from '../../../stores/authStore';
+import apiClient from '../../../api/client';
+import { LocationPicker, MapLocation } from '../../../components/maps/LocationPicker';
 
 // Form schema aligned with backend createComplexSchema
+const ratingSchema = z
+  .string()
+  .min(1, 'Rating is required')
+  .regex(/^\d+$/, 'Rating must be 0-10')
+  .refine((val) => {
+    const num = Number(val);
+    return num >= 0 && num <= 10;
+  }, 'Rating must be between 0 and 10');
+
+const latitudeSchema = z
+  .string()
+  .min(1, 'Latitude is required')
+  .regex(/^-?\d+(\.\d+)?$/, 'Latitude must be a number')
+  .refine((val) => {
+    const num = Number(val);
+    return num >= -90 && num <= 90;
+  }, 'Latitude must be between -90 and 90');
+
+const longitudeSchema = z
+  .string()
+  .min(1, 'Longitude is required')
+  .regex(/^-?\d+(\.\d+)?$/, 'Longitude must be a number')
+  .refine((val) => {
+    const num = Number(val);
+    return num >= -180 && num <= 180;
+  }, 'Longitude must be between -180 and 180');
+
 const complexSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(1, 'Description is required'),
-  address: z.string().min(1, 'Address is required'),
+  locationText: z.string().min(1, 'Address is required'),
   city: z.string().min(1, 'City is required'),
-  latitude: z
-    .string()
-    .min(1, 'Latitude is required')
-    .regex(/^-?\d+(\.\d+)?$/, 'Latitude must be a number'),
-  longitude: z
-    .string()
-    .min(1, 'Longitude is required')
-    .regex(/^-?\d+(\.\d+)?$/, 'Longitude must be a number'),
-  walkabilityScore: z
-    .string()
-    .min(1, 'Walkability is required')
-    .regex(/^\d+$/, 'Walkability must be 1-10'),
-  airQualityScore: z
-    .string()
-    .optional()
-    .refine((val) => !val || /^\d+$/.test(val), {
-      message: 'Air quality must be numeric',
-    }),
-  airQualityNote: z.string().optional(),
-  nearbyInfrastructureText: z
-    .string()
-    .min(1, 'Nearby infrastructure description is required'),
+  locationLat: latitudeSchema,
+  locationLng: longitudeSchema,
+  walkabilityRating: ratingSchema,
+  airQualityRating: ratingSchema,
+  nearbyNote: z.string().optional(),
 });
 
 type ComplexFormData = z.infer<typeof complexSchema>;
@@ -46,22 +58,21 @@ export function ComplexForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
-  const { token } = useAuthStore();
 
   const [permission1, setPermission1] = useState<File | null>(null);
   const [permission2, setPermission2] = useState<File | null>(null);
   const [permission3, setPermission3] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [locationRequestError, setLocationRequestError] = useState<string | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
 
   // Fetch complex data for editing
   const { data: complexData } = useQuery({
     queryKey: ['complex', id],
     queryFn: async () => {
       if (!id) return null;
-      const response = await fetch(`/api/complexes/${id}`);
-      if (!response.ok) throw new Error('Failed to fetch complex');
-      const json = await response.json();
-      return json.data;
+      const response = await apiClient.get(`/complexes/${id}`);
+      return response.data?.data ?? response.data;
     },
     enabled: isEdit,
   });
@@ -70,20 +81,21 @@ export function ComplexForm() {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<ComplexFormData>({
     resolver: zodResolver(complexSchema),
     defaultValues: {
       title: '',
       description: '',
-      address: '',
+      locationText: '',
       city: '',
-      latitude: '',
-      longitude: '',
-      walkabilityScore: '',
-      airQualityScore: '',
-      airQualityNote: '',
-      nearbyInfrastructureText: '',
+      locationLat: '',
+      locationLng: '',
+      walkabilityRating: '',
+      airQualityRating: '',
+      nearbyNote: '',
     },
   });
 
@@ -102,17 +114,110 @@ export function ComplexForm() {
       reset({
         title,
         description: complexData.description || '',
-        address,
+        locationText: complexData.locationText || address,
         city: complexData.city || '',
-        latitude: complexData.location?.latitude?.toString() || '',
-        longitude: complexData.location?.longitude?.toString() || '',
-        walkabilityScore: complexData.walkabilityScore?.toString() || '',
-        airQualityScore: complexData.airQualityScore?.toString() || '',
-        airQualityNote: complexData.airQualityNote || '',
-        nearbyInfrastructureText: complexData.nearbyInfrastructureText || '',
+        locationLat:
+          complexData.locationLat?.toString() ||
+          complexData.latitude?.toString() ||
+          complexData.location?.latitude?.toString() ||
+          '',
+        locationLng:
+          complexData.locationLng?.toString() ||
+          complexData.longitude?.toString() ||
+          complexData.location?.longitude?.toString() ||
+          '',
+        walkabilityRating:
+          complexData.walkabilityRating?.toString() ||
+          complexData.walkabilityScore?.toString() ||
+          '',
+        airQualityRating:
+          complexData.airQualityRating?.toString() ||
+          complexData.airQualityScore?.toString() ||
+          '',
+        nearbyNote: complexData.nearbyNote || complexData.nearbyInfrastructure || '',
       });
     }
   }, [complexData, reset]);
+
+  const locationLat = watch('locationLat');
+  const locationLng = watch('locationLng');
+
+  const parseCoordinate = (value: string | undefined, fallback: number) => {
+    if (value === undefined || value === null) return fallback;
+    const trimmed = String(value).trim();
+    if (!trimmed) return fallback;
+    const num = Number(trimmed);
+    return Number.isFinite(num) ? num : fallback;
+  };
+
+  const storedLocation = useMemo<MapLocation | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = window.localStorage.getItem('complexForm:lastLocation');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!Number.isFinite(parsed?.lat) || !Number.isFinite(parsed?.lng)) return null;
+      return { lat: Number(parsed.lat), lng: Number(parsed.lng) };
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const fallbackLocation = storedLocation ?? { lat: 41.3111, lng: 69.2797 };
+
+  const mapLocation: MapLocation = {
+    lat: parseCoordinate(locationLat, fallbackLocation.lat),
+    lng: parseCoordinate(locationLng, fallbackLocation.lng),
+  };
+
+  const handleMapChange = (value: MapLocation) => {
+    setValue('locationLat', value.lat.toFixed(6), { shouldValidate: true });
+    setValue('locationLng', value.lng.toFixed(6), { shouldValidate: true });
+    setLocationRequestError(null);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('complexForm:lastLocation', JSON.stringify(value));
+    }
+  };
+
+  useEffect(() => {
+    if (isEdit) return;
+    const latVal = String(locationLat || '').trim();
+    const lngVal = String(locationLng || '').trim();
+    if (latVal || lngVal) return;
+
+    const initial = storedLocation ?? fallbackLocation;
+    setValue('locationLat', initial.lat.toFixed(6), { shouldValidate: true });
+    setValue('locationLng', initial.lng.toFixed(6), { shouldValidate: true });
+  }, [isEdit, locationLat, locationLng, setValue, storedLocation, fallbackLocation]);
+
+  const handleUseMyLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationRequestError('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationRequestError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        handleMapChange({ lat: latitude, lng: longitude });
+        setIsLocating(false);
+      },
+      (err) => {
+        setIsLocating(false);
+        if (err?.code === err.PERMISSION_DENIED) {
+          setLocationRequestError('Location permission denied.');
+        } else if (err?.code === err.TIMEOUT) {
+          setLocationRequestError('Location request timed out. Try again.');
+        } else {
+          setLocationRequestError('Unable to fetch location. Try again.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  };
 
   const validateFiles = () => {
     if (isEdit) {
@@ -134,84 +239,104 @@ export function ComplexForm() {
       setter(file);
     };
 
+  const extractApiError = (error: unknown, fallback: string) => {
+    if (axios.isAxiosError(error)) {
+      const data = error.response?.data as any;
+      const detailMessage = Array.isArray(data?.details)
+        ? data.details.map((d: any) => d.message).filter(Boolean).join(', ')
+        : null;
+      return (
+        detailMessage ||
+        data?.error ||
+        data?.message ||
+        error.message ||
+        fallback
+      );
+    }
+    if (error instanceof Error) return error.message;
+    return fallback;
+  };
+
   const mutation = useMutation({
     mutationFn: async (data: ComplexFormData) => {
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
       if (!validateFiles()) {
         throw new Error('Missing permission files');
       }
 
-      if (isEdit) {
-        // PATCH JSON body
-        const payload: any = {
-          title: data.title,
-          description: data.description,
-          address: data.address,
-          city: data.city,
-          latitude: parseFloat(data.latitude),
-          longitude: parseFloat(data.longitude),
-          walkabilityScore: parseInt(data.walkabilityScore, 10),
-          nearbyInfrastructureText: data.nearbyInfrastructureText,
-        };
-        if (data.airQualityScore) {
-          payload.airQualityScore = parseInt(data.airQualityScore, 10);
-        }
-        if (data.airQualityNote) {
-          payload.airQualityNote = data.airQualityNote;
+      try {
+        if (isEdit) {
+          // PATCH JSON body
+          const legacyNearby = data.nearbyNote || data.locationText;
+          const payload: any = {
+            title: data.title,
+            description: data.description,
+            locationText: data.locationText,
+            city: data.city,
+            locationLat: parseFloat(data.locationLat),
+            locationLng: parseFloat(data.locationLng),
+            walkabilityRating: parseInt(data.walkabilityRating, 10),
+            airQualityRating: parseInt(data.airQualityRating, 10),
+            nearbyNote: data.nearbyNote || undefined,
+            // legacy fields for older backend versions
+            address: data.locationText,
+            latitude: parseFloat(data.locationLat),
+            longitude: parseFloat(data.locationLng),
+            walkabilityScore: parseInt(data.walkabilityRating, 10),
+            airQualityScore: parseInt(data.airQualityRating, 10),
+            nearbyInfrastructureText: legacyNearby,
+          };
+
+          const response = await apiClient.patch(`/complexes/${id}`, payload);
+          return response.data;
         }
 
-        const response = await fetch(`/api/complexes/${id}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          const error = await response.json().catch(() => ({}));
-          throw new Error(error.error || error.message || 'Failed to update complex');
-        }
-        return response.json();
-      } else {
         // CREATE with FormData + 3 permission files
         const formData = new FormData();
+        const legacyNearby = data.nearbyNote || data.locationText;
+
         formData.append('title', data.title);
         formData.append('description', data.description);
-        formData.append('address', data.address);
+        formData.append('locationText', data.locationText);
         formData.append('city', data.city);
-        formData.append('latitude', data.latitude);
-        formData.append('longitude', data.longitude);
-        formData.append('walkabilityScore', data.walkabilityScore);
-        if (data.airQualityScore) {
-          formData.append('airQualityScore', data.airQualityScore);
+        formData.append('locationLat', data.locationLat);
+        formData.append('locationLng', data.locationLng);
+        formData.append('walkabilityRating', data.walkabilityRating);
+        formData.append('airQualityRating', data.airQualityRating);
+        if (data.nearbyNote) {
+          formData.append('nearbyNote', data.nearbyNote);
         }
-        if (data.airQualityNote) {
-          formData.append('airQualityNote', data.airQualityNote);
+        // legacy fields for older backend versions
+        formData.append('address', data.locationText);
+        formData.append('latitude', data.locationLat);
+        formData.append('longitude', data.locationLng);
+        formData.append('walkabilityScore', data.walkabilityRating);
+        formData.append('airQualityScore', data.airQualityRating);
+        formData.append('nearbyInfrastructureText', legacyNearby);
+
+        if (permission1) {
+          formData.append('permission_1', permission1);
+          formData.append('permission1', permission1);
         }
-        formData.append('nearbyInfrastructureText', data.nearbyInfrastructureText);
+        if (permission2) {
+          formData.append('permission_2', permission2);
+          formData.append('permission2', permission2);
+        }
+        if (permission3) {
+          formData.append('permission_3', permission3);
+          formData.append('permission3', permission3);
+        }
 
-        if (permission1) formData.append('permission_1', permission1);
-        if (permission2) formData.append('permission_2', permission2);
-        if (permission3) formData.append('permission_3', permission3);
-
-        const response = await fetch('/api/complexes', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
+        const response = await apiClient.post('/complexes', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
-
-        if (!response.ok) {
-          const error = await response.json().catch(() => ({}));
-          throw new Error(error.error || error.message || 'Failed to create complex');
-        }
-        return response.json();
+        return response.data;
+      } catch (error) {
+        throw new Error(
+          extractApiError(
+            error,
+            isEdit ? 'Failed to update complex' : 'Failed to create complex'
+          )
+        );
       }
     },
     onSuccess: () => {
@@ -316,17 +441,42 @@ export function ComplexForm() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Address *
+              Address / Location Text *
             </label>
             <Input
-              {...register('address')}
-              placeholder="Toshkent, Mirzo Ulug‘bek tumani, ..."
+              {...register('locationText')}
+              placeholder="Toshkent, Mirzo Ulug?bek tumani, ..."
             />
-            {errors.address && (
-              <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>
+            {errors.locationText && (
+              <p className="mt-1 text-sm text-red-600">{errors.locationText.message}</p>
             )}
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Pick Location on Map *
+            </label>
+            <p className="text-xs text-gray-500 mb-3">
+              Click on the map to set coordinates or drag the marker.
+            </p>
+            <div className="flex items-center gap-3 mb-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleUseMyLocation}
+                disabled={isLocating}
+              >
+                {isLocating ? 'Locating...' : 'Use My Location'}
+              </Button>
+              <span className="text-xs text-gray-500">
+                This uses your browser location permission.
+              </span>
+            </div>
+            {locationRequestError && (
+              <p className="mb-3 text-sm text-red-600">{locationRequestError}</p>
+            )}
+            <LocationPicker value={mapLocation} onChange={handleMapChange} />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -341,74 +491,60 @@ export function ComplexForm() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Latitude *
               </label>
-              <Input {...register('latitude')} placeholder="41.2995" />
-              {errors.latitude && (
-                <p className="mt-1 text-sm text-red-600">{errors.latitude.message}</p>
+              <Input {...register('locationLat')} placeholder="41.2995" type="number" step="0.000001" />
+              {errors.locationLat && (
+                <p className="mt-1 text-sm text-red-600">{errors.locationLat.message}</p>
               )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Longitude *
               </label>
-              <Input {...register('longitude')} placeholder="69.2401" />
-              {errors.longitude && (
-                <p className="mt-1 text-sm text-red-600">{errors.longitude.message}</p>
+              <Input {...register('locationLng')} placeholder="69.2401" type="number" step="0.000001" />
+              {errors.locationLng && (
+                <p className="mt-1 text-sm text-red-600">{errors.locationLng.message}</p>
               )}
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Walkability Score (1–10) *
+                Walkability Rating (0?10) *
               </label>
-              <Input {...register('walkabilityScore')} placeholder="8" />
-              {errors.walkabilityScore && (
+              <Input {...register('walkabilityRating')} placeholder="8" type="number" min={0} max={10} step={1} />
+              {errors.walkabilityRating && (
                 <p className="mt-1 text-sm text-red-600">
-                  {errors.walkabilityScore.message}
+                  {errors.walkabilityRating.message}
                 </p>
               )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Air Quality Score (optional)
+                Air Quality Rating (0?10) *
               </label>
-              <Input {...register('airQualityScore')} placeholder="90" />
-              {errors.airQualityScore && (
+              <Input {...register('airQualityRating')} placeholder="7" type="number" min={0} max={10} step={1} />
+              {errors.airQualityRating && (
                 <p className="mt-1 text-sm text-red-600">
-                  {errors.airQualityScore.message}
+                  {errors.airQualityRating.message}
                 </p>
               )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Air Quality Note (optional)
-              </label>
-              <Input
-                {...register('airQualityNote')}
-                placeholder="Based on local AQI measurements..."
-              />
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nearby Infrastructure *
+              Nearby Places Note (optional)
             </label>
             <Textarea
-              {...register('nearbyInfrastructureText')}
+              {...register('nearbyNote')}
               rows={3}
               placeholder="Shops, markets, metro, schools, parks, etc."
             />
-            {errors.nearbyInfrastructureText && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.nearbyInfrastructureText.message}
-              </p>
-            )}
           </div>
         </div>
 
         {/* Actions & Errors */}
+
         <div className="flex justify-end gap-3">
           <Button
             type="button"

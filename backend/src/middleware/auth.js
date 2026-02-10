@@ -23,6 +23,7 @@ async function authMiddleware(req, res, next) {
       id: true,
       email: true,
       role: true,
+      isActive: true,
       firstName: true,
       lastName: true,
       phone: true,
@@ -32,6 +33,9 @@ async function authMiddleware(req, res, next) {
 
   if (!user) {
     return res.status(401).json({ error: 'Unauthorized', message: 'User not found' });
+  }
+  if (user.isActive === false) {
+    return res.status(403).json({ error: 'Forbidden', message: 'Account is deactivated' });
   }
 
   req.user = user;
@@ -62,12 +66,17 @@ async function optionalAuth(req, res, next) {
       id: true,
       email: true,
       role: true,
+      isActive: true,
       firstName: true,
       lastName: true,
       phone: true,
       createdAt: true,
     },
   });
+  if (user && user.isActive === false) {
+    req.user = null;
+    return next();
+  }
 
   req.user = user || null;
   next();

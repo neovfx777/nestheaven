@@ -17,7 +17,7 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { Badge } from '../../../components/ui/Badge';
-import { useAuthStore } from '../../../stores/authStore';
+import apiClient from '../../../api/client';
 
 interface ComplexFilters {
   search: string;
@@ -42,7 +42,6 @@ export function ComplexList() {
   const [selectedComplexes, setSelectedComplexes] = useState<Set<string>>(new Set());
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const queryClient = useQueryClient();
-  const { token } = useAuthStore();
 
   // Backend complex format (simplified)
   interface BackendComplex {
@@ -64,9 +63,8 @@ export function ComplexList() {
   }>({
     queryKey: ['admin-complexes'],
     queryFn: async () => {
-      const response = await fetch('/api/complexes');
-      if (!response.ok) throw new Error('Failed to fetch complexes');
-      return response.json();
+      const response = await apiClient.get('/complexes');
+      return response.data;
     },
   });
 
@@ -102,14 +100,8 @@ export function ComplexList() {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/complexes/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) throw new Error('Failed to delete complex');
-      return response.json();
+      await apiClient.delete(`/complexes/${id}`);
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-complexes'] });
@@ -315,7 +307,7 @@ export function ComplexList() {
           <div className="flex flex-wrap gap-2">
             <Select
               value={filters.hasApartments}
-              onValueChange={(value) => handleFilterChange('hasApartments', value)}
+              onChange={(value) => handleFilterChange('hasApartments', value)}
             >
               <option value="">All</option>
               <option value="true">With Apartments</option>
@@ -323,7 +315,7 @@ export function ComplexList() {
             </Select>
             <Select
               value={filters.hasActiveApartments}
-              onValueChange={(value) => handleFilterChange('hasActiveApartments', value)}
+              onChange={(value) => handleFilterChange('hasActiveApartments', value)}
             >
               <option value="">All</option>
               <option value="true">With Active Listings</option>
@@ -331,7 +323,7 @@ export function ComplexList() {
             </Select>
             <Select
               value={filters.sortBy}
-              onValueChange={(value) => handleFilterChange('sortBy', value)}
+              onChange={(value) => handleFilterChange('sortBy', value)}
             >
               <option value="name">Sort by Name</option>
               <option value="createdAt">Sort by Created</option>
@@ -339,7 +331,7 @@ export function ComplexList() {
             </Select>
             <Select
               value={filters.sortOrder}
-              onValueChange={(value) => handleFilterChange('sortOrder', value)}
+              onChange={(value) => handleFilterChange('sortOrder', value)}
             >
               <option value="asc">Ascending</option>
               <option value="desc">Descending</option>
@@ -373,7 +365,10 @@ export function ComplexList() {
                     <th className="px-6 py-3 text-left">
                       <input
                         type="checkbox"
-                        checked={selectedComplexes.size === complexesData?.data.complexes.length}
+                        checked={
+                          filteredComplexes.length > 0 &&
+                          selectedComplexes.size === filteredComplexes.length
+                        }
                         onChange={handleSelectAll}
                         className="rounded border-gray-300"
                       />

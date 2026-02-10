@@ -151,8 +151,8 @@ const ApartmentDetailPage = () => {
   // Helper function to get location
   const getLocation = (apartment: ApartmentDetailType) => {
     if (apartment.complex?.address && typeof apartment.complex.address === 'object') {
-      return (apartment.complex.address as any).en || (apartment.complex.address as any).uz || 
-             (apartment.complex.address as any).ru || 'Location not specified';
+      return (apartment.complex.address as any).en || (apartment.complex.address as any).uz ||
+        (apartment.complex.address as any).ru || 'Location not specified';
     }
     return apartment.complex?.address as string || 'Location not specified';
   };
@@ -188,7 +188,7 @@ const ApartmentDetailPage = () => {
                   <MapPin className="h-5 w-5 mr-2 flex-shrink-0" />
                   <span>{getLocation(apartment)}</span>
                 </div>
-                
+
                 {/* Images */}
                 {apartment.images && apartment.images.length > 0 ? (
                   <ApartmentGallery images={apartment.images} title={getTitle(apartment)} />
@@ -211,13 +211,12 @@ const ApartmentDetailPage = () => {
                     <div className="text-3xl font-bold text-primary-600">{formatPrice(apartment.price)}</div>
                     <div className="text-gray-500">Total Price</div>
                   </div>
-                  <div className={`px-4 py-2 rounded-full text-sm font-medium ${
-                    apartment.status === 'active' || apartment.status === 'ACTIVE' 
-                      ? 'bg-green-100 text-green-800' 
+                  <div className={`px-4 py-2 rounded-full text-sm font-medium ${apartment.status === 'active' || apartment.status === 'ACTIVE'
+                      ? 'bg-green-100 text-green-800'
                       : apartment.status === 'sold' || apartment.status === 'SOLD'
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
                     {apartment.status.toUpperCase()}
                   </div>
                 </div>
@@ -289,11 +288,10 @@ const ApartmentDetailPage = () => {
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
-                      className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                        activeTab === tab
+                      className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === tab
                           ? 'border-primary-500 text-primary-600'
                           : 'border-transparent text-gray-500 hover:text-gray-700'
-                      }`}
+                        }`}
                     >
                       {tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>
@@ -353,7 +351,7 @@ const ApartmentDetailPage = () => {
                     {['en', 'uz', 'ru'].map((lang) => {
                       const desc = getDescription(apartment, lang as 'en' | 'uz' | 'ru');
                       if (!desc) return null;
-                      
+
                       return (
                         <div key={lang} className="bg-gray-50 rounded-lg p-4">
                           <div className="flex items-center mb-3">
@@ -386,7 +384,7 @@ const ApartmentDetailPage = () => {
                             <div className="text-sm text-gray-500">{apartment.seller.email}</div>
                           </div>
                         </div>
-                        
+
                         <div className="space-y-3">
                           <Button className="w-full">
                             <Phone className="h-5 w-5 mr-2" />
@@ -419,7 +417,7 @@ const ApartmentDetailPage = () => {
                       <div className="text-sm text-gray-500">Verified Seller</div>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Button className="w-full">
                       <Phone className="h-5 w-5 mr-2" />
@@ -458,33 +456,7 @@ const ApartmentDetailPage = () => {
               </div>
             </Card>
 
-            {/* Safety Tips */}
-            <Card className="bg-blue-50 border-blue-200">
-              <div className="p-6">
-                <div className="flex items-center mb-4">
-                  <Shield className="h-6 w-6 text-blue-600 mr-2" />
-                  <h4 className="font-semibold text-blue-900">Safety Tips</h4>
-                </div>
-                <ul className="space-y-2 text-sm text-blue-800">
-                  <li className="flex items-start">
-                    <span className="mr-2">•</span>
-                    <span>Meet in public places first</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="mr-2">•</span>
-                    <span>Never send money in advance</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="mr-2">•</span>
-                    <span>Verify the property before purchase</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="mr-2">•</span>
-                    <span>Use secure payment methods</span>
-                  </li>
-                </ul>
-              </div>
-            </Card>
+
           </div>
         </div>
       </div>

@@ -14,6 +14,9 @@ model User {
   email         String    @unique
   passwordHash  String    @map("password_hash")
   role          String    @default("USER")
+  isActive      Boolean   @default(true) @map("is_active")
+  deactivatedAt DateTime? @map("deactivated_at")
+  deactivatedById String? @map("deactivated_by_id")
   firstName     String?   @map("first_name")
   lastName      String?   @map("last_name")
   phone         String?
@@ -23,27 +26,48 @@ model User {
 
   createdBy   User?    @relation("UserCreatedBy", fields: [createdById], references: [id])
   createdUsers User[]  @relation("UserCreatedBy")
+  deactivatedBy   User?   @relation("UserDeactivatedBy", fields: [deactivatedById], references: [id])
+  deactivatedUsers User[] @relation("UserDeactivatedBy")
 
-  favorites      Favorite[]
-  savedSearches  SavedSearch[]
-  apartments     Apartment[]
+  favorites        Favorite[]
+  savedSearches    SavedSearch[]
+  apartments       Apartment[]
+  createdComplexes Complex[]
+  broadcasts       Broadcast[]
 }
 
 model Complex {
   id          String   @id @default(cuid())
-  name        String   // Project title, JSON: { uz, ru, en }
-  address     String?  // Human-readable address, JSON: { uz, ru, en }
-  city        String
+  name        String   // Legacy title, JSON or plain string
+  address     String?  // Legacy address, JSON or plain string
+  city        String   // Legacy city
 
-  // Project-level details (Complex != listing)
-  description           String?  // Long-form description about the project / developer vision
-  permissions           String?  @map("permissions")              // JSON array of 3 permission files (metadata + URLs)
+  // Project-level details
+  description           String?
+  permissions           String?  @map("permissions")
   latitude              Float?   @map("latitude")
   longitude             Float?   @map("longitude")
-  walkabilityScore      Int?     @map("walkability_score")        // 1–10
-  airQualityScore       Int?     @map("air_quality_score")        // 1–10 or AQI-like value
-  airQualityNote        String?  @map("air_quality_note")         // Optional explanatory note / source
-  nearbyInfrastructure  String?  @map("nearby_infrastructure")    // Free-text description of nearby infrastructure
+  walkabilityScore      Int?     @map("walkability_score")
+  airQualityScore       Int?     @map("air_quality_score")
+  airQualityNote        String?  @map("air_quality_note")
+  nearbyInfrastructure  String?  @map("nearby_infrastructure")
+
+  // New fields
+  title             String?
+  locationText      String?   @map("location_text")
+  locationLat       Float?    @map("location_lat")
+  locationLng       Float?    @map("location_lng")
+  bannerImageUrl    String?   @map("banner_image_url")
+  permission1Url    String?   @map("permission1_url")
+  permission2Url    String?   @map("permission2_url")
+  permission3Url    String?   @map("permission3_url")
+  walkabilityRating Int?      @map("walkability_rating")
+  airQualityRating  Int?      @map("air_quality_rating")
+  nearbyNote        String?   @map("nearby_note")
+  nearbyPlaces      String?   @map("nearby_places")
+  amenities         String?   @map("amenities")
+  createdById       String?   @map("created_by_id")
+  createdBy         User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -52,23 +76,23 @@ model Complex {
 }
 
 model Apartment {
-  id               String          @id @default(cuid())
-  complexId        String          @map("complex_id")
-  sellerId         String          @map("seller_id")
-  status           String          @default("active")
-  price            Float
-  area             Float
-  rooms            Int
-  floor            Int?
-  totalFloors      Int?            @map("total_floors")
-  title            String          // JSON: { uz, ru, en }
-  description      String?         // JSON: { uz, ru, en }
-  materials        String?         // JSON: { uz, ru, en }, optional
-  infrastructureNote String?       @map("infrastructure_note") // JSON, optional
-  createdAt        DateTime        @default(now()) @map("created_at")
-  updatedAt        DateTime        @updatedAt @map("updated_at")
+  id                 String         @id @default(cuid())
+  complexId          String?        @map("complex_id")
+  sellerId           String         @map("seller_id")
+  status             String         @default("active")
+  price              Float
+  area               Float
+  rooms              Int
+  floor              Int?
+  totalFloors        Int?           @map("total_floors")
+  title              String         // JSON: { uz, ru, en }
+  description        String?        // JSON: { uz, ru, en }
+  materials          String?        // JSON: { uz, ru, en }, optional
+  infrastructureNote String?        @map("infrastructure_note") // JSON, optional
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
 
-  complex    Complex    @relation(fields: [complexId], references: [id], onDelete: Cascade)
+  complex    Complex?   @relation(fields: [complexId], references: [id], onDelete: SetNull)
   seller     User       @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   images     ApartmentImage[]
   favorites  Favorite[]
@@ -109,4 +133,15 @@ model SavedSearch {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("saved_searches")
+}
+
+model Broadcast {
+  id          String   @id @default(cuid())
+  title       String
+  message     String
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdById String?  @map("created_by_id")
+
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
 }

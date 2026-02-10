@@ -8,6 +8,7 @@ interface User {
   email: string;
   fullName: string;
   role: string;
+  isActive?: boolean;
 }
 
 interface AuthState {
@@ -120,10 +121,15 @@ export const useAuthStore = create<AuthState>()(
             ) {
               message = "Email yoki parol noto'g'ri";
             }
+            if (error.response.status === 403 && message.toLowerCase().includes('deactivated')) {
+              message = 'Akkountingiz deaktiv qilingan';
+            }
           } else if (error.message) {
             // Standard Error object
             if (error.message.toLowerCase().includes('invalid email or password')) {
               message = "Email yoki parol noto'g'ri";
+            } else if (error.message.toLowerCase().includes('deactivated')) {
+              message = 'Akkountingiz deaktiv qilingan';
             } else {
               message = error.message;
             }

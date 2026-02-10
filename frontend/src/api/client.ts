@@ -3,12 +3,21 @@ import { useAuthStore } from '../stores/authStore';
 
 // Create axios instance
 // Default backend URL points to local development API; can be overridden via VITE_API_URL
+const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://45.92.173.175:3000/api';
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://45.92.173.175:3000/api',
+  baseURL: apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+export function getAssetUrl(url?: string | null) {
+  if (!url) return null;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  const base = apiBaseUrl.replace(/\/api\/?$/, '');
+  if (url.startsWith('/')) return `${base}${url}`;
+  return `${base}/${url}`;
+}
 
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
@@ -30,12 +39,13 @@ apiClient.interceptors.response.use(
   (error) => {
     const status = error.response?.status;
     const url: string | undefined = error.config?.url;
+    const message = (error.response?.data?.message || error.response?.data?.error || '').toString();
 
     // Don't auto-logout on auth endpoints themselves
     const isAuthEndpoint =
       url?.includes('/auth/login') || url?.includes('/auth/register');
 
-    if (status === 401 && !isAuthEndpoint) {
+    if ((status === 401 || (status === 403 && message.toLowerCase().includes('deactivated'))) && !isAuthEndpoint) {
       // Token expired or invalid on protected route
       useAuthStore.getState().logout();
       window.location.href = '/login';

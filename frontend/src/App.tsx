@@ -140,7 +140,7 @@ function App() {
           <Route
             path="admin/users"
             element={
-              <ProtectedRoute requireRole={['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN']}>
+              <ProtectedRoute requireRole={['MANAGER_ADMIN', 'OWNER_ADMIN']}>
                 <UserManagement mode="users" />
               </ProtectedRoute>
             }
@@ -148,7 +148,7 @@ function App() {
           <Route
             path="admin/analytics"
             element={
-              <ProtectedRoute requireRole={['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN']}>
+              <ProtectedRoute requireRole={['MANAGER_ADMIN', 'OWNER_ADMIN']}>
                 <AnalyticsDashboard />
               </ProtectedRoute>
             }
@@ -156,7 +156,7 @@ function App() {
           <Route
             path="admin/complexes"
             element={
-              <ProtectedRoute requireRole={['ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN']}>
+              <ProtectedRoute requireRole={['MANAGER_ADMIN', 'OWNER_ADMIN']}>
                 <ComplexList />
               </ProtectedRoute>
             }

@@ -2,8 +2,8 @@ const complexesService = require('./complexes.service');
 
 async function list(req, res, next) {
   try {
-    const result = await complexesService.list(req.user);
-    res.json({ success: true, data: result });
+    const result = await complexesService.list(req.validated);
+    res.json({ success: true, data: result.items, pagination: result.pagination });
   } catch (err) {
     next(err);
   }
@@ -21,8 +21,9 @@ async function getById(req, res, next) {
 
 async function create(req, res, next) {
   try {
-    const result = await complexesService.create(req.validated, req.user);
-    res.status(201).json(result);
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const result = await complexesService.create(req.validated, req.user, baseUrl);
+    res.status(201).json({ success: true, data: result });
   } catch (err) {
     next(err);
   }
@@ -31,8 +32,9 @@ async function create(req, res, next) {
 async function update(req, res, next) {
   try {
     const { id } = req.validated.params;
-    const result = await complexesService.update(id, req.validated, req.user);
-    res.json(result);
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const result = await complexesService.update(id, req.validated, req.user, baseUrl);
+    res.json({ success: true, data: result });
   } catch (err) {
     next(err);
   }

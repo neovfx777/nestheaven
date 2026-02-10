@@ -10,7 +10,7 @@ npm install
 
 # Configure environment
 cp .env.example .env
-# Edit .env: set DATABASE_URL (PostgreSQL), JWT_SECRET
+# Edit .env: set DATABASE_URL (SQLite), JWT_SECRET
 
 # Generate Prisma client
 npx prisma generate
@@ -115,10 +115,14 @@ sudo systemctl start good-home
 
 ---
 
+## Complex Docs
+
+See `docs/complex.md` for multipart payload examples and field details.
+
 ## Tech Stack
 
 - Node.js (>=18)
 - Express.js
 - Prisma ORM
-- PostgreSQL
+- SQLite
 - JWT, bcrypt, multer, zod, dotenv, cors

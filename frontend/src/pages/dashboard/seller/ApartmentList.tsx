@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { apartmentsApi } from '../../../api/apartments'; // FIXED: apartmentsApi
 import { Button } from '../../../components/ui/Button';
@@ -7,11 +7,9 @@ import { Card } from '../../../components/ui/Card';
 import { Badge } from '../../../components/ui/Badge';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
-import { toast } from 'react-hot-toast';
 import { 
   Eye, 
   Edit3, 
-  Trash2, 
   Building2, 
   Filter,
   Search,
@@ -39,39 +37,13 @@ interface Apartment {
 }
 
 export const SellerApartmentList: React.FC = () => {
-  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const { data: apartments, isLoading, refetch } = useQuery({
     queryKey: ['seller-apartments'],
     queryFn: () => apartmentsApi.getMyListings?.() || [] // FIXED: apartmentsApi
   });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => apartmentsApi.deleteListing?.(id) || Promise.reject('Delete not implemented'), // FIXED: apartmentsApi
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['seller-apartments'] });
-      toast.success('Apartment deleted successfully');
-    },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to delete apartment');
-    }
-  });
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this apartment?')) {
-      setDeletingId(id);
-      try {
-        await deleteMutation.mutateAsync(id);
-      } catch (error) {
-        // Error handled by mutation
-      } finally {
-        setDeletingId(null);
-      }
-    }
-  };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, 'success' | 'destructive' | 'secondary' | 'default'> = {
@@ -267,16 +239,9 @@ export const SellerApartmentList: React.FC = () => {
                       </Button>
                     </Link>
                   </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(apt.id)}
-                    disabled={deletingId === apt.id}
-                    className="flex items-center gap-1"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    {deletingId === apt.id ? 'Deleting...' : 'Delete'}
-                  </Button>
+                  <div className="text-xs text-gray-500 self-center">
+                    Listingni o‘chirish faqat Owner Admin tomonidan amalga oshiriladi.
+                  </div>
                 </div>
               </div>
             </Card>

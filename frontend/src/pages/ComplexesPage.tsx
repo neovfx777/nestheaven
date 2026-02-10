@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Building2, MapPin } from 'lucide-react';
 import { apartmentsApi, Complex } from '../api/apartments';
+import { getAssetUrl } from '../api/client';
 
 const ComplexesPage = () => {
   const { data: complexes, isLoading } = useQuery({
@@ -50,6 +51,9 @@ const ComplexesPage = () => {
                 (typeof complex.address === 'string'
                   ? complex.address
                   : '');
+              const cover = getAssetUrl(
+                complex.coverImage || complex.bannerImageUrl || null
+              );
 
               return (
                 <Link
@@ -57,10 +61,10 @@ const ComplexesPage = () => {
                   to={`/complexes/${complex.id}`}
                   className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow"
                 >
-                  {complex.coverImage && (
+                  {cover && (
                     <div className="h-44 w-full overflow-hidden">
                       <img
-                        src={complex.coverImage}
+                        src={cover}
                         alt={name}
                         className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
                       />
@@ -83,6 +87,21 @@ const ComplexesPage = () => {
                         <span>{complex.city}</span>
                       </div>
                     </div>
+                    {(complex.walkabilityRating != null ||
+                      complex.airQualityRating != null) && (
+                      <div className="mt-3 flex gap-3 text-xs text-gray-600">
+                        {complex.walkabilityRating != null && (
+                          <span className="px-2 py-1 rounded-full bg-green-50 text-green-700">
+                            Walkability: {complex.walkabilityRating}/10
+                          </span>
+                        )}
+                        {complex.airQualityRating != null && (
+                          <span className="px-2 py-1 rounded-full bg-blue-50 text-blue-700">
+                            Air: {complex.airQualityRating}/10
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </Link>
               );

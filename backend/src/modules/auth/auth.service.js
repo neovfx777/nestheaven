@@ -21,6 +21,12 @@ async function login(email, password) {
     throw err;
   }
 
+  if (user.isActive === false) {
+    const err = new Error('Account is deactivated');
+    err.statusCode = 403;
+    throw err;
+  }
+
   const token = signToken({
     userId: user.id,
     email: user.email,
@@ -33,6 +39,7 @@ async function login(email, password) {
       id: user.id,
       email: user.email,
       role: user.role,
+      isActive: user.isActive,
       firstName: user.firstName,
       lastName: user.lastName,
       phone: user.phone,
@@ -77,6 +84,7 @@ async function register(data) {
       id: user.id,
       email: user.email,
       role: user.role,
+      isActive: user.isActive,
       firstName: user.firstName,
       lastName: user.lastName,
       phone: user.phone,

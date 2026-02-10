@@ -29,9 +29,6 @@ function canCreateRole(creatorRole, targetRole) {
     return [ROLES.USER, ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN].includes(targetRole);
   }
   if (creatorRole === ROLES.MANAGER_ADMIN) {
-    return [ROLES.USER, ROLES.SELLER, ROLES.ADMIN].includes(targetRole);
-  }
-  if (creatorRole === ROLES.ADMIN) {
     return [ROLES.USER, ROLES.SELLER].includes(targetRole);
   }
   return false;

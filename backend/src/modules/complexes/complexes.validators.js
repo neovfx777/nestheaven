@@ -1,65 +1,72 @@
 const { z } = require('zod');
 
-// Helper schema for optional i18n objects – we still store JSON in DB
-const i18nSchema = z
-  .object({
-    uz: z.string().min(1),
-    ru: z.string().min(1),
-    en: z.string().min(1),
-  })
-  .partial()
-  .refine((obj) => obj.uz || obj.ru || obj.en, { message: 'At least one language required' });
+const numberFromString = (schema) =>
+  z.preprocess((val) => {
+    if (val === '' || val === null || val === undefined) return undefined;
+    if (typeof val === 'string') {
+      const num = Number(val);
+      return Number.isNaN(num) ? val : num;
+    }
+    return val;
+  }, schema);
 
-// === CREATE COMPLEX (ADMIN-ONLY) ===
-// Backend-only API for creating a construction project container (NOT a listing)
+const jsonFromString = (schema) =>
+  z.preprocess((val) => {
+    if (typeof val === 'string') {
+      try {
+        return JSON.parse(val);
+      } catch {
+        return val;
+      }
+    }
+    return val;
+  }, schema);
+
+const nearbyPlaceSchema = z
+  .object({
+    name: z.string().min(1).max(120),
+    distanceMeters: numberFromString(z.number().int().nonnegative()).optional(),
+    distanceKm: numberFromString(z.number().nonnegative()).optional(),
+    note: z.string().max(500).optional(),
+  })
+  .refine((obj) => obj.distanceMeters != null || obj.distanceKm != null, {
+    message: 'distanceMeters or distanceKm is required',
+  });
+
+const amenitiesSchema = jsonFromString(z.array(z.string().min(1).max(50)));
+const nearbyPlacesSchema = jsonFromString(z.array(nearbyPlaceSchema));
+
 const createComplexSchema = z.object({
   body: z.object({
-    // Title of the complex (will be stored as JSON name field internally)
-    title: z.union([i18nSchema, z.string()]).describe('Project title (e.g. "Sevgi Shaxr")'),
-
-    // Long-form description of the project / developer vision
-    description: z.string().min(1, 'Description is required'),
-
-    // Human-readable address; we still support i18n JSON format under the hood
-    // Note: length validation only applies to plain string variant
-    address: z.union([
-      i18nSchema,
-      z.string().min(1, 'Address is required'),
-    ]),
-
-    city: z.string().min(1, 'City is required'),
-
-    // Location (lat / lng)
-    latitude: z.number().min(-90).max(90),
-    longitude: z.number().min(-180).max(180),
-
-    // Walkability rating 1–10
-    walkabilityScore: z.number().int().min(1).max(10),
-
-    // Air quality rating + optional note
-    airQualityScore: z.number().int().min(1).max(500).optional(),
-    airQualityNote: z.string().max(1000).optional(),
-
-    // Nearby infrastructure free-text description
-    nearbyInfrastructureText: z.string().min(1, 'Nearby infrastructure text is required'),
+    title: z.string().min(1).max(120),
+    description: z.string().min(1),
+    locationText: z.string().min(1),
+    locationLat: numberFromString(z.number().min(-90).max(90)),
+    locationLng: numberFromString(z.number().min(-180).max(180)),
+    walkabilityRating: numberFromString(z.number().int().min(0).max(10)),
+    airQualityRating: numberFromString(z.number().int().min(0).max(10)),
+    nearbyNote: z.string().max(2000).optional(),
+    nearbyPlaces: nearbyPlacesSchema.optional(),
+    amenities: amenitiesSchema.optional(),
+    city: z.string().min(1).optional(),
   }),
 });
 
-// === UPDATE COMPLEX (ADMIN-ONLY) ===
 const updateComplexSchema = z.object({
   params: z.object({ id: z.string().min(1) }),
   body: z
     .object({
-      title: z.union([i18nSchema, z.string()]).optional(),
+      title: z.string().min(1).max(120).optional(),
       description: z.string().min(1).optional(),
-      address: z.union([i18nSchema, z.string()]).optional(),
+      locationText: z.string().min(1).optional(),
+      locationLat: numberFromString(z.number().min(-90).max(90)).optional(),
+      locationLng: numberFromString(z.number().min(-180).max(180)).optional(),
+      walkabilityRating: numberFromString(z.number().int().min(0).max(10)).optional(),
+      airQualityRating: numberFromString(z.number().int().min(0).max(10)).optional(),
+      nearbyNote: z.string().max(2000).optional().nullable(),
+      nearbyPlaces: nearbyPlacesSchema.optional(),
+      amenities: amenitiesSchema.optional(),
       city: z.string().min(1).optional(),
-      latitude: z.number().min(-90).max(90).optional().nullable(),
-      longitude: z.number().min(-180).max(180).optional().nullable(),
-      walkabilityScore: z.number().int().min(1).max(10).optional().nullable(),
-      airQualityScore: z.number().int().min(1).max(500).optional().nullable(),
-      airQualityNote: z.string().max(1000).optional().nullable(),
-      nearbyInfrastructureText: z.string().min(1).optional(),
     })
     .refine((b) => Object.keys(b).length > 0, {
       message: 'At least one field to update',
@@ -70,6 +77,14 @@ const getByIdSchema = z.object({
   params: z.object({ id: z.string().min(1) }),
 });
 
+const listSchema = z.object({
+  query: z.object({
+    page: z.coerce.number().int().min(1).optional().default(1),
+    limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+    title: z.string().min(1).optional(),
+  }),
+});
+
 function validateCreate(req, res, next) {
   const result = createComplexSchema.safeParse({ body: req.body });
   if (!result.success) {
@@ -78,30 +93,29 @@ function validateCreate(req, res, next) {
       .json({ error: 'Validation failed', details: result.error.errors });
   }
 
-  // Validate permission files: exactly 3 (permission_1..3)
   const files = req.files || {};
-  const expected = ['permission_1', 'permission_2', 'permission_3'];
-  const allPresent = expected.every(
-    (field) => Array.isArray(files[field]) && files[field].length === 1
-  );
+  const permission1 = files.permission1?.[0] || files.permission_1?.[0] || null;
+  const permission2 = files.permission2?.[0] || files.permission_2?.[0] || null;
+  const permission3 = files.permission3?.[0] || files.permission_3?.[0] || null;
+  const provided = [permission1, permission2, permission3].filter(Boolean).length;
 
-  if (!allPresent) {
+  if (provided > 0 && provided < 3) {
     return res.status(400).json({
       error: 'Validation failed',
       details: [
         {
           path: ['permissions'],
           message:
-            'Exactly 3 permission files are required: permission_1, permission_2, permission_3',
+            'Provide all three permission files (permission1, permission2, permission3) or none',
         },
       ],
     });
   }
 
-  // Attach validated body + raw files to req.validated
   req.validated = {
     ...result.data,
     files,
+    meta: { complexId: req.complexId },
   };
   next();
 }
@@ -116,7 +130,10 @@ function validateUpdate(req, res, next) {
       .status(400)
       .json({ error: 'Validation failed', details: result.error.errors });
   }
-  req.validated = result.data;
+  req.validated = {
+    ...result.data,
+    files: req.files || {},
+  };
   next();
 }
 
@@ -131,4 +148,15 @@ function validateGetById(req, res, next) {
   next();
 }
 
-module.exports = { validateCreate, validateUpdate, validateGetById };
+function validateList(req, res, next) {
+  const result = listSchema.safeParse({ query: req.query });
+  if (!result.success) {
+    return res
+      .status(400)
+      .json({ error: 'Validation failed', details: result.error.errors });
+  }
+  req.validated = result.data;
+  next();
+}
+
+module.exports = { validateCreate, validateUpdate, validateGetById, validateList };
