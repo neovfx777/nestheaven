@@ -19,8 +19,8 @@ export default function ProfileScreen() {
 
   return (
     <AuthGuard>
-      <Screen>
-        <Header title="Profile" subtitle="Your account details" />
+      <Screen bottomPadding={true}>
+        <Header title="Profile" subtitle="Your account details" showBack={false} />
 
         <Card>
           <View style={styles.row}>

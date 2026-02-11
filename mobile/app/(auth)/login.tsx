@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter, Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Screen } from '../../src/components/layout/Screen';
 import { Header } from '../../src/components/layout/Header';
 import { Input } from '../../src/components/ui/Input';
@@ -40,7 +40,7 @@ export default function LoginScreen() {
 
   return (
     <Screen>
-      <Header title="Welcome Back" subtitle="Login to continue" />
+      <Header title="Welcome Back" subtitle="Login to continue" showBack={false} />
       <View style={styles.form}>
         <Controller
           name="email"
@@ -79,9 +79,12 @@ export default function LoginScreen() {
           onPress={handleSubmit(onSubmit)}
           loading={formState.isSubmitting}
         />
-        <Link href="/(auth)/register" asChild>
-          <Text style={styles.link}>Create a new account</Text>
-        </Link>
+        <Button
+          title="Create a new account"
+          variant="outline"
+          onPress={() => router.push('/(auth)/register')}
+          style={styles.registerButton}
+        />
       </View>
     </Screen>
   );
@@ -95,9 +98,7 @@ const styles = StyleSheet.create({
     color: COLORS.danger,
     fontSize: 14,
   },
-  link: {
-    color: COLORS.primary,
-    textAlign: 'center',
+  registerButton: {
     marginTop: 8,
   },
 });

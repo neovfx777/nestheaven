@@ -5,7 +5,7 @@ export default function DashboardLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: true,
+        headerShown: false, // Custom Header komponenti ishlatilmoqda
         headerTitleAlign: 'center',
       }}
     />

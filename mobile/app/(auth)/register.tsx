@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter, Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Screen } from '../../src/components/layout/Screen';
 import { Header } from '../../src/components/layout/Header';
 import { Input } from '../../src/components/ui/Input';
@@ -56,7 +56,7 @@ export default function RegisterScreen() {
 
   return (
     <Screen>
-      <Header title="Create Account" subtitle="Join NestHeaven" />
+      <Header title="Create Account" subtitle="Join NestHeaven" showBack={true} />
       <View style={styles.form}>
         <Controller
           name="fullName"
@@ -136,9 +136,12 @@ export default function RegisterScreen() {
           onPress={handleSubmit(onSubmit)}
           loading={formState.isSubmitting}
         />
-        <Link href="/(auth)/login" asChild>
-          <Text style={styles.link}>Already have an account? Sign in</Text>
-        </Link>
+        <Button
+          title="Already have an account? Sign in"
+          variant="outline"
+          onPress={() => router.push('/(auth)/login')}
+          style={styles.loginButton}
+        />
       </View>
     </Screen>
   );
@@ -152,9 +155,7 @@ const styles = StyleSheet.create({
     color: COLORS.danger,
     fontSize: 14,
   },
-  link: {
-    color: COLORS.primary,
-    textAlign: 'center',
+  loginButton: {
     marginTop: 8,
   },
 });

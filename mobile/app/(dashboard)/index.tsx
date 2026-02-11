@@ -20,6 +20,8 @@ export default function DashboardHome() {
         <Header
           title="Dashboard"
           subtitle={`Welcome back, ${user?.fullName || user?.email || ''}`}
+          showBack={true}
+          onBackPress={() => router.replace('/(tabs)')}
         />
 
         <Card>

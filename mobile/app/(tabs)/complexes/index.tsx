@@ -30,8 +30,8 @@ export default function ComplexesScreen() {
   }, [complexes, search]);
 
   return (
-    <Screen>
-      <Header title="Complexes" subtitle="Explore residential complexes" />
+    <Screen bottomPadding={true}>
+      <Header title="Complexes" subtitle="Explore residential complexes" showBack={false} />
       <Input
         placeholder="Search complexes..."
         value={search}

@@ -2,13 +2,14 @@ import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
 const apiBaseUrl =
-  process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+  process.env.EXPO_PUBLIC_API_URL || 'http://45.92.173.175:3000/api';
 
 const apiClient = axios.create({
   baseURL: apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 seconds timeout for mobile networks
 });
 
 export function getAssetUrl(url?: string | null) {
@@ -38,6 +39,11 @@ apiClient.interceptors.response.use(
     const message = (
       error.response?.data?.message || error.response?.data?.error || ''
     ).toString();
+
+    // Log network errors for debugging
+    if (!error.response) {
+      console.error('Network error:', error.message, 'URL:', apiBaseUrl + (url || ''));
+    }
 
     const isAuthEndpoint =
       url?.includes('/auth/login') || url?.includes('/auth/register');
