@@ -32,8 +32,8 @@ export default function ApartmentsScreen() {
   }, [apartments, search]);
 
   return (
-    <Screen>
-      <Header title="Apartments" subtitle="Browse all listings" />
+    <Screen bottomPadding={true}>
+      <Header title="Apartments" subtitle="Browse all listings" showBack={false} />
       <Input placeholder="Search apartments..." value={search} onChangeText={setSearch} />
 
       {filtered.map((apartment: Apartment) => (

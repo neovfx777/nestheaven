@@ -33,10 +33,11 @@ export default function HomeScreen() {
   const latestApartments: Apartment[] = apartments?.apartments?.slice(0, 6) || [];
 
   return (
-    <Screen>
+    <Screen bottomPadding={true}>
       <Header
         title="NestHeaven"
         subtitle="Find modern apartments and trusted complexes"
+        showBack={false}
       />
 
       {broadcasts.length > 0 && (
