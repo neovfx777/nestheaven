@@ -76,6 +76,14 @@ export interface ApartmentDetail {
     coverImage: string | null;
     title?: string;
     locationText?: string;
+    locationLat?: number | null;
+    locationLng?: number | null;
+    nearbyPlaces?: Array<{
+      name: string;
+      distanceMeters: number;
+      note?: string | null;
+    }> | null;
+    nearbyNote?: string | null;
     bannerImageUrl?: string | null;
     walkabilityRating?: number | null;
     airQualityRating?: number | null;
@@ -128,23 +136,23 @@ export interface Complex {
   address?: { uz: string; ru: string; en: string } | string;
   city: string;
   coverImage: string | null;
-  title?: string;
-  locationText?: string;
-  locationLat?: number;
-  locationLng?: number;
-  bannerImageUrl?: string | null;
-  permission1Url?: string | null;
-  permission2Url?: string | null;
-  permission3Url?: string | null;
-  walkabilityRating?: number | null;
-  airQualityRating?: number | null;
-  nearbyNote?: string | null;
-  nearbyPlaces?: Array<{
-    name: string;
-    distanceMeters: number;
-    note?: string | null;
-  }>;
-  amenities?: string[];
+    title?: string;
+    locationText?: string;
+    locationLat?: number;
+    locationLng?: number;
+    bannerImageUrl?: string | null;
+    permission1Url?: string | null;
+    permission2Url?: string | null;
+    permission3Url?: string | null;
+    walkabilityRating?: number | null;
+    airQualityRating?: number | null;
+    nearbyNote?: string | null;
+    nearbyPlaces?: Array<{
+      name: string;
+      distanceMeters: number;
+      note?: string | null;
+    }> | null;
+    amenities?: string[];
   _count?: {
     apartments: number;
   };
