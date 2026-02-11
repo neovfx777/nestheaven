@@ -11,6 +11,7 @@ interface FavoriteButtonProps {
   showText?: boolean;
   onToggle?: (isFavorite: boolean) => void;
   initialIsFavorite?: boolean;
+  className?: string;
 }
 
 export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
@@ -19,6 +20,7 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
   showText = false,
   onToggle,
   initialIsFavorite = false,
+  className = '',
 }) => {
   const { isAuthenticated } = useAuthStore();
   const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
@@ -89,7 +91,7 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
       size="sm"
       onClick={handleToggleFavorite}
       disabled={isLoading}
-      className={`${sizeClasses[size]} ${isFavorite ? 'text-red-500 hover:text-red-600' : 'text-gray-500 hover:text-gray-700'}`}
+      className={`${sizeClasses[size]} ${isFavorite ? 'text-red-500 hover:text-red-600' : 'text-gray-500 hover:text-gray-700'} ${className}`}
     >
       <Heart
         className={`${iconSizes[size]} ${isFavorite ? 'fill-current' : ''} ${isLoading ? 'animate-pulse' : ''}`}

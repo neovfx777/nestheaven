@@ -42,6 +42,18 @@ function formatComplexSummary(complex) {
       : address?.en || address?.uz || address?.ru || '');
 
   const bannerImageUrl = complex.bannerImageUrl || null;
+  
+  // Parse nearbyPlaces if it's a JSON string
+  let nearbyPlaces = null;
+  if (complex.nearbyPlaces) {
+    try {
+      nearbyPlaces = typeof complex.nearbyPlaces === 'string' 
+        ? JSON.parse(complex.nearbyPlaces) 
+        : complex.nearbyPlaces;
+    } catch (e) {
+      nearbyPlaces = null;
+    }
+  }
 
   return {
     ...complex,
@@ -49,6 +61,10 @@ function formatComplexSummary(complex) {
     address,
     title,
     locationText,
+    locationLat: complex.locationLat ?? null,
+    locationLng: complex.locationLng ?? null,
+    nearbyPlaces,
+    nearbyNote: complex.nearbyNote ?? null,
     bannerImageUrl,
     walkabilityRating: complex.walkabilityRating ?? complex.walkabilityScore ?? null,
     airQualityRating: complex.airQualityRating ?? complex.airQualityScore ?? null,
@@ -109,6 +125,10 @@ async function list(data, reqUser) {
             address: true,
             title: true,
             locationText: true,
+            locationLat: true,
+            locationLng: true,
+            nearbyPlaces: true,
+            nearbyNote: true,
             bannerImageUrl: true,
             walkabilityRating: true,
             airQualityRating: true,
@@ -199,6 +219,10 @@ async function getById(id, reqUser) {
             address: true,
             title: true,
             locationText: true,
+            locationLat: true,
+            locationLng: true,
+            nearbyPlaces: true,
+            nearbyNote: true,
             bannerImageUrl: true,
             walkabilityRating: true,
             airQualityRating: true,
@@ -316,6 +340,10 @@ async function getMyListings(options) {
             address: true,
             title: true,
             locationText: true,
+            locationLat: true,
+            locationLng: true,
+            nearbyPlaces: true,
+            nearbyNote: true,
             bannerImageUrl: true,
             walkabilityRating: true,
             airQualityRating: true,
@@ -420,6 +448,10 @@ async function create(data, reqUser) {
             address: true,
             title: true,
             locationText: true,
+            locationLat: true,
+            locationLng: true,
+            nearbyPlaces: true,
+            nearbyNote: true,
             bannerImageUrl: true,
             walkabilityRating: true,
             airQualityRating: true,
@@ -517,6 +549,10 @@ async function update(id, data, reqUser) {
             address: true,
             title: true,
             locationText: true,
+            locationLat: true,
+            locationLng: true,
+            nearbyPlaces: true,
+            nearbyNote: true,
             bannerImageUrl: true,
             walkabilityRating: true,
             airQualityRating: true,
@@ -622,6 +658,10 @@ async function markSold(id, reqUser) {
             address: true,
             title: true,
             locationText: true,
+            locationLat: true,
+            locationLng: true,
+            nearbyPlaces: true,
+            nearbyNote: true,
             bannerImageUrl: true,
             walkabilityRating: true,
             airQualityRating: true,
@@ -668,6 +708,10 @@ async function hideUnhide(id, data, reqUser) {
             address: true,
             title: true,
             locationText: true,
+            locationLat: true,
+            locationLng: true,
+            nearbyPlaces: true,
+            nearbyNote: true,
             bannerImageUrl: true,
             walkabilityRating: true,
             airQualityRating: true,

@@ -23,6 +23,7 @@ import { ApartmentDetail as ApartmentDetailType } from '../../api/apartments';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { FavoriteButton } from '../../components/apartments/FavoriteButton';
+import { ComplexLocationMap } from '../../components/maps/ComplexLocationMap';
 import { toast } from 'react-hot-toast';
 
 const ApartmentDetailPage = () => {
@@ -175,6 +176,17 @@ const ApartmentDetailPage = () => {
         </div>
       </div>
 
+      {/* Floating Favorite Button for Mobile */}
+      <div className="fixed bottom-6 right-6 z-50 lg:hidden">
+        <div className="bg-white rounded-full shadow-lg p-3 border border-gray-200">
+          <FavoriteButton
+            apartmentId={apartment.id}
+            size="lg"
+            showText={false}
+          />
+        </div>
+      </div>
+
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -202,6 +214,85 @@ const ApartmentDetailPage = () => {
                 )}
               </div>
             </Card>
+
+            {/* Complex Locations Card */}
+            {apartment.complex && (
+              <Card>
+                <div className="p-6">
+                  <div className="flex items-center mb-4">
+                    <MapPin className="h-6 w-6 text-primary-600 mr-2" />
+                    <h3 className="text-lg font-semibold text-gray-900">Complex Location</h3>
+                  </div>
+                  
+                  {/* Location Text */}
+                  {apartment.complex.locationText && (
+                    <div className="mb-4">
+                      <p className="text-gray-700 font-medium text-base">{apartment.complex.locationText}</p>
+                    </div>
+                  )}
+
+                  {/* Map */}
+                  {(apartment.complex.locationLat && apartment.complex.locationLng) && (
+                    <div className="mb-4">
+                      <ComplexLocationMap
+                        latitude={apartment.complex.locationLat}
+                        longitude={apartment.complex.locationLng}
+                        locationText={apartment.complex.locationText || undefined}
+                        complexName={
+                          apartment.complex.name && typeof apartment.complex.name === 'object'
+                            ? (apartment.complex.name as any).en || (apartment.complex.name as any).uz || (apartment.complex.name as any).ru
+                            : apartment.complex.name
+                        }
+                        heightClassName="h-64 sm:h-80"
+                        zoom={15}
+                      />
+                    </div>
+                  )}
+
+                  {/* Coordinates */}
+                  {(apartment.complex.locationLat && apartment.complex.locationLng) && (
+                    <div className="mb-4 text-sm text-gray-600">
+                      <span className="font-medium">Coordinates: </span>
+                      <span className="font-mono">{apartment.complex.locationLat.toFixed(6)}, {apartment.complex.locationLng.toFixed(6)}</span>
+                    </div>
+                  )}
+
+                  {/* Nearby Places */}
+                  {apartment.complex.nearbyPlaces && apartment.complex.nearbyPlaces.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-3">Nearby Places:</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {apartment.complex.nearbyPlaces.map((place, index) => (
+                          <div key={index} className="flex items-center justify-between bg-gray-50 rounded-lg p-3 border border-gray-200">
+                            <div className="flex items-center flex-1 min-w-0">
+                              <MapPin className="h-4 w-4 text-primary-600 mr-2 flex-shrink-0" />
+                              <div className="min-w-0">
+                                <span className="font-medium text-gray-900 block truncate">{place.name}</span>
+                                {place.note && (
+                                  <span className="text-xs text-gray-500 block">{place.note}</span>
+                                )}
+                              </div>
+                            </div>
+                            <span className="text-sm font-medium text-gray-600 ml-2 flex-shrink-0">
+                              {place.distanceMeters < 1000 
+                                ? `${place.distanceMeters}m` 
+                                : `${(place.distanceMeters / 1000).toFixed(1)}km`}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Nearby Note */}
+                  {apartment.complex.nearbyNote && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <p className="text-sm text-gray-600 italic">{apartment.complex.nearbyNote}</p>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            )}
 
             {/* Price and Quick Stats */}
             <Card>
@@ -256,25 +347,29 @@ const ApartmentDetailPage = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex space-x-4 pt-6">
-                  <div className="flex-1">
-                    <FavoriteButton
-                      apartmentId={apartment.id}
-                      size="md"
-                      showText={true}
-                    />
+                <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                  {/* Favorite Button - Always visible, especially on mobile */}
+                  <div className="flex-1 sm:flex-initial w-full sm:w-auto">
+                    <div className="w-full sm:w-auto">
+                      <FavoriteButton
+                        apartmentId={apartment.id}
+                        size="md"
+                        showText={true}
+                      />
+                    </div>
                   </div>
                   <Button
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 w-full sm:w-auto"
                     onClick={handleShare}
                   >
                     <Share2 className="h-5 w-5 mr-2" />
                     Share
                   </Button>
-                  <Button className="flex-1">
+                  <Button className="flex-1 w-full sm:w-auto">
                     <Phone className="h-5 w-5 mr-2" />
-                    Contact Seller
+                    <span className="hidden sm:inline">Contact Seller</span>
+                    <span className="sm:hidden">Contact</span>
                   </Button>
                 </div>
               </div>
@@ -366,6 +461,63 @@ const ApartmentDetailPage = () => {
                         </div>
                       );
                     })}
+
+                    {/* Complex Locations */}
+                    {apartment.complex && (
+                      <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
+                        <div className="flex items-center mb-4">
+                          <MapPin className="h-6 w-6 text-primary-600 mr-2" />
+                          <h3 className="text-lg font-semibold text-gray-900">Complex Location</h3>
+                        </div>
+                        
+                        {/* Location Text */}
+                        {apartment.complex.locationText && (
+                          <div className="mb-4">
+                            <p className="text-gray-700 font-medium">{apartment.complex.locationText}</p>
+                          </div>
+                        )}
+
+                        {/* Coordinates */}
+                        {(apartment.complex.locationLat && apartment.complex.locationLng) && (
+                          <div className="mb-4 text-sm text-gray-600">
+                            <span className="font-medium">Coordinates: </span>
+                            <span>{apartment.complex.locationLat.toFixed(6)}, {apartment.complex.locationLng.toFixed(6)}</span>
+                          </div>
+                        )}
+
+                        {/* Nearby Places */}
+                        {apartment.complex.nearbyPlaces && apartment.complex.nearbyPlaces.length > 0 && (
+                          <div className="mb-4">
+                            <h4 className="text-sm font-semibold text-gray-700 mb-2">Nearby Places:</h4>
+                            <div className="space-y-2">
+                              {apartment.complex.nearbyPlaces.map((place, index) => (
+                                <div key={index} className="flex items-center justify-between bg-white rounded-lg p-3 border border-gray-200">
+                                  <div className="flex items-center">
+                                    <MapPin className="h-4 w-4 text-primary-600 mr-2" />
+                                    <span className="font-medium text-gray-900">{place.name}</span>
+                                    {place.note && (
+                                      <span className="ml-2 text-sm text-gray-500">({place.note})</span>
+                                    )}
+                                  </div>
+                                  <span className="text-sm text-gray-600">
+                                    {place.distanceMeters < 1000 
+                                      ? `${place.distanceMeters}m` 
+                                      : `${(place.distanceMeters / 1000).toFixed(1)}km`}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Nearby Note */}
+                        {apartment.complex.nearbyNote && (
+                          <div className="mt-4 pt-4 border-t border-blue-200">
+                            <p className="text-sm text-gray-600 italic">{apartment.complex.nearbyNote}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
