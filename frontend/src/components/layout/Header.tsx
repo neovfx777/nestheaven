@@ -4,6 +4,7 @@ import { Building2, User, LogIn, MapPin, TrendingUp, Calendar } from 'lucide-rea
 import { useAuthStore } from '../../stores/authStore';
 import { defaultComplexData } from '../../data/defaultData';
 import { broadcastsApi } from '../../api/broadcasts';
+import { LanguageSelector } from '../ui/LanguageSelector';
 
 const Header = () => {
   const { isAuthenticated, user } = useAuthStore();
@@ -71,8 +72,9 @@ const Header = () => {
               </Link>
             </nav>
 
-            {/* Auth Section */}
+            {/* Language Selector & Auth Section */}
             <div className="flex items-center space-x-4">
+              <LanguageSelector />
               {isAuthenticated ? (
                 <div className="flex items-center space-x-4">
                   <span className="hidden sm:inline text-gray-700 text-sm">{user?.fullName || user?.email}</span>

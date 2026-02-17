@@ -1,0 +1,154 @@
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Check, X } from 'lucide-react';
+import { usersApi } from '../../api/users';
+import { Input } from '../ui/Input';
+import { Button } from '../ui/Button';
+
+interface SellerMultiSelectProps {
+  selectedSellerIds: string[];
+  onChange: (sellerIds: string[]) => void;
+  className?: string;
+}
+
+export function SellerMultiSelect({
+  selectedSellerIds,
+  onChange,
+  className = '',
+}: SellerMultiSelectProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Fetch all sellers
+  const { data: sellers = [], isLoading } = useQuery({
+    queryKey: ['sellers'],
+    queryFn: async () => {
+      // This endpoint should return all SELLER role users
+      // You'll need to create this endpoint in backend
+      try {
+        const response = await fetch('/api/users/sellers', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        if (!response.ok) return [];
+        const data = await response.json();
+        return data.data || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const filteredSellers = sellers.filter((seller: any) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    const fullName = `${seller.firstName || ''} ${seller.lastName || ''}`.toLowerCase();
+    const email = (seller.email || '').toLowerCase();
+    return fullName.includes(query) || email.includes(query);
+  });
+
+  const handleToggle = (sellerId: string) => {
+    if (selectedSellerIds.includes(sellerId)) {
+      onChange(selectedSellerIds.filter((id) => id !== sellerId));
+    } else {
+      onChange([...selectedSellerIds, sellerId]);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedSellerIds.length === filteredSellers.length) {
+      onChange([]);
+    } else {
+      onChange(filteredSellers.map((s: any) => s.id));
+    }
+  };
+
+  return (
+    <div className={`space-y-3 ${className}`}>
+      <div className="flex items-center justify-between">
+        <label className="block text-sm font-medium text-gray-700">
+          Allowed Sellers ({selectedSellerIds.length} selected)
+        </label>
+        {filteredSellers.length > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleSelectAll}
+          >
+            {selectedSellerIds.length === filteredSellers.length ? 'Deselect All' : 'Select All'}
+          </Button>
+        )}
+      </div>
+
+      <Input
+        type="text"
+        placeholder="Search sellers by name or email..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="w-full"
+      />
+
+      {isLoading ? (
+        <div className="text-sm text-gray-500">Loading sellers...</div>
+      ) : filteredSellers.length === 0 ? (
+        <div className="text-sm text-gray-500">No sellers found</div>
+      ) : (
+        <div className="border border-gray-200 rounded-lg max-h-64 overflow-y-auto">
+          {filteredSellers.map((seller: any) => {
+            const isSelected = selectedSellerIds.includes(seller.id);
+            const fullName = `${seller.firstName || ''} ${seller.lastName || ''}`.trim() || 'No name';
+
+            return (
+              <div
+                key={seller.id}
+                className={`flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-gray-50 ${
+                  isSelected ? 'bg-primary-50' : ''
+                }`}
+                onClick={() => handleToggle(seller.id)}
+              >
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">{fullName}</div>
+                  <div className="text-sm text-gray-500">{seller.email}</div>
+                </div>
+                <div className={`ml-3 ${isSelected ? 'text-primary-600' : 'text-gray-400'}`}>
+                  {isSelected ? (
+                    <Check className="h-5 w-5" />
+                  ) : (
+                    <div className="h-5 w-5 rounded-full border-2 border-gray-300" />
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {selectedSellerIds.length > 0 && (
+        <div className="flex flex-wrap gap-2 pt-2">
+          {selectedSellerIds.map((sellerId) => {
+            const seller = sellers.find((s: any) => s.id === sellerId);
+            if (!seller) return null;
+            const fullName = `${seller.firstName || ''} ${seller.lastName || ''}`.trim() || 'No name';
+
+            return (
+              <div
+                key={sellerId}
+                className="inline-flex items-center space-x-1 bg-primary-100 text-primary-800 px-2 py-1 rounded text-sm"
+              >
+                <span>{fullName}</span>
+                <button
+                  type="button"
+                  onClick={() => handleToggle(sellerId)}
+                  className="hover:text-primary-900"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

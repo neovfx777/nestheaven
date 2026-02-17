@@ -31,6 +31,8 @@ import FavoritesPage from './pages/dashboard/FavoritesPage';
 // Admin dashboard pages
 import { ComplexList } from './pages/dashboard/admin/ComplexList';
 import { ComplexForm } from './pages/dashboard/admin/ComplexForm';
+import { ComplexFormNew } from './pages/dashboard/admin/ComplexFormNew';
+import { ComplexManagement } from './pages/dashboard/admin/ComplexManagement';
 import { AnalyticsDashboard } from './pages/dashboard/admin/AnalyticsDashboard';
 import { UserManagement } from './pages/dashboard/admin/UserManagement';
 
@@ -157,7 +159,7 @@ function App() {
             path="admin/complexes"
             element={
               <ProtectedRoute requireRole={['MANAGER_ADMIN', 'OWNER_ADMIN']}>
-                <ComplexList />
+                <ComplexManagement />
               </ProtectedRoute>
             }
           />
@@ -165,7 +167,7 @@ function App() {
             path="admin/complexes/new"
             element={
               <ProtectedRoute requireRole={['MANAGER_ADMIN', 'OWNER_ADMIN']}>
-                <ComplexForm />
+                <ComplexFormNew />
               </ProtectedRoute>
             }
           />
@@ -173,7 +175,7 @@ function App() {
             path="admin/complexes/:id/edit"
             element={
               <ProtectedRoute requireRole={['MANAGER_ADMIN', 'OWNER_ADMIN']}>
-                <ComplexForm />
+                <ComplexFormNew />
               </ProtectedRoute>
             }
           />

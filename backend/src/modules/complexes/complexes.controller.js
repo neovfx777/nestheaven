@@ -50,4 +50,13 @@ async function remove(req, res, next) {
   }
 }
 
-module.exports = { list, getById, create, update, remove };
+async function getForSeller(req, res, next) {
+  try {
+    const result = await complexesService.getForSeller(req.validated, req.user);
+    res.json({ success: true, data: result.items, pagination: result.pagination });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { list, getById, create, update, remove, getForSeller };
