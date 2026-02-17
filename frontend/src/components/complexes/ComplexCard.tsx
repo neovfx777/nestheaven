@@ -2,8 +2,7 @@ import { Link } from 'react-router-dom';
 import { Building2, MapPin } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
-import { useLanguageStore } from '../../stores/languageStore';
-import { getLocalizedContent } from '../../utils/translations';
+import { useTranslation } from '../../hooks/useTranslation';
 import { AMENITY_CATEGORIES } from '../../constants/amenities';
 
 interface ComplexCardProps {
@@ -31,9 +30,9 @@ interface ComplexCardProps {
 }
 
 export function ComplexCard({ complex }: ComplexCardProps) {
-  const { language } = useLanguageStore();
+  const { t, getLocalizedContent } = useTranslation();
 
-  const title = getLocalizedContent(complex.title, language);
+  const title = getLocalizedContent(complex.title);
   const amenities = Array.isArray(complex.amenities) ? complex.amenities : [];
   const nearbyPlaces = Array.isArray(complex.nearbyPlaces) ? complex.nearbyPlaces : [];
 
@@ -41,7 +40,7 @@ export function ComplexCard({ complex }: ComplexCardProps) {
   const amenityLabels = amenities
     .map((id) => {
       const amenity = AMENITY_CATEGORIES.flatMap((cat) => cat.amenities).find((a) => a.id === id);
-      return amenity ? getLocalizedContent(amenity.label, language) : null;
+      return amenity ? getLocalizedContent(amenity.label) : null;
     })
     .filter(Boolean)
     .slice(0, 5);
@@ -87,7 +86,7 @@ export function ComplexCard({ complex }: ComplexCardProps) {
           {complex.blockCount && (
             <div className="mb-3">
               <Badge variant="outline">
-                {complex.blockCount} {complex.blockCount === 1 ? 'Block' : 'Blocks'}
+                {complex.blockCount} {complex.blockCount === 1 ? (t('common.block') || 'Block') : (t('common.blocks') || 'Blocks')}
               </Badge>
             </div>
           )}
@@ -95,7 +94,7 @@ export function ComplexCard({ complex }: ComplexCardProps) {
           {/* Amenities - Only show checked ones */}
           {amenityLabels.length > 0 && (
             <div className="mb-3">
-              <p className="text-xs text-gray-500 mb-2 font-medium">Amenities:</p>
+              <p className="text-xs text-gray-500 mb-2 font-medium">{t('complex.amenities')}:</p>
               <div className="flex flex-wrap gap-1">
                 {amenityLabels.map((label, idx) => (
                   <Badge key={idx} variant="secondary" className="text-xs">
@@ -104,7 +103,7 @@ export function ComplexCard({ complex }: ComplexCardProps) {
                 ))}
                 {amenities.length > 5 && (
                   <Badge variant="secondary" className="text-xs">
-                    +{amenities.length - 5} more
+                    +{amenities.length - 5} {t('common.more')}
                   </Badge>
                 )}
               </div>
@@ -114,7 +113,7 @@ export function ComplexCard({ complex }: ComplexCardProps) {
           {/* Nearby Places - Show first 3 */}
           {nearbyPlaces.length > 0 && (
             <div className="mb-3">
-              <p className="text-xs text-gray-500 mb-2 font-medium">Nearby:</p>
+              <p className="text-xs text-gray-500 mb-2 font-medium">{t('common.nearby')}:</p>
               <div className="space-y-1">
                 {nearbyPlaces.slice(0, 3).map((place, idx) => {
                   const distanceText =
@@ -131,7 +130,7 @@ export function ComplexCard({ complex }: ComplexCardProps) {
                 })}
                 {nearbyPlaces.length > 3 && (
                   <p className="text-xs text-gray-500">
-                    +{nearbyPlaces.length - 3} more places
+                    +{nearbyPlaces.length - 3} {t('common.morePlaces')}
                   </p>
                 )}
               </div>
@@ -142,7 +141,7 @@ export function ComplexCard({ complex }: ComplexCardProps) {
           {complex._count && complex._count.apartments > 0 && (
             <div className="pt-3 border-t border-gray-200">
               <p className="text-sm font-medium text-gray-900">
-                {complex._count.apartments} {complex._count.apartments === 1 ? 'Apartment' : 'Apartments'} Available
+                {complex._count.apartments} {complex._count.apartments === 1 ? (t('apartment.title') || 'Apartment') : (t('common.apartments') || 'Apartments')} {t('common.available') || 'Available'}
               </p>
             </div>
           )}

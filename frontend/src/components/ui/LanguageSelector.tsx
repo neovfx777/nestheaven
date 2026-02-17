@@ -1,9 +1,10 @@
 import { Globe } from 'lucide-react';
 import { useLanguageStore, Language } from '../../stores/languageStore';
-import { t } from '../../utils/translations';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export function LanguageSelector() {
   const { language, setLanguage } = useLanguageStore();
+  const { t } = useTranslation();
 
   const languages: { code: Language; label: string; flag: string }[] = [
     { code: 'uz', label: t('common.uzbek'), flag: '🇺🇿' },

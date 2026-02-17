@@ -27,4 +27,7 @@ router.get('/saved-searches', usersController.getSavedSearches);
 router.post('/saved-searches', validateSavedSearch, usersController.createSavedSearch);
 router.delete('/saved-searches/:id', validateSavedSearchId, usersController.deleteSavedSearch);
 
+// Get sellers list (for complex assignment)
+router.get('/sellers', usersController.getSellers);
+
 module.exports = router;

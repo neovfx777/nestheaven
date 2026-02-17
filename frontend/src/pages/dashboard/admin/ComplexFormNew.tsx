@@ -23,14 +23,13 @@ import {
   ArrowLeft,
   AlertCircle,
 } from 'lucide-react';
-import { useLanguageStore } from '../../../stores/languageStore';
-import { t } from '../../../utils/translations';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 export function ComplexFormNew() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
-  const { language } = useLanguageStore();
+  const { t } = useTranslation();
 
   const [bannerImage, setBannerImage] = useState<File | null>(null);
   const [permission1, setPermission1] = useState<File | null>(null);
@@ -166,7 +165,10 @@ export function ComplexFormNew() {
       if (permission2) formData.append('permission2', permission2);
       if (permission3) formData.append('permission3', permission3);
 
-      const response = await apiClient.post('/complexes', formData, {
+      const url = isEdit ? `/complexes/${id}` : '/complexes';
+      const method = isEdit ? 'patch' : 'post';
+      
+      const response = await apiClient[method](url, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
@@ -177,7 +179,12 @@ export function ComplexFormNew() {
       navigate('/dashboard/admin/complexes');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to save complex');
+      console.error('Complex save error:', error);
+      const errorMessage = error.response?.data?.error 
+        || error.response?.data?.details?.[0]?.message
+        || error.message 
+        || 'Failed to save complex';
+      toast.error(errorMessage);
     },
   });
 
@@ -185,7 +192,7 @@ export function ComplexFormNew() {
     // Validate required files for create
     if (!isEdit) {
       if (!permission1 || !permission2 || !permission3) {
-        toast.error('All three permission files are required');
+        toast.error(t('complex.allPermissionsRequired') || 'All three permission files are required');
         return;
       }
     }
@@ -210,10 +217,10 @@ export function ComplexFormNew() {
           className="mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
+          {t('common.back')}
         </Button>
         <h1 className="text-3xl font-bold text-gray-900">
-          {isEdit ? 'Edit Complex' : 'Create Complex'}
+          {isEdit ? t('complex.edit') : t('complex.create')}
         </h1>
       </div>
 
@@ -238,22 +245,22 @@ export function ComplexFormNew() {
         {/* Basic Information */}
         <Card>
           <div className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('common.basicInfo') || 'Basic Information'}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Developer"
+                label={t('complex.developer')}
                 {...register('developer')}
                 error={errors.developer?.message}
                 required
               />
               <Input
-                label="City"
+                label={t('complex.city')}
                 {...register('city')}
                 error={errors.city?.message}
                 required
               />
               <Input
-                label="Block Count"
+                label={t('complex.blockCount')}
                 type="number"
                 {...register('blockCount', { valueAsNumber: true })}
                 error={errors.blockCount?.message}
@@ -269,7 +276,7 @@ export function ComplexFormNew() {
           <div className="p-6">
             <div className="flex items-center mb-4">
               <MapPin className="h-6 w-6 text-primary-600 mr-2" />
-              <h2 className="text-xl font-semibold">Location</h2>
+              <h2 className="text-xl font-semibold">{t('complex.location')}</h2>
             </div>
             <div className="mb-4">
               <LocationPicker
@@ -284,19 +291,19 @@ export function ComplexFormNew() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Input
-                label="Address (Uzbek)"
+                label={`${t('complex.location')} (Uzbek)`}
                 {...register('location.address.uz')}
                 error={errors.location?.address?.uz?.message}
                 required
               />
               <Input
-                label="Address (Russian)"
+                label={`${t('complex.location')} (Russian)`}
                 {...register('location.address.ru')}
                 error={errors.location?.address?.ru?.message}
                 required
               />
               <Input
-                label="Address (English)"
+                label={`${t('complex.location')} (English)`}
                 {...register('location.address.en')}
                 error={errors.location?.address?.en?.message}
                 required
@@ -330,10 +337,10 @@ export function ComplexFormNew() {
         {/* Ratings */}
         <Card>
           <div className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Ratings</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('common.ratings') || 'Ratings'}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Walkability Rating (0-10)"
+                label={`${t('complex.walkability')} (0-10)`}
                 type="number"
                 {...register('walkability', { valueAsNumber: true })}
                 error={errors.walkability?.message}
@@ -341,7 +348,7 @@ export function ComplexFormNew() {
                 max={10}
               />
               <Input
-                label="Air Quality Rating (0-10)"
+                label={`${t('complex.airQuality')} (0-10)`}
                 type="number"
                 {...register('airQuality', { valueAsNumber: true })}
                 error={errors.airQuality?.message}
@@ -380,7 +387,7 @@ export function ComplexFormNew() {
               <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start">
                 <AlertCircle className="h-5 w-5 text-yellow-600 mr-2 mt-0.5" />
                 <p className="text-sm text-yellow-800">
-                  All three permission files are required for new complexes.
+                  {t('complex.allPermissionsRequired') || 'All three permission files are required for new complexes.'}
                 </p>
               </div>
             )}
@@ -440,7 +447,7 @@ export function ComplexFormNew() {
             variant="outline"
             onClick={() => navigate(-1)}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             type="submit"
@@ -448,7 +455,7 @@ export function ComplexFormNew() {
             className="flex items-center space-x-2"
           >
             <Save className="h-4 w-4" />
-            <span>{createMutation.isPending ? 'Saving...' : isEdit ? 'Update' : 'Create'}</span>
+            <span>{createMutation.isPending ? t('common.loading') : isEdit ? t('common.update') : t('common.create')}</span>
           </Button>
         </div>
       </form>

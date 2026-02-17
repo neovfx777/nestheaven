@@ -166,6 +166,28 @@ async function deleteSavedSearch(userId, id) {
   return { success: true };
 }
 
+async function getSellers() {
+  const sellers = await prisma.user.findMany({
+    where: {
+      role: ROLES.SELLER,
+      isActive: true,
+    },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      phone: true,
+      role: true,
+      createdAt: true,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+  return sellers;
+}
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -176,4 +198,5 @@ module.exports = {
   getSavedSearches,
   createSavedSearch,
   deleteSavedSearch,
+  getSellers,
 };

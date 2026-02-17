@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Plus, Trash2, Edit2 } from 'lucide-react';
-import { useLanguageStore } from '../../stores/languageStore';
 import { NEARBY_PLACE_TYPES } from '../../constants/amenities';
-import { getLocalizedContent } from '../../utils/translations';
+import { useTranslation } from '../../hooks/useTranslation';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
@@ -25,7 +24,7 @@ export function NearbyPlacesManager({
   onChange,
   className = '',
 }: NearbyPlacesManagerProps) {
-  const { language } = useLanguageStore();
+  const { t, getLocalizedContent } = useTranslation();
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [formData, setFormData] = useState<NearbyPlace>({
     type: '',
@@ -71,19 +70,19 @@ export function NearbyPlacesManager({
       <div className="bg-gray-50 rounded-lg p-4 space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <Select
-            label="Place Type"
+            label={t('common.placeType') || 'Place Type'}
             value={formData.type}
             onChange={(value) => setFormData({ ...formData, type: value })}
             options={[
-              { label: 'Select type...', value: '' },
+              { label: t('common.selectType') || 'Select type...', value: '' },
               ...NEARBY_PLACE_TYPES.map((type) => ({
-                label: getLocalizedContent(type.label, language),
+                label: getLocalizedContent(type.label),
                 value: type.id,
               })),
             ]}
           />
           <Input
-            label="Name"
+            label={t('common.name') || 'Name'}
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             placeholder="e.g., Metro Station"
@@ -91,7 +90,7 @@ export function NearbyPlacesManager({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <Input
-            label="Distance (meters)"
+            label={t('common.distance') || 'Distance (meters)'}
             type="number"
             value={formData.distanceMeters.toString()}
             onChange={(e) =>
@@ -100,7 +99,7 @@ export function NearbyPlacesManager({
             placeholder="500"
           />
           <Input
-            label="Note (optional)"
+            label={t('common.note') || 'Note (optional)'}
             value={formData.note || ''}
             onChange={(e) => setFormData({ ...formData, note: e.target.value })}
             placeholder="e.g., Blue line"
@@ -110,16 +109,16 @@ export function NearbyPlacesManager({
           {editingIndex !== null ? (
             <>
               <Button onClick={handleUpdate} size="sm">
-                Update
+                {t('common.update')}
               </Button>
               <Button onClick={handleCancel} variant="outline" size="sm">
-                Cancel
+                {t('common.cancel')}
               </Button>
             </>
           ) : (
             <Button onClick={handleAdd} size="sm" className="flex items-center space-x-2">
               <Plus className="h-4 w-4" />
-              <span>Add Place</span>
+              <span>{t('common.addPlace') || 'Add Place'}</span>
             </Button>
           )}
         </div>
@@ -128,7 +127,7 @@ export function NearbyPlacesManager({
       {/* Places List */}
       {places.length > 0 && (
         <div className="space-y-2">
-          <h4 className="font-semibold text-gray-900">Added Places:</h4>
+          <h4 className="font-semibold text-gray-900">{t('common.addedPlaces') || 'Added Places'}:</h4>
           {places.map((place, index) => {
             const placeType = NEARBY_PLACE_TYPES.find((t) => t.id === place.type);
             const distanceText =
@@ -146,7 +145,7 @@ export function NearbyPlacesManager({
                     <span className="font-medium text-gray-900">{place.name}</span>
                     {placeType && (
                       <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                        {getLocalizedContent(placeType.label, language)}
+                        {getLocalizedContent(placeType.label)}
                       </span>
                     )}
                   </div>

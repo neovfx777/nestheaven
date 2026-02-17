@@ -90,6 +90,19 @@ async function deleteSavedSearch(req, res, next) {
   }
 }
 
+async function getSellers(req, res, next) {
+  try {
+    // Only MANAGER_ADMIN and OWNER_ADMIN can get sellers list
+    if (req.user.role !== 'MANAGER_ADMIN' && req.user.role !== 'OWNER_ADMIN') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    const result = await usersService.getSellers();
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -100,4 +113,5 @@ module.exports = {
   getSavedSearches,
   createSavedSearch,
   deleteSavedSearch,
+  getSellers,
 };

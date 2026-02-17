@@ -2,8 +2,7 @@ import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MapPin, Building2, CheckCircle } from 'lucide-react';
 import { ComplexLocationMap } from '../maps/ComplexLocationMap';
-import { getLocalizedContent } from '../../utils/translations';
-import { useLanguageStore } from '../../stores/languageStore';
+import { useTranslation } from '../../hooks/useTranslation';
 import { AMENITY_CATEGORIES } from '../../constants/amenities';
 import apiClient from '../../api/client';
 import { Card } from '../ui/Card';
@@ -13,7 +12,7 @@ interface InheritedComplexDataProps {
 }
 
 export function InheritedComplexData({ complexId }: InheritedComplexDataProps) {
-  const { language } = useLanguageStore();
+  const { t, getLocalizedContent } = useTranslation();
 
   const { data: complex } = useQuery({
     queryKey: ['complex', complexId],
@@ -59,11 +58,11 @@ export function InheritedComplexData({ complexId }: InheritedComplexDataProps) {
           <div className="flex items-center mb-2">
             <CheckCircle className="h-5 w-5 text-blue-600 mr-2" />
             <h3 className="font-semibold text-blue-900">
-              Inherited from Complex: {getLocalizedContent(title, language)}
+              {t('apartment.inheritedFromComplex')}: {getLocalizedContent(title)}
             </h3>
           </div>
           <p className="text-sm text-blue-700">
-            The following information is automatically inherited from the selected complex and cannot be edited.
+            {t('apartment.inheritedNote') || 'The following information is automatically inherited from the selected complex and cannot be edited.'}
           </p>
         </div>
       </Card>
@@ -73,21 +72,21 @@ export function InheritedComplexData({ complexId }: InheritedComplexDataProps) {
         <div className="p-4">
           <div className="flex items-center mb-3">
             <MapPin className="h-5 w-5 text-primary-600 mr-2" />
-            <h4 className="font-semibold">Location</h4>
+            <h4 className="font-semibold">{t('apartment.location')}</h4>
           </div>
           {location.lat && location.lng && (
             <div className="mb-3">
               <ComplexLocationMap
                 latitude={location.lat}
                 longitude={location.lng}
-                locationText={getLocalizedContent(location.address, language)}
-                complexName={getLocalizedContent(title, language)}
+                locationText={getLocalizedContent(location.address)}
+                complexName={getLocalizedContent(title)}
                 heightClassName="h-48"
               />
             </div>
           )}
           <p className="text-sm text-gray-600">
-            {getLocalizedContent(location.address, language)}
+            {getLocalizedContent(location.address)}
           </p>
         </div>
       </Card>
@@ -96,7 +95,7 @@ export function InheritedComplexData({ complexId }: InheritedComplexDataProps) {
       {nearbyPlaces.length > 0 && (
         <Card>
           <div className="p-4">
-            <h4 className="font-semibold mb-3">Nearby Places</h4>
+            <h4 className="font-semibold mb-3">{t('apartment.nearbyPlaces')}</h4>
             <div className="space-y-2">
               {nearbyPlaces.slice(0, 5).map((place: any, index: number) => {
                 const distanceText =
@@ -130,7 +129,7 @@ export function InheritedComplexData({ complexId }: InheritedComplexDataProps) {
           <div className="p-4">
             <div className="flex items-center mb-3">
               <Building2 className="h-5 w-5 text-primary-600 mr-2" />
-              <h4 className="font-semibold">Amenities</h4>
+              <h4 className="font-semibold">{t('apartment.amenities')}</h4>
             </div>
             <div className="flex flex-wrap gap-2">
               {amenities.map((amenityId: string) => {
@@ -144,7 +143,7 @@ export function InheritedComplexData({ complexId }: InheritedComplexDataProps) {
                     key={amenityId}
                     className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-800"
                   >
-                    {getLocalizedContent(amenity.label, language)}
+                    {getLocalizedContent(amenity.label)}
                   </span>
                 );
               })}
