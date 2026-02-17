@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { useLanguageStore } from '../../stores/languageStore';
 import { AMENITY_CATEGORIES, Amenity } from '../../constants/amenities';
-import { getLocalizedContent } from '../../utils/translations';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface AmenitiesCheckboxGroupProps {
   selectedAmenities: string[];
@@ -14,7 +13,7 @@ export function AmenitiesCheckboxGroup({
   onChange,
   className = '',
 }: AmenitiesCheckboxGroupProps) {
-  const { language } = useLanguageStore();
+  const { t, getLocalizedContent } = useTranslation();
 
   const handleToggle = (amenityId: string) => {
     if (selectedAmenities.includes(amenityId)) {
@@ -36,7 +35,7 @@ export function AmenitiesCheckboxGroup({
           <div key={category.id} className="border border-gray-200 rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <h4 className="font-semibold text-gray-900">
-                {getLocalizedContent(category.label, language)}
+                {getLocalizedContent(category.label)}
               </h4>
               <span className="text-sm text-gray-500">
                 {checkedCount}/{totalCount}
@@ -55,7 +54,7 @@ export function AmenitiesCheckboxGroup({
                     className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                   />
                   <span className="text-sm text-gray-700">
-                    {getLocalizedContent(amenity.label, language)}
+                    {getLocalizedContent(amenity.label)}
                   </span>
                 </label>
               ))}

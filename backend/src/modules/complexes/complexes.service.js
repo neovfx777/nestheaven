@@ -191,34 +191,117 @@ async function create(data, reqUser, baseUrl) {
       });
     }
 
-    // Normalize data
-    const titleJson = body.title ? JSON.stringify(body.title) : JSON.stringify({ uz: '', ru: '', en: '' });
-    const descriptionJson = body.description ? JSON.stringify(body.description) : null;
-    const locationJson = body.location ? JSON.stringify(body.location) : JSON.stringify({
-      lat: 41.3111,
-      lng: 69.2797,
-      address: { uz: '', ru: '', en: '' },
-    });
+    // Handle title - can be JSON string or object
+    let titleJson;
+    if (typeof body.title === 'string') {
+      try {
+        const parsed = JSON.parse(body.title);
+        titleJson = JSON.stringify(parsed);
+      } catch {
+        // Old format: plain string
+        titleJson = JSON.stringify({ uz: body.title, ru: body.title, en: body.title });
+      }
+    } else {
+      titleJson = JSON.stringify(body.title || { uz: '', ru: '', en: '' });
+    }
+
+    // Handle description
+    let descriptionJson = null;
+    if (body.description) {
+      if (typeof body.description === 'string') {
+        try {
+          const parsed = JSON.parse(body.description);
+          descriptionJson = JSON.stringify(parsed);
+        } catch {
+          descriptionJson = JSON.stringify({ uz: body.description, ru: body.description, en: body.description });
+        }
+      } else {
+        descriptionJson = JSON.stringify(body.description);
+      }
+    }
+
+    // Handle location - can be JSON string or object, or use old format
+    let locationJson;
+    if (body.location) {
+      if (typeof body.location === 'string') {
+        try {
+          const parsed = JSON.parse(body.location);
+          locationJson = JSON.stringify(parsed);
+        } catch {
+          locationJson = JSON.stringify({
+            lat: body.locationLat || 41.3111,
+            lng: body.locationLng || 69.2797,
+            address: { uz: body.locationText || '', ru: body.locationText || '', en: body.locationText || '' },
+          });
+        }
+      } else {
+        locationJson = JSON.stringify(body.location);
+      }
+    } else if (body.locationLat && body.locationLng) {
+      // Old format
+      locationJson = JSON.stringify({
+        lat: body.locationLat,
+        lng: body.locationLng,
+        address: {
+          uz: body.locationText || '',
+          ru: body.locationText || '',
+          en: body.locationText || '',
+        },
+      });
+    } else {
+      locationJson = JSON.stringify({
+        lat: 41.3111,
+        lng: 69.2797,
+        address: { uz: '', ru: '', en: '' },
+      });
+    }
     
     let amenitiesJson = null;
     if (body.amenities) {
-      const normalizedAmenities = normalizeAmenities(body.amenities);
+      let amenitiesData = body.amenities;
+      if (typeof amenitiesData === 'string') {
+        try {
+          amenitiesData = JSON.parse(amenitiesData);
+        } catch {
+          amenitiesData = [];
+        }
+      }
+      const normalizedAmenities = normalizeAmenities(amenitiesData);
       if (normalizedAmenities.length > 0) {
         amenitiesJson = JSON.stringify(normalizedAmenities);
       }
     }
 
     let nearbyJson = null;
-    if (body.nearby) {
-      const normalizedNearby = normalizeNearbyPlaces(body.nearby);
+    if (body.nearby || body.nearbyPlaces) {
+      const nearbyData = body.nearby || body.nearbyPlaces;
+      let parsedNearby = nearbyData;
+      if (typeof nearbyData === 'string') {
+        try {
+          parsedNearby = JSON.parse(nearbyData);
+        } catch {
+          parsedNearby = [];
+        }
+      }
+      const normalizedNearby = normalizeNearbyPlaces(parsedNearby);
       if (normalizedNearby.length > 0) {
         nearbyJson = JSON.stringify(normalizedNearby);
       }
     }
 
     let allowedSellersJson = null;
-    if (body.allowedSellers && Array.isArray(body.allowedSellers) && body.allowedSellers.length > 0) {
-      allowedSellersJson = JSON.stringify(body.allowedSellers);
+    if (body.allowedSellers) {
+      let sellersArray = body.allowedSellers;
+      if (typeof sellersArray === 'string') {
+        try {
+          sellersArray = JSON.parse(sellersArray);
+        } catch {
+          sellersArray = [];
+        }
+      }
+      if (Array.isArray(sellersArray) && sellersArray.length > 0) {
+        allowedSellersJson = JSON.stringify(sellersArray);
+      }
     }
 
     const created = await prisma.complex.create({
@@ -232,12 +315,30 @@ async function create(data, reqUser, baseUrl) {
         amenities: amenitiesJson,
         nearby: nearbyJson,
         location: locationJson,
-        walkability: body.walkability ? parseInt(body.walkability) : null,
-        airQuality: body.airQuality ? parseInt(body.airQuality) : null,
+        walkability: body.walkability ?? body.walkabilityRating ?? null,
+        airQuality: body.airQuality ?? body.airQualityRating ?? null,
         bannerImage: bannerImageUrl,
         permissions: permissionsJson,
         allowedSellers: allowedSellersJson,
-        createdById: reqUser?.id || null,
+        createdById: reqUser?.id ?? null,
+
+        // Legacy fields for compatibility
+        name: titleJson,
+        address: locationJson,
+        latitude: typeof locationJson === 'string' ? JSON.parse(locationJson).lat : null,
+        longitude: typeof locationJson === 'string' ? JSON.parse(locationJson).lng : null,
+        walkabilityScore: body.walkability ?? body.walkabilityRating ?? null,
+        airQualityScore: body.airQuality ?? body.airQualityRating ?? null,
+        walkabilityRating: body.walkability ?? body.walkabilityRating ?? null,
+        airQualityRating: body.airQuality ?? body.airQualityRating ?? null,
+        locationLat: typeof locationJson === 'string' ? JSON.parse(locationJson).lat : null,
+        locationLng: typeof locationJson === 'string' ? JSON.parse(locationJson).lng : null,
+        locationText: typeof locationJson === 'string' ? JSON.parse(locationJson).address?.uz : null,
+        nearbyPlaces: nearbyJson,
+        bannerImageUrl: bannerImageUrl,
+        permission1Url: permission1Url,
+        permission2Url: permission2Url,
+        permission3Url: permission3Url,
       },
       include: {
         _count: { select: { apartments: true } },

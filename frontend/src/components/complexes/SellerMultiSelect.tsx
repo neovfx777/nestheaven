@@ -4,6 +4,7 @@ import { Check, X } from 'lucide-react';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { useAuthStore } from '../../stores/authStore';
+import { useTranslation } from '../../hooks/useTranslation';
 import apiClient from '../../api/client'; // IMPORT apiClient
 
 interface SellerMultiSelectProps {
@@ -27,6 +28,7 @@ export function SellerMultiSelect({
 }: SellerMultiSelectProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const { token } = useAuthStore();
+  const { t } = useTranslation();
 
   // Fetch all sellers using apiClient
   const { data: sellers = [], isLoading, error } = useQuery<Seller[]>({
@@ -77,7 +79,7 @@ export function SellerMultiSelect({
     <div className={`space-y-3 ${className}`}>
       <div className="flex items-center justify-between">
         <label className="block text-sm font-medium text-gray-700">
-          Allowed Sellers ({selectedSellerIds.length} selected)
+          {t('complex.allowedSellers')} ({selectedSellerIds.length} {t('common.selected') || 'selected'})
         </label>
         {filteredSellers.length > 0 && (
           <Button
@@ -86,24 +88,24 @@ export function SellerMultiSelect({
             size="sm"
             onClick={handleSelectAll}
           >
-            {selectedSellerIds.length === filteredSellers.length ? 'Deselect All' : 'Select All'}
+            {selectedSellerIds.length === filteredSellers.length ? (t('common.deselectAll') || 'Deselect All') : (t('common.selectAll') || 'Select All')}
           </Button>
         )}
       </div>
 
       <Input
         type="text"
-        placeholder="Search sellers by name or email..."
+        placeholder={t('common.searchSellers') || 'Search sellers by name or email...'}
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         className="w-full"
       />
 
       {isLoading ? (
-        <div className="text-sm text-gray-500 py-4 text-center">Loading sellers...</div>
+        <div className="text-sm text-gray-500 py-4 text-center">{t('common.loading')}</div>
       ) : filteredSellers.length === 0 ? (
         <div className="text-sm text-gray-500 py-4 text-center border border-gray-200 rounded-lg">
-          No sellers found
+          {t('common.noSellersFound') || 'No sellers found'}
         </div>
       ) : (
         <div className="border border-gray-200 rounded-lg max-h-64 overflow-y-auto">

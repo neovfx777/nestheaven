@@ -20,7 +20,34 @@
     "loading": "Yuklanmoqda...",
     "error": "Xatolik",
     "success": "Muvaffaqiyat",
-    "required": "Majburiy"
+    "required": "Majburiy",
+    "basicInfo": "Asosiy ma'lumotlar",
+    "ratings": "Reytinglar",
+    "back": "Orqaga",
+    "saving": "Saqlanmoqda...",
+    "edit": "Tahrirlash",
+    "create": "Yaratish",
+    "update": "Yangilash",
+    "placeType": "Joy turi",
+    "selectType": "Turini tanlang...",
+    "name": "Nomi",
+    "distance": "Masofa (metr)",
+    "note": "Eslatma (ixtiyoriy)",
+    "addPlace": "Joy qo'shish",
+    "addedPlaces": "Qo'shilgan joylar",
+    "amenities": "Qulayliklar",
+    "nearby": "Yaqin",
+    "selected": "tanlangan",
+    "selectAll": "Barchasini tanlash",
+    "deselectAll": "Barchasini bekor qilish",
+    "searchSellers": "Sotuvchilarni ism yoki email bo'yicha qidirish...",
+    "noSellersFound": "Sotuvchilar topilmadi",
+    "block": "Blok",
+    "blocks": "Bloklar",
+    "apartments": "Kvartiralar",
+    "available": "Mavjud",
+    "more": "yana",
+    "morePlaces": "joylar yana"
   },
   "navigation": {
     "home": "Bosh sahifa",
@@ -52,7 +79,8 @@
     "walkability": "Yurish reytingi",
     "airQuality": "Havo sifati reytingi",
     "allowedSellers": "Ruxsat etilgan sotuvchilar",
-    "selectSellers": "Ushbu kompleksga kirish huquqiga ega bo'lgan sotuvchilarni tanlang"
+    "selectSellers": "Ushbu kompleksga kirish huquqiga ega bo'lgan sotuvchilarni tanlang",
+    "allPermissionsRequired": "Yangi komplekslar uchun uchta ruxsatnoma fayli talab qilinadi."
   },
   "apartment": {
     "title": "Kvartira",
@@ -73,6 +101,7 @@
     "paymentOptions": "To'lov variantlari",
     "features": "Xususiyatlar",
     "inheritedFromComplex": "Kompleksdan meros olingan",
+    "inheritedNote": "Quyidagi ma'lumotlar tanlangan kompleksdan avtomatik meros olinadi va tahrirlash mumkin emas.",
     "location": "Manzil",
     "nearbyPlaces": "Yaqin joylar",
     "amenities": "Qulayliklar"

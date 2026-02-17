@@ -36,19 +36,46 @@ const nearbyPlaceSchema = z
 const amenitiesSchema = jsonFromString(z.array(z.string().min(1).max(50)));
 const nearbyPlacesSchema = jsonFromString(z.array(nearbyPlaceSchema));
 
+// Support both old format (string fields) and new format (JSON strings)
 const createComplexSchema = z.object({
   body: z.object({
-    title: z.string().min(1).max(120),
-    description: z.string().min(1),
-    locationText: z.string().min(1),
-    locationLat: numberFromString(z.number().min(-90).max(90)),
-    locationLng: numberFromString(z.number().min(-180).max(180)),
-    walkabilityRating: numberFromString(z.number().int().min(0).max(10)),
-    airQualityRating: numberFromString(z.number().int().min(0).max(10)),
+    // New format: JSON strings for multi-language
+    title: jsonFromString(z.object({
+      uz: z.string().min(1),
+      ru: z.string().min(1),
+      en: z.string().min(1),
+    })).or(z.string().min(1)), // Fallback to old format
+    description: jsonFromString(z.object({
+      uz: z.string().min(1),
+      ru: z.string().min(1),
+      en: z.string().min(1),
+    })).optional().or(z.string().optional()),
+    developer: z.string().min(1).optional(),
+    city: z.string().min(1).optional(),
+    blockCount: numberFromString(z.number().int().min(1).max(100)).optional(),
+    // New format: location as JSON
+    location: jsonFromString(z.object({
+      lat: z.number().min(-90).max(90),
+      lng: z.number().min(-180).max(180),
+      address: z.object({
+        uz: z.string().min(1),
+        ru: z.string().min(1),
+        en: z.string().min(1),
+      }),
+    })).optional(),
+    // Old format fallback
+    locationText: z.string().min(1).optional(),
+    locationLat: numberFromString(z.number().min(-90).max(90)).optional(),
+    locationLng: numberFromString(z.number().min(-180).max(180)).optional(),
+    walkabilityRating: numberFromString(z.number().int().min(0).max(10)).optional(),
+    walkability: numberFromString(z.number().int().min(0).max(10)).optional(),
+    airQualityRating: numberFromString(z.number().int().min(0).max(10)).optional(),
+    airQuality: numberFromString(z.number().int().min(0).max(10)).optional(),
     nearbyNote: z.string().max(2000).optional(),
     nearbyPlaces: nearbyPlacesSchema.optional(),
+    nearby: nearbyPlacesSchema.optional(),
     amenities: amenitiesSchema.optional(),
-    city: z.string().min(1).optional(),
+    allowedSellers: jsonFromString(z.array(z.string())).optional(),
   }),
 });
 
