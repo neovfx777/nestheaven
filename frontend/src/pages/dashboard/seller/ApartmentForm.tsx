@@ -10,6 +10,7 @@ import { Textarea } from '../../../components/ui/Textarea';
 import { Select } from '../../../components/ui/Select';
 import { ImageUpload } from '../../../components/ui/ImageUpload';
 import { MultiLanguageInput } from '../../../components/ui/MultiLanguageInput';
+import { InheritedComplexData } from '../../../components/apartments/InheritedComplexData';
 import { toast } from 'react-hot-toast';
 import { 
   Globe, 
@@ -112,17 +113,8 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
   const [activeSection, setActiveSection] = useState<'basic' | 'details' | 'media' | 'contact'>('basic');
   
   const { data: complexes = [] } = useQuery<Complex[]>({
-    queryKey: ['complexes'],
-    queryFn: async () => {
-      try {
-        // Try to fetch complexes from your API
-        // If you don't have a complexes API yet, return empty array
-        return [];
-      } catch (error) {
-        console.error('Error fetching complexes:', error);
-        return [];
-      }
-    }
+    queryKey: ['complexes-for-seller'],
+    queryFn: () => apartmentsApi.getComplexesForSeller(),
   });
 
   const { data: apartment, isLoading } = useQuery({
@@ -524,14 +516,27 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
                     />
 
                     <Select
-                      label="Complex (Optional)"
+                      label="Complex *"
                       options={[
-                        { value: '', label: 'Standalone Apartment' },
-                        ...(complexes?.map(c => ({ value: c.id, label: c.name })) || [])
+                        { value: '', label: 'Select Complex...' },
+                        ...(complexes?.map(c => {
+                          const name = typeof c.name === 'string' 
+                            ? c.name 
+                            : c.name?.en || c.name?.uz || c.name?.ru || 'Complex';
+                          return { value: c.id, label: name };
+                        }) || [])
                       ]}
                       value={form.watch('complexId')}
                       onChange={(value) => form.setValue('complexId', value)}
+                      required
                     />
+                    
+                    {/* Show inherited data when complex is selected */}
+                    {form.watch('complexId') && (
+                      <div className="col-span-full mt-4">
+                        <InheritedComplexData complexId={form.watch('complexId')} />
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-6">

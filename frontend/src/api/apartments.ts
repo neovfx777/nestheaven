@@ -303,6 +303,17 @@ export const apartmentsApi = {
     }
   },
 
+  // Get complexes for seller (only complexes where seller is in allowedSellers)
+  getComplexesForSeller: async (): Promise<Complex[]> => {
+    try {
+      const response = await apiClient.get<{ success: boolean; data: Complex[] }>('/complexes/for-seller');
+      return response.data.data || [];
+    } catch (error) {
+      console.error('Failed to fetch complexes for seller:', error);
+      return [];
+    }
+  },
+
   // Get other apartments in same complex
   getOtherApartments: async (apartmentId: string, limit: number = 6): Promise<Apartment[]> => {
     const response = await apiClient.get<{ success: boolean; data: Apartment[] }>(

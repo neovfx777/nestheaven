@@ -1,0 +1,137 @@
+// Prisma schema for Complete Real Estate Platform
+// Note: SQLite doesn't support native JSON, so we use String and parse in application layer
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  role          String    @default("USER") // USER, SELLER, ADMIN, MANAGER_ADMIN, OWNER_ADMIN
+  isActive      Boolean   @default(true) @map("is_active")
+  deactivatedAt DateTime? @map("deactivated_at")
+  deactivatedById String? @map("deactivated_by_id")
+  firstName     String?   @map("first_name")
+  lastName      String?   @map("last_name")
+  phone         String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  createdById   String?   @map("created_by_id")
+
+  createdBy   User?    @relation("UserCreatedBy", fields: [createdById], references: [id])
+  createdUsers User[]  @relation("UserCreatedBy")
+  deactivatedBy   User?   @relation("UserDeactivatedBy", fields: [deactivatedById], references: [id])
+  deactivatedUsers User[] @relation("UserDeactivatedBy")
+
+  favorites        Favorite[]
+  savedSearches    SavedSearch[]
+  apartments       Apartment[]
+  createdComplexes Complex[]
+  broadcasts       Broadcast[]
+}
+
+model Complex {
+  id             String   @id @default(cuid())
+  title          String   // JSON: { uz: "text", ru: "text", en: "text" }
+  description    String?  // JSON: { uz, ru, en }
+  developer      String   // Developer name
+  city           String
+  blockCount     Int      @default(1) @map("block_count")
+  amenities      String?  // JSON: ["pool", "gym", "park", "playground"]
+  nearby         String?  // JSON: [{ type: "metro", name: "Text", distanceMeters: 500, note: "optional" }]
+  location       String   // JSON: { lat: 41.2995, lng: 69.2401, address: { uz, ru, en } }
+  walkability    Int?     // 0-10
+  airQuality     Int?     @map("air_quality") // 0-10
+  bannerImage    String?  @map("banner_image")
+  permissions    String?  // JSON: { permission1: "url", permission2: "url", permission3: "url" }
+  allowedSellers String?  @map("allowed_sellers") // JSON: ["sellerId1", "sellerId2"]
+  createdById    String?  @map("created_by_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  createdBy   User?       @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  apartments  Apartment[]
+
+  @@map("complexes")
+}
+
+model Apartment {
+  id             String   @id @default(cuid())
+  title          String   // JSON: { uz, ru, en }
+  description    String?  // JSON: { uz, ru, en }
+  price          Float
+  rooms          Int
+  area           Float
+  floor          Int
+  totalFloors    Int?     @map("total_floors")
+  status         String   @default("draft") // draft, pending, approved, rejected, sold, hidden
+  statusReason   String?  @map("status_reason")
+  complexId      String   @map("complex_id")
+  sellerId       String   @map("seller_id")
+  paymentOptions String?  @map("payment_options") // JSON: { installments: { available: boolean, months: number[], downPayment: number }, mortgage: { available: boolean, banks: string[], maxTerm: number } }
+  features       String?  // JSON: ["balcony", "furnished", "renovation"]
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  complex    Complex         @relation(fields: [complexId], references: [id], onDelete: Cascade)
+  seller     User            @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  images     ApartmentImage[]
+  favorites  Favorite[]
+
+  @@map("apartments")
+}
+
+model ApartmentImage {
+  id          String    @id @default(cuid())
+  apartmentId String    @map("apartment_id")
+  url         String
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  apartment Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+
+  @@map("apartment_images")
+}
+
+model Favorite {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  apartmentId String   @map("apartment_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apartment Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, apartmentId])
+  @@map("favorites")
+}
+
+model SavedSearch {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  name        String?
+  filters     String   // JSON
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("saved_searches")
+}
+
+model Broadcast {
+  id          String   @id @default(cuid())
+  title       String
+  message     String
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdById String?  @map("created_by_id")
+
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+}

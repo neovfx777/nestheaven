@@ -66,4 +66,12 @@ router.delete(
   complexesController.remove
 );
 
+// Get complexes for seller (only complexes where seller is in allowedSellers)
+router.get(
+  '/for-seller',
+  authMiddleware,
+  validateList,
+  complexesController.getForSeller
+);
+
 module.exports = router;

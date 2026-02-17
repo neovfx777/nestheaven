@@ -354,4 +354,75 @@ async function remove(id, reqUser) {
   return { success: true };
 }
 
-module.exports = { list, getById, create, update, remove };
+async function getForSeller(data, reqUser) {
+  // Only SELLER role can access this endpoint
+  if (reqUser.role !== 'SELLER') {
+    const err = new Error('Access denied');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const { page = 1, limit = 20, search, city } = data.query;
+  const skip = (page - 1) * limit;
+
+  const where = {
+    // Filter complexes where seller is in allowedSellers array
+    OR: [
+      {
+        allowedSellers: {
+          contains: reqUser.id,
+        },
+      },
+      // Also include complexes with null allowedSellers (accessible to all sellers)
+      {
+        allowedSellers: null,
+      },
+    ],
+  };
+
+  if (search) {
+    where.OR = [
+      ...where.OR,
+      { title: { contains: search, mode: 'insensitive' } },
+      { name: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  if (city) {
+    where.city = city;
+  }
+
+  const total = await prisma.complex.count({ where });
+  const complexes = await prisma.complex.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    skip,
+    take: limit,
+    include: {
+      _count: { select: { apartments: true } },
+    },
+  });
+
+  // Filter by parsing allowedSellers JSON
+  const filtered = complexes.filter((complex) => {
+    if (!complex.allowedSellers) return true; // Null means accessible to all
+    try {
+      const allowed = JSON.parse(complex.allowedSellers);
+      return Array.isArray(allowed) && allowed.includes(reqUser.id);
+    } catch {
+      return false;
+    }
+  });
+
+  return {
+    items: filtered.map(formatComplex),
+    pagination: {
+      total: filtered.length,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(filtered.length / limit) || 1,
+    },
+  };
+}
+
+module.exports = { list, getById, create, update, remove, getForSeller };
