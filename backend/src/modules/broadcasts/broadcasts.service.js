@@ -1,20 +1,30 @@
 const { prisma } = require('../../config/db');
 
 async function listPublic(data) {
-  const { limit = 5 } = data.query;
-  return prisma.broadcast.findMany({
-    where: { isActive: true },
-    orderBy: { createdAt: 'desc' },
-    take: Number(limit),
-    select: {
-      id: true,
-      title: true,
-      message: true,
-      isActive: true,
-      createdAt: true,
-      createdById: true,
-    },
-  });
+  try {
+    const { limit = 5 } = data.query;
+    const result = await prisma.broadcast.findMany({
+      where: { isActive: true },
+      orderBy: { createdAt: 'desc' },
+      take: Number(limit),
+      select: {
+        id: true,
+        title: true,
+        message: true,
+        isActive: true,
+        createdAt: true,
+        createdById: true,
+      },
+    });
+    return result;
+  } catch (error) {
+    console.error('Error in broadcasts.listPublic:', error);
+    // If table doesn't exist, return empty array instead of crashing
+    if (error.message && error.message.includes('does not exist')) {
+      return [];
+    }
+    throw error;
+  }
 }
 
 async function create(data, reqUser) {

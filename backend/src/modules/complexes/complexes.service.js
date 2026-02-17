@@ -57,11 +57,15 @@ function formatComplex(complex) {
   const title = parseJsonMaybe(complex.title, { uz: '', ru: '', en: '' });
   const description = parseJsonMaybe(complex.description, null);
   const amenities = parseJsonMaybe(complex.amenities, []);
-  const nearby = parseJsonMaybe(complex.nearby, []);
-  const location = parseJsonMaybe(complex.location, {
-    lat: 41.3111,
-    lng: 69.2797,
-    address: { uz: '', ru: '', en: '' },
+  const nearby = parseJsonMaybe(complex.nearbyPlaces || complex.nearby, []); // Use nearbyPlaces from schema
+  const location = complex.locationLat && complex.locationLng ? {
+    lat: complex.locationLat,
+    lng: complex.locationLng,
+    address: parseJsonMaybe(complex.address || complex.locationText, { uz: '', ru: '', en: '' }),
+  } : parseJsonMaybe(complex.location, {
+    lat: complex.latitude || 41.3111,
+    lng: complex.longitude || 69.2797,
+    address: parseJsonMaybe(complex.address, { uz: '', ru: '', en: '' }),
   });
   const permissions = parseJsonMaybe(complex.permissions, null);
   const allowedSellers = parseJsonMaybe(complex.allowedSellers, []);
@@ -70,15 +74,15 @@ function formatComplex(complex) {
     id: complex.id,
     title,
     description,
-    developer: complex.developer,
+    developer: complex.developer || null,
     city: complex.city,
     blockCount: complex.blockCount || 1,
     amenities,
     nearby,
     location,
-    walkability: complex.walkability,
-    airQuality: complex.airQuality,
-    bannerImage: complex.bannerImage,
+    walkability: complex.walkabilityRating || complex.walkabilityScore || null,
+    airQuality: complex.airQualityRating || complex.airQualityScore || null,
+    bannerImage: complex.bannerImageUrl || null,
     permissions,
     allowedSellers,
     createdAt: complex.createdAt,
@@ -196,13 +200,33 @@ async function create(data, reqUser, baseUrl) {
     if (typeof body.title === 'string') {
       try {
         const parsed = JSON.parse(body.title);
-        titleJson = JSON.stringify(parsed);
+        // Ensure it has the required structure
+        if (parsed && typeof parsed === 'object' && parsed.uz && parsed.ru && parsed.en) {
+          titleJson = JSON.stringify(parsed);
+        } else {
+          // Invalid structure, create default
+          titleJson = JSON.stringify({ uz: body.title || 'Complex', ru: body.title || 'Complex', en: body.title || 'Complex' });
+        }
       } catch {
         // Old format: plain string
-        titleJson = JSON.stringify({ uz: body.title, ru: body.title, en: body.title });
+        titleJson = JSON.stringify({ uz: body.title || 'Complex', ru: body.title || 'Complex', en: body.title || 'Complex' });
       }
+    } else if (body.title && typeof body.title === 'object') {
+      // Ensure all required fields exist
+      const title = {
+        uz: body.title.uz || 'Complex',
+        ru: body.title.ru || 'Complex',
+        en: body.title.en || 'Complex',
+      };
+      titleJson = JSON.stringify(title);
     } else {
-      titleJson = JSON.stringify(body.title || { uz: '', ru: '', en: '' });
+      // No title provided, use default
+      titleJson = JSON.stringify({ uz: 'Complex', ru: 'Complex', en: 'Complex' });
+    }
+    
+    // Ensure name is never empty (required field)
+    if (!titleJson || titleJson === 'null' || titleJson === '""') {
+      titleJson = JSON.stringify({ uz: 'Complex', ru: 'Complex', en: 'Complex' });
     }
 
     // Handle description
@@ -304,42 +328,89 @@ async function create(data, reqUser, baseUrl) {
       }
     }
 
-    const created = await prisma.complex.create({
-      data: {
-        id: complexId,
-        title: titleJson,
-        description: descriptionJson,
-        developer: body.developer || '',
-        city: body.city || '',
-        blockCount: body.blockCount ? parseInt(body.blockCount) : 1,
-        amenities: amenitiesJson,
-        nearby: nearbyJson,
-        location: locationJson,
-        walkability: body.walkability ?? body.walkabilityRating ?? null,
-        airQuality: body.airQuality ?? body.airQualityRating ?? null,
-        bannerImage: bannerImageUrl,
-        permissions: permissionsJson,
-        allowedSellers: allowedSellersJson,
-        createdById: reqUser?.id ?? null,
+    // Parse location JSON to extract lat/lng/text
+    let locationLat = null;
+    let locationLng = null;
+    let locationText = null;
+    let addressJson = null;
+    
+    if (locationJson) {
+      try {
+        const locationData = typeof locationJson === 'string' ? JSON.parse(locationJson) : locationJson;
+        locationLat = locationData.lat ?? null;
+        locationLng = locationData.lng ?? null;
+        locationText = locationData.address?.uz || locationData.address?.en || locationData.address?.ru || null;
+        addressJson = JSON.stringify(locationData.address || {});
+      } catch (e) {
+        console.error('Error parsing location:', e);
+      }
+    }
 
-        // Legacy fields for compatibility
-        name: titleJson,
-        address: locationJson,
-        latitude: typeof locationJson === 'string' ? JSON.parse(locationJson).lat : null,
-        longitude: typeof locationJson === 'string' ? JSON.parse(locationJson).lng : null,
-        walkabilityScore: body.walkability ?? body.walkabilityRating ?? null,
-        airQualityScore: body.airQuality ?? body.airQualityRating ?? null,
-        walkabilityRating: body.walkability ?? body.walkabilityRating ?? null,
-        airQualityRating: body.airQuality ?? body.airQualityRating ?? null,
-        locationLat: typeof locationJson === 'string' ? JSON.parse(locationJson).lat : null,
-        locationLng: typeof locationJson === 'string' ? JSON.parse(locationJson).lng : null,
-        locationText: typeof locationJson === 'string' ? JSON.parse(locationJson).address?.uz : null,
-        nearbyPlaces: nearbyJson,
-        bannerImageUrl: bannerImageUrl,
-        permission1Url: permission1Url,
-        permission2Url: permission2Url,
-        permission3Url: permission3Url,
-      },
+    // Prepare data object
+    const createData = {
+      id: complexId,
+      title: titleJson,
+      description: descriptionJson,
+      name: titleJson, // Legacy field - required, must be non-empty string
+      address: addressJson || locationJson || JSON.stringify({ uz: '', ru: '', en: '' }), // Legacy field
+      city: (body.city && body.city.trim()) || 'Unknown', // Required field in schema
+      developer: body.developer || null,
+      blockCount: body.blockCount ? parseInt(body.blockCount) : 1,
+      amenities: amenitiesJson,
+      nearbyPlaces: nearbyJson,
+      locationLat: locationLat,
+      locationLng: locationLng,
+      locationText: locationText,
+      latitude: locationLat, // Legacy field
+      longitude: locationLng, // Legacy field
+      walkabilityRating: (body.walkability !== undefined && body.walkability !== null && body.walkability !== '') 
+        ? parseInt(body.walkability) 
+        : (body.walkabilityRating !== undefined && body.walkabilityRating !== null && body.walkabilityRating !== '')
+          ? parseInt(body.walkabilityRating)
+          : null,
+      airQualityRating: (body.airQuality !== undefined && body.airQuality !== null && body.airQuality !== '')
+        ? parseInt(body.airQuality)
+        : (body.airQualityRating !== undefined && body.airQualityRating !== null && body.airQualityRating !== '')
+          ? parseInt(body.airQualityRating)
+          : null,
+      walkabilityScore: (body.walkability !== undefined && body.walkability !== null && body.walkability !== '') 
+        ? parseInt(body.walkability) 
+        : (body.walkabilityRating !== undefined && body.walkabilityRating !== null && body.walkabilityRating !== '')
+          ? parseInt(body.walkabilityRating)
+          : null, // Legacy field
+      airQualityScore: (body.airQuality !== undefined && body.airQuality !== null && body.airQuality !== '')
+        ? parseInt(body.airQuality)
+        : (body.airQualityRating !== undefined && body.airQualityRating !== null && body.airQualityRating !== '')
+          ? parseInt(body.airQualityRating)
+          : null, // Legacy field
+      bannerImageUrl: bannerImageUrl,
+      permission1Url: permission1Url,
+      permission2Url: permission2Url,
+      permission3Url: permission3Url,
+      permissions: permissionsJson,
+      allowedSellers: allowedSellersJson,
+      createdById: reqUser?.id ?? null,
+    };
+
+    console.log('=== Prisma Create Data ===');
+    console.log('Data keys:', Object.keys(createData));
+    console.log('Name:', createData.name?.substring(0, 100));
+    console.log('City:', createData.city);
+    console.log('Title:', createData.title?.substring(0, 100));
+    console.log('Developer:', createData.developer);
+    console.log('BlockCount:', createData.blockCount);
+    console.log('WalkabilityRating:', createData.walkabilityRating);
+    console.log('AirQualityRating:', createData.airQualityRating);
+
+    // Remove undefined values to avoid Prisma errors
+    const cleanedData = Object.fromEntries(
+      Object.entries(createData).filter(([_, v]) => v !== undefined)
+    );
+
+    console.log('Cleaned data keys:', Object.keys(cleanedData));
+
+    const created = await prisma.complex.create({
+      data: cleanedData,
       include: {
         _count: { select: { apartments: true } },
       },
@@ -348,6 +419,18 @@ async function create(data, reqUser, baseUrl) {
     return formatComplex(created);
   } catch (error) {
     console.error('Error in complexes.create:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack,
+    });
+    console.error('Request data:', {
+      body: JSON.stringify(data.body, null, 2),
+      hasFiles: !!data.files,
+      fileKeys: Object.keys(data.files || {}),
+      complexId: data.meta?.complexId,
+    });
     throw error;
   }
 }
@@ -365,38 +448,115 @@ async function update(id, data, reqUser, baseUrl) {
     const files = data.files || {};
     const updates = {};
 
+    // Handle title - can be JSON string or object
     if (body.title !== undefined) {
-      updates.title = JSON.stringify(body.title);
+      if (typeof body.title === 'string') {
+        try {
+          const parsed = JSON.parse(body.title);
+          updates.title = JSON.stringify(parsed);
+          updates.name = JSON.stringify(parsed); // Legacy field
+        } catch {
+          updates.title = JSON.stringify({ uz: body.title, ru: body.title, en: body.title });
+          updates.name = JSON.stringify({ uz: body.title, ru: body.title, en: body.title });
+        }
+      } else {
+        updates.title = JSON.stringify(body.title);
+        updates.name = JSON.stringify(body.title); // Legacy field
+      }
     }
+    
     if (body.description !== undefined) {
-      updates.description = body.description ? JSON.stringify(body.description) : null;
+      if (typeof body.description === 'string') {
+        try {
+          const parsed = JSON.parse(body.description);
+          updates.description = JSON.stringify(parsed);
+        } catch {
+          updates.description = JSON.stringify({ uz: body.description, ru: body.description, en: body.description });
+        }
+      } else {
+        updates.description = body.description ? JSON.stringify(body.description) : null;
+      }
     }
+    
     if (body.developer !== undefined) updates.developer = body.developer;
     if (body.city !== undefined) updates.city = body.city;
     if (body.blockCount !== undefined) updates.blockCount = parseInt(body.blockCount);
     
     if (body.amenities !== undefined) {
-      updates.amenities = body.amenities && Array.isArray(body.amenities) && body.amenities.length > 0
-        ? JSON.stringify(normalizeAmenities(body.amenities))
+      let amenitiesData = body.amenities;
+      if (typeof amenitiesData === 'string') {
+        try {
+          amenitiesData = JSON.parse(amenitiesData);
+        } catch {
+          amenitiesData = [];
+        }
+      }
+      updates.amenities = amenitiesData && Array.isArray(amenitiesData) && amenitiesData.length > 0
+        ? JSON.stringify(normalizeAmenities(amenitiesData))
         : null;
     }
     
-    if (body.nearby !== undefined) {
-      updates.nearby = body.nearby && Array.isArray(body.nearby) && body.nearby.length > 0
-        ? JSON.stringify(normalizeNearbyPlaces(body.nearby))
+    if (body.nearby !== undefined || body.nearbyPlaces !== undefined) {
+      const nearbyData = body.nearby || body.nearbyPlaces;
+      let parsedNearby = nearbyData;
+      if (typeof nearbyData === 'string') {
+        try {
+          parsedNearby = JSON.parse(nearbyData);
+        } catch {
+          parsedNearby = [];
+        }
+      }
+      updates.nearbyPlaces = parsedNearby && Array.isArray(parsedNearby) && parsedNearby.length > 0
+        ? JSON.stringify(normalizeNearbyPlaces(parsedNearby))
         : null;
     }
     
+    // Handle location - parse and update locationLat, locationLng, locationText
     if (body.location !== undefined) {
-      updates.location = JSON.stringify(body.location);
+      let locationData;
+      if (typeof body.location === 'string') {
+        try {
+          locationData = JSON.parse(body.location);
+        } catch {
+          locationData = null;
+        }
+      } else {
+        locationData = body.location;
+      }
+      
+      if (locationData) {
+        updates.locationLat = locationData.lat ?? null;
+        updates.locationLng = locationData.lng ?? null;
+        updates.locationText = locationData.address?.uz || locationData.address?.en || locationData.address?.ru || null;
+        updates.latitude = locationData.lat ?? null; // Legacy field
+        updates.longitude = locationData.lng ?? null; // Legacy field
+        updates.address = JSON.stringify(locationData.address || {}); // Legacy field
+      }
     }
     
-    if (body.walkability !== undefined) updates.walkability = body.walkability ? parseInt(body.walkability) : null;
-    if (body.airQuality !== undefined) updates.airQuality = body.airQuality ? parseInt(body.airQuality) : null;
+    if (body.walkability !== undefined || body.walkabilityRating !== undefined) {
+      const value = body.walkability ?? body.walkabilityRating;
+      updates.walkabilityRating = value ? parseInt(value) : null;
+      updates.walkabilityScore = value ? parseInt(value) : null; // Legacy field
+    }
+    
+    if (body.airQuality !== undefined || body.airQualityRating !== undefined) {
+      const value = body.airQuality ?? body.airQualityRating;
+      updates.airQualityRating = value ? parseInt(value) : null;
+      updates.airQualityScore = value ? parseInt(value) : null; // Legacy field
+    }
     
     if (body.allowedSellers !== undefined) {
-      updates.allowedSellers = body.allowedSellers && Array.isArray(body.allowedSellers) && body.allowedSellers.length > 0
-        ? JSON.stringify(body.allowedSellers)
+      let sellersArray = body.allowedSellers;
+      if (typeof sellersArray === 'string') {
+        try {
+          sellersArray = JSON.parse(sellersArray);
+        } catch {
+          sellersArray = [];
+        }
+      }
+      updates.allowedSellers = sellersArray && Array.isArray(sellersArray) && sellersArray.length > 0
+        ? JSON.stringify(sellersArray)
         : null;
     }
 
@@ -407,10 +567,10 @@ async function update(id, data, reqUser, baseUrl) {
     const permission3File = getFile(files, 'permission3', 'permission_3');
 
     if (bannerFile) {
-      if (existing.bannerImage) {
-        deleteFileByUrl(existing.bannerImage);
+      if (existing.bannerImageUrl) {
+        deleteFileByUrl(existing.bannerImageUrl);
       }
-      updates.bannerImage = buildUrl(id, bannerFile, baseUrl);
+      updates.bannerImageUrl = buildUrl(id, bannerFile, baseUrl);
     }
 
     // Handle permissions
@@ -444,6 +604,9 @@ async function update(id, data, reqUser, baseUrl) {
           permission2: nextPermission2,
           permission3: nextPermission3,
         });
+        updates.permission1Url = nextPermission1;
+        updates.permission2Url = nextPermission2;
+        updates.permission3Url = nextPermission3;
       }
     }
 
@@ -457,6 +620,12 @@ async function update(id, data, reqUser, baseUrl) {
 
     return formatComplex(updated);
   } catch (error) {
+    console.error('Error in complexes.update:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+    });
     console.error('Error in complexes.update:', error);
     throw error;
   }

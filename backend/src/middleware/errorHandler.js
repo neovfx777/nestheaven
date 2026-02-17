@@ -47,9 +47,19 @@ function errorHandler(err, req, res, next) {
     });
   }
 
+  // Log full error details for debugging
+  console.error('Unhandled error:', {
+    name: err.name,
+    message: err.message,
+    stack: err.stack,
+    code: err.code,
+    meta: err.meta,
+  });
+
   res.status(500).json({
     error: 'Internal Server Error',
     message: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message,
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
   });
 }
 

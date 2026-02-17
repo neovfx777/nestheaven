@@ -5,6 +5,11 @@ async function listPublic(req, res, next) {
     const result = await broadcastsService.listPublic(req.validated);
     res.json({ success: true, data: result });
   } catch (err) {
+    console.error('Error in broadcastsController.listPublic:', err);
+    // If it's a table not found error, return empty array
+    if (err.message && (err.message.includes('does not exist') || err.message.includes('no such table'))) {
+      return res.json({ success: true, data: [] });
+    }
     next(err);
   }
 }

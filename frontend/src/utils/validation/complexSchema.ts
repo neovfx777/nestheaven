@@ -11,7 +11,7 @@ export const complexSchema = z.object({
     uz: z.string().min(1, 'Uzbek description is required'),
     ru: z.string().min(1, 'Russian description is required'),
     en: z.string().min(1, 'English description is required'),
-  }),
+  }).optional(),
   developer: z.string().min(1, 'Developer name is required'),
   city: z.string().min(1, 'City is required'),
   blockCount: z.number().int().min(1, 'Block count must be at least 1'),
@@ -35,8 +35,22 @@ export const complexSchema = z.object({
       en: z.string().min(1, 'English address is required'),
     }),
   }),
-  walkability: z.number().min(0).max(10).optional(),
-  airQuality: z.number().min(0).max(10).optional(),
+  walkability: z.preprocess(
+    (val) => {
+      if (val === '' || val === null || val === undefined) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    },
+    z.number().min(0).max(10).optional()
+  ),
+  airQuality: z.preprocess(
+    (val) => {
+      if (val === '' || val === null || val === undefined) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    },
+    z.number().min(0).max(10).optional()
+  ),
   allowedSellers: z.array(z.string()).optional(),
 });
 

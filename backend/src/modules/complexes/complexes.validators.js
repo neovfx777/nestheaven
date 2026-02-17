@@ -51,7 +51,7 @@ const createComplexSchema = z.object({
       en: z.string().min(1),
     })).optional().or(z.string().optional()),
     developer: z.string().min(1).optional(),
-    city: z.string().min(1).optional(),
+    city: z.string().min(1).default('Unknown'), // Required in schema, provide default
     blockCount: numberFromString(z.number().int().min(1).max(100)).optional(),
     // New format: location as JSON
     location: jsonFromString(z.object({
@@ -113,38 +113,53 @@ const listSchema = z.object({
 });
 
 function validateCreate(req, res, next) {
-  const result = createComplexSchema.safeParse({ body: req.body });
-  if (!result.success) {
-    return res
-      .status(400)
-      .json({ error: 'Validation failed', details: result.error.errors });
-  }
+  try {
+    console.log('=== Validator: validateCreate ===');
+    console.log('Request body keys:', Object.keys(req.body || {}));
+    console.log('Request body sample:', JSON.stringify(req.body, null, 2).substring(0, 1000));
+    
+    const result = createComplexSchema.safeParse({ body: req.body });
+    if (!result.success) {
+      console.error('Validation failed:', JSON.stringify(result.error.errors, null, 2));
+      return res
+        .status(400)
+        .json({ error: 'Validation failed', details: result.error.errors });
+    }
 
-  const files = req.files || {};
-  const permission1 = files.permission1?.[0] || files.permission_1?.[0] || null;
-  const permission2 = files.permission2?.[0] || files.permission_2?.[0] || null;
-  const permission3 = files.permission3?.[0] || files.permission_3?.[0] || null;
-  const provided = [permission1, permission2, permission3].filter(Boolean).length;
+    const files = req.files || {};
+    const permission1 = files.permission1?.[0] || files.permission_1?.[0] || null;
+    const permission2 = files.permission2?.[0] || files.permission_2?.[0] || null;
+    const permission3 = files.permission3?.[0] || files.permission_3?.[0] || null;
+    const provided = [permission1, permission2, permission3].filter(Boolean).length;
 
-  if (provided > 0 && provided < 3) {
-    return res.status(400).json({
-      error: 'Validation failed',
-      details: [
-        {
-          path: ['permissions'],
-          message:
-            'Provide all three permission files (permission1, permission2, permission3) or none',
-        },
-      ],
+    if (provided > 0 && provided < 3) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: [
+          {
+            path: ['permissions'],
+            message:
+              'Provide all three permission files (permission1, permission2, permission3) or none',
+          },
+        ],
+      });
+    }
+
+    req.validated = {
+      ...result.data,
+      files,
+      meta: { complexId: req.complexId },
+    };
+    
+    console.log('Validation passed. Validated data keys:', Object.keys(req.validated.body || {}));
+    next();
+  } catch (err) {
+    console.error('Error in validateCreate:', err);
+    return res.status(500).json({
+      error: 'Validation error',
+      message: err.message,
     });
   }
-
-  req.validated = {
-    ...result.data,
-    files,
-    meta: { complexId: req.complexId },
-  };
-  next();
 }
 
 function validateUpdate(req, res, next) {
