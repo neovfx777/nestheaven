@@ -123,9 +123,9 @@ export const MultiLanguageInput: React.FC<MultiLanguageInputProps> = ({
 
   const statusIcons = {
     empty: <div className="w-2 h-2 rounded-full bg-gray-400"></div>,
-    short: <AlertCircle className="w-4 w-4" />,
-    long: <AlertCircle className="w-4 w-4" />,
-    good: <Check className="w-4 w-4" />,
+    short: <AlertCircle className="w-4 h-4" />,
+    long: <AlertCircle className="w-4 h-4" />,
+    good: <Check className="w-4 h-4" />,
   };
 
   return (
@@ -249,7 +249,8 @@ export const MultiLanguageInput: React.FC<MultiLanguageInputProps> = ({
           {languages.map(({ code, label: langLabel, flag }) => (
             <div
               key={code}
-              className={`${activeLang === code ? 'block animate-fadeIn' : 'hidden'}`}
+              className={`${activeLang === code ? 'block' : 'hidden'}`}
+              style={{ animation: activeLang === code ? 'fadeIn 0.2s ease-out' : 'none' }}
             >
               <div className="mb-6">
                 <div className="flex items-center space-x-3 mb-6">
@@ -339,13 +340,11 @@ export const MultiLanguageInput: React.FC<MultiLanguageInputProps> = ({
         </div>
       </div>
 
-      <style jsx>{`
+      {/* Add keyframe animation to global scope via style tag */}
+      <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.2s ease-out;
         }
       `}</style>
     </div>
