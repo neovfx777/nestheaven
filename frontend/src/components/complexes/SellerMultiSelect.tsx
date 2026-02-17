@@ -1,14 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Check, X } from 'lucide-react';
-import { usersApi } from '../../api/users';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
+import { useAuthStore } from '../../stores/authStore';
+import apiClient from '../../api/client'; // IMPORT apiClient
 
 interface SellerMultiSelectProps {
   selectedSellerIds: string[];
   onChange: (sellerIds: string[]) => void;
   className?: string;
+}
+
+interface Seller {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  role: string;
 }
 
 export function SellerMultiSelect({
@@ -17,29 +26,20 @@ export function SellerMultiSelect({
   className = '',
 }: SellerMultiSelectProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const { token } = useAuthStore();
 
-  // Fetch all sellers
-  const { data: sellers = [], isLoading } = useQuery({
+  // Fetch all sellers using apiClient
+  const { data: sellers = [], isLoading, error } = useQuery<Seller[]>({
     queryKey: ['sellers'],
     queryFn: async () => {
-      // This endpoint should return all SELLER role users
-      // You'll need to create this endpoint in backend
-      try {
-        const response = await fetch('/api/users/sellers', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        if (!response.ok) return [];
-        const data = await response.json();
-        return data.data || [];
-      } catch {
-        return [];
-      }
+      // Use apiClient instead of fetch
+      const response = await apiClient.get('/users/sellers');
+      return response.data?.data || response.data || [];
     },
+    enabled: !!token, // Only fetch if token exists
   });
 
-  const filteredSellers = sellers.filter((seller: any) => {
+  const filteredSellers = (sellers || []).filter((seller: Seller) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     const fullName = `${seller.firstName || ''} ${seller.lastName || ''}`.toLowerCase();
@@ -59,9 +59,19 @@ export function SellerMultiSelect({
     if (selectedSellerIds.length === filteredSellers.length) {
       onChange([]);
     } else {
-      onChange(filteredSellers.map((s: any) => s.id));
+      onChange(filteredSellers.map((s: Seller) => s.id));
     }
   };
+
+  if (error) {
+    return (
+      <div className={`space-y-3 ${className}`}>
+        <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+          Error loading sellers: {error.message}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`space-y-3 ${className}`}>
@@ -90,12 +100,14 @@ export function SellerMultiSelect({
       />
 
       {isLoading ? (
-        <div className="text-sm text-gray-500">Loading sellers...</div>
+        <div className="text-sm text-gray-500 py-4 text-center">Loading sellers...</div>
       ) : filteredSellers.length === 0 ? (
-        <div className="text-sm text-gray-500">No sellers found</div>
+        <div className="text-sm text-gray-500 py-4 text-center border border-gray-200 rounded-lg">
+          No sellers found
+        </div>
       ) : (
         <div className="border border-gray-200 rounded-lg max-h-64 overflow-y-auto">
-          {filteredSellers.map((seller: any) => {
+          {filteredSellers.map((seller: Seller) => {
             const isSelected = selectedSellerIds.includes(seller.id);
             const fullName = `${seller.firstName || ''} ${seller.lastName || ''}`.trim() || 'No name';
 
@@ -127,7 +139,7 @@ export function SellerMultiSelect({
       {selectedSellerIds.length > 0 && (
         <div className="flex flex-wrap gap-2 pt-2">
           {selectedSellerIds.map((sellerId) => {
-            const seller = sellers.find((s: any) => s.id === sellerId);
+            const seller = (sellers || []).find((s: Seller) => s.id === sellerId);
             if (!seller) return null;
             const fullName = `${seller.firstName || ''} ${seller.lastName || ''}`.trim() || 'No name';
 
@@ -139,7 +151,10 @@ export function SellerMultiSelect({
                 <span>{fullName}</span>
                 <button
                   type="button"
-                  onClick={() => handleToggle(sellerId)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggle(sellerId);
+                  }}
                   className="hover:text-primary-900"
                 >
                   <X className="h-3 w-3" />

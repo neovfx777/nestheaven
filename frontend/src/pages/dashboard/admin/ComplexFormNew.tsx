@@ -13,7 +13,6 @@ import { AmenitiesCheckboxGroup } from '../../../components/complexes/AmenitiesC
 import { NearbyPlacesManager, NearbyPlace } from '../../../components/complexes/NearbyPlacesManager';
 import { LocationPicker, MapLocation } from '../../../components/maps/LocationPicker';
 import { SellerMultiSelect } from '../../../components/complexes/SellerMultiSelect';
-import { ImageUpload } from '../../../components/ui/ImageUpload';
 import { toast } from 'react-hot-toast';
 import apiClient from '../../../api/client';
 import {
@@ -353,16 +352,23 @@ export function ComplexFormNew() {
           </div>
         </Card>
 
-        {/* Images */}
+        {/* Banner Image */}
         <Card>
           <div className="p-6">
             <h2 className="text-xl font-semibold mb-4">{t('complex.bannerImage')}</h2>
-            <ImageUpload
-              files={bannerImage ? [bannerImage] : []}
-              onChange={(files) => setBannerImage(files[0] || null)}
-              maxFiles={1}
-              accept="image/*"
-            />
+            <div className="flex items-center space-x-4">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setBannerImage(e.target.files?.[0] || null)}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+              />
+              {bannerImage && (
+                <span className="text-sm text-gray-600">
+                  Selected: {bannerImage.name}
+                </span>
+              )}
+            </div>
           </div>
         </Card>
 
