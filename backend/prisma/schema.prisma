@@ -54,6 +54,8 @@ model Complex {
 
   // New fields
   title             String?
+  developer         String?   // Developer name
+  blockCount        Int?      @default(1) @map("block_count")
   locationText      String?   @map("location_text")
   locationLat       Float?    @map("location_lat")
   locationLng       Float?    @map("location_lng")
@@ -66,6 +68,7 @@ model Complex {
   nearbyNote        String?   @map("nearby_note")
   nearbyPlaces      String?   @map("nearby_places")
   amenities         String?   @map("amenities")
+  allowedSellers    String?   @map("allowed_sellers") // JSON array of seller IDs
   createdById       String?   @map("created_by_id")
   createdBy         User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
 

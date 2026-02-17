@@ -147,11 +147,11 @@ export function ComplexFormNew() {
         formData.append('nearby', JSON.stringify(nearbyPlaces));
       }
 
-      if (data.walkability !== undefined) {
+      if (data.walkability !== undefined && !isNaN(data.walkability) && data.walkability !== null) {
         formData.append('walkability', data.walkability.toString());
       }
 
-      if (data.airQuality !== undefined) {
+      if (data.airQuality !== undefined && !isNaN(data.airQuality) && data.airQuality !== null) {
         formData.append('airQuality', data.airQuality.toString());
       }
 
@@ -189,6 +189,14 @@ export function ComplexFormNew() {
   });
 
   const onSubmit = (data: ComplexFormData) => {
+    console.log('=== Form Submit ===');
+    console.log('Form data:', data);
+    console.log('Form errors:', errors);
+    console.log('Location:', location);
+    console.log('Amenities:', amenities);
+    console.log('Nearby places:', nearbyPlaces);
+    console.log('Allowed sellers:', allowedSellers);
+    
     // Validate required files for create
     if (!isEdit) {
       if (!permission1 || !permission2 || !permission3) {
@@ -197,7 +205,61 @@ export function ComplexFormNew() {
       }
     }
 
-    createMutation.mutate(data);
+    // Ensure all required fields are present
+    const formData: ComplexFormData = {
+      ...data,
+      title: data.title || { uz: '', ru: '', en: '' },
+      description: data.description || { uz: '', ru: '', en: '' },
+      developer: data.developer || '',
+      city: data.city || '',
+      blockCount: data.blockCount || 1,
+      location: {
+        lat: location.lat,
+        lng: location.lng,
+        address: data.location?.address || { uz: '', ru: '', en: '' },
+      },
+      amenities: amenities,
+      nearby: nearbyPlaces,
+      allowedSellers: allowedSellers,
+      // Clean up walkability and airQuality - remove if NaN or invalid
+      walkability: (data.walkability !== undefined && !isNaN(data.walkability) && data.walkability !== null) 
+        ? data.walkability 
+        : undefined,
+      airQuality: (data.airQuality !== undefined && !isNaN(data.airQuality) && data.airQuality !== null) 
+        ? data.airQuality 
+        : undefined,
+    };
+
+    // Validate title has at least one non-empty value
+    const hasTitle = formData.title.uz.trim() || formData.title.ru.trim() || formData.title.en.trim();
+    if (!hasTitle) {
+      toast.error('Please enter a title in at least one language');
+      return;
+    }
+
+    // Validate city
+    if (!formData.city.trim()) {
+      toast.error('City is required');
+      return;
+    }
+
+    // Validate developer
+    if (!formData.developer.trim()) {
+      toast.error('Developer is required');
+      return;
+    }
+
+    // Validate location address
+    const hasAddress = formData.location.address.uz.trim() || 
+                      formData.location.address.ru.trim() || 
+                      formData.location.address.en.trim();
+    if (!hasAddress) {
+      toast.error('Please enter an address in at least one language');
+      return;
+    }
+
+    console.log('Calling mutation with validated data:', formData);
+    createMutation.mutate(formData);
   };
 
   if (isEdit && isLoading) {
@@ -224,7 +286,34 @@ export function ComplexFormNew() {
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form 
+        onSubmit={handleSubmit(
+          (data) => {
+            console.log('Form validation passed:', data);
+            onSubmit(data);
+          },
+          (errors) => {
+            console.error('Form validation errors:', errors);
+            const errorMessages = Object.values(errors).map(err => err?.message).filter(Boolean);
+            if (errorMessages.length > 0) {
+              toast.error(`Please fix form errors: ${errorMessages.join(', ')}`);
+            } else {
+              toast.error('Please fix form errors before submitting');
+            }
+            // Scroll to first error
+            const firstError = Object.keys(errors)[0];
+            if (firstError) {
+              const element = document.querySelector(`[name="${firstError}"]`) || 
+                             document.querySelector(`[name*="${firstError}"]`);
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                (element as HTMLElement).focus();
+              }
+            }
+          }
+        )} 
+        className="space-y-6"
+      >
         {/* Multi-language Title and Description */}
         <Card>
           <div className="p-6">
@@ -234,9 +323,13 @@ export function ComplexFormNew() {
             </div>
             <MultiLanguageInput
               titleValue={watch('title')}
-              descriptionValue={watch('description')}
-              onTitleChange={(value) => setValue('title', value)}
-              onDescriptionChange={(value) => setValue('description', value)}
+              descriptionValue={watch('description') || { uz: '', ru: '', en: '' }}
+              onTitleChange={(value) => {
+                setValue('title', value, { shouldValidate: true });
+              }}
+              onDescriptionChange={(value) => {
+                setValue('description', value, { shouldValidate: true });
+              }}
               required={true}
             />
           </div>
@@ -283,8 +376,8 @@ export function ComplexFormNew() {
                 value={location}
                 onChange={(loc) => {
                   setLocation(loc);
-                  setValue('location.lat', loc.lat);
-                  setValue('location.lng', loc.lng);
+                  setValue('location.lat', loc.lat, { shouldValidate: true });
+                  setValue('location.lng', loc.lng, { shouldValidate: true });
                 }}
                 heightClassName="h-64"
               />
@@ -318,7 +411,10 @@ export function ComplexFormNew() {
             <h2 className="text-xl font-semibold mb-4">{t('complex.amenities')}</h2>
             <AmenitiesCheckboxGroup
               selectedAmenities={amenities}
-              onChange={setAmenities}
+              onChange={(newAmenities) => {
+                setAmenities(newAmenities);
+                setValue('amenities', newAmenities, { shouldValidate: false });
+              }}
             />
           </div>
         </Card>
@@ -329,7 +425,10 @@ export function ComplexFormNew() {
             <h2 className="text-xl font-semibold mb-4">{t('complex.nearbyPlaces')}</h2>
             <NearbyPlacesManager
               places={nearbyPlaces}
-              onChange={setNearbyPlaces}
+              onChange={(newPlaces) => {
+                setNearbyPlaces(newPlaces);
+                setValue('nearby', newPlaces, { shouldValidate: false });
+              }}
             />
           </div>
         </Card>
@@ -342,7 +441,13 @@ export function ComplexFormNew() {
               <Input
                 label={`${t('complex.walkability')} (0-10)`}
                 type="number"
-                {...register('walkability', { valueAsNumber: true })}
+                {...register('walkability', { 
+                  valueAsNumber: true,
+                  setValueAs: (v) => {
+                    const num = Number(v);
+                    return isNaN(num) || v === '' ? undefined : num;
+                  }
+                })}
                 error={errors.walkability?.message}
                 min={0}
                 max={10}
@@ -350,7 +455,13 @@ export function ComplexFormNew() {
               <Input
                 label={`${t('complex.airQuality')} (0-10)`}
                 type="number"
-                {...register('airQuality', { valueAsNumber: true })}
+                {...register('airQuality', { 
+                  valueAsNumber: true,
+                  setValueAs: (v) => {
+                    const num = Number(v);
+                    return isNaN(num) || v === '' ? undefined : num;
+                  }
+                })}
                 error={errors.airQuality?.message}
                 min={0}
                 max={10}
@@ -435,7 +546,10 @@ export function ComplexFormNew() {
             <h2 className="text-xl font-semibold mb-4">{t('complex.allowedSellers')}</h2>
             <SellerMultiSelect
               selectedSellerIds={allowedSellers}
-              onChange={setAllowedSellers}
+              onChange={(newSellers) => {
+                setAllowedSellers(newSellers);
+                setValue('allowedSellers', newSellers, { shouldValidate: false });
+              }}
             />
           </div>
         </Card>
@@ -453,6 +567,14 @@ export function ComplexFormNew() {
             type="submit"
             disabled={createMutation.isPending}
             className="flex items-center space-x-2"
+            onClick={(e) => {
+              // Prevent double submission
+              if (createMutation.isPending) {
+                e.preventDefault();
+                return;
+              }
+              // Let form handle submission
+            }}
           >
             <Save className="h-4 w-4" />
             <span>{createMutation.isPending ? t('common.loading') : isEdit ? t('common.update') : t('common.create')}</span>
