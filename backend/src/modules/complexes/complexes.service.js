@@ -443,12 +443,31 @@ async function create(data, reqUser, baseUrl) {
     console.log('Name value:', cleanedData.name?.substring(0, 100));
     console.log('City value:', cleanedData.city);
 
-    const created = await prisma.complex.create({
-      data: cleanedData,
-      include: {
-        _count: { select: { apartments: true } },
-      },
+    console.log('Attempting Prisma create with data:', {
+      id: cleanedData.id,
+      name: cleanedData.name?.substring(0, 50),
+      city: cleanedData.city,
+      hasTitle: !!cleanedData.title,
+      hasName: !!cleanedData.name,
     });
+
+    let created;
+    try {
+      created = await prisma.complex.create({
+        data: cleanedData,
+        include: {
+          _count: { select: { apartments: true } },
+        },
+      });
+      console.log('✅ Complex created successfully:', created.id);
+    } catch (prismaError) {
+      console.error('❌ Prisma create error:', {
+        code: prismaError.code,
+        message: prismaError.message,
+        meta: prismaError.meta,
+      });
+      throw prismaError;
+    }
 
     return formatComplex(created);
   } catch (error) {

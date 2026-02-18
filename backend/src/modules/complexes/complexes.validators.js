@@ -163,6 +163,7 @@ function validateCreate(req, res, next) {
     console.log('=== Validator: validateCreate ===');
     console.log('Request body keys:', Object.keys(req.body || {}));
     console.log('Request body sample:', JSON.stringify(req.body, null, 2).substring(0, 1000));
+    console.log('Request files:', req.files ? Object.keys(req.files) : 'No files');
     
     // Ensure req.body exists
     if (!req.body) {
@@ -176,6 +177,7 @@ function validateCreate(req, res, next) {
     
     // Ensure title exists - it's required
     if (!req.body.title) {
+      console.error('Validation failed: Title is missing');
       return res.status(400).json({
         error: 'Validation failed',
         details: [{ path: ['title'], message: 'Title is required' }],
@@ -216,13 +218,21 @@ function validateCreate(req, res, next) {
     };
     
     console.log('Validation passed. Validated data keys:', Object.keys(req.validated.body || {}));
+    console.log('Complex ID:', req.complexId);
     next();
   } catch (err) {
     console.error('Error in validateCreate:', err);
-    return res.status(500).json({
-      error: 'Validation error',
-      message: err.message,
-    });
+    console.error('Error stack:', err.stack);
+    // Don't crash - return error response
+    if (!res.headersSent) {
+      return res.status(500).json({
+        error: 'Validation error',
+        message: err.message || 'An error occurred during validation',
+        ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
+      });
+    }
+    // If headers already sent, pass to error handler
+    next(err);
   }
 }
 

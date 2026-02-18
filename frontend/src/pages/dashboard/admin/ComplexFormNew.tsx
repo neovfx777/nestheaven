@@ -168,9 +168,8 @@ export function ComplexFormNew() {
       const url = isEdit ? `/complexes/${id}` : '/complexes';
       const method = isEdit ? 'patch' : 'post';
       
-      const response = await apiClient[method](url, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      // Don't set Content-Type manually - axios will set it with boundary for FormData
+      const response = await apiClient[method](url, formData);
 
       return response.data;
     },
