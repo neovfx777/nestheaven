@@ -22,6 +22,30 @@ function assignComplexId(req, res, next) {
 router.get('/', validateList, complexesController.list);
 router.get('/:id', validateGetById, complexesController.getById);
 
+// Multer error handler middleware
+function handleMulterError(err, req, res, next) {
+  if (err) {
+    console.error('Multer error:', err);
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'File too large',
+      });
+    }
+    if (err.message && err.message.includes('Invalid')) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: err.message,
+      });
+    }
+    return res.status(400).json({
+      error: 'Bad Request',
+      message: err.message || 'File upload error',
+    });
+  }
+  next();
+}
+
 // Admin-only creator & editor
 router.post(
   '/',
@@ -37,6 +61,7 @@ router.post(
     { name: 'permission_2', maxCount: 1 },
     { name: 'permission_3', maxCount: 1 },
   ]),
+  handleMulterError,
   validateCreate,
   complexesController.create
 );
@@ -54,6 +79,7 @@ router.patch(
     { name: 'permission_2', maxCount: 1 },
     { name: 'permission_3', maxCount: 1 },
   ]),
+  handleMulterError,
   validateUpdate,
   complexesController.update
 );
