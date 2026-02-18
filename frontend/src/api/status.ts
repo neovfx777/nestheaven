@@ -57,23 +57,25 @@ export const statusApi = {
   // Get status history
   getStatusHistory: async (apartmentId: string) => {
     const response = await apiClient.get<{ success: boolean; data: StatusHistory[] }>(
-      `/apartments/${apartmentId}/status/history`
+      `/apartment-status/${apartmentId}/history`
     );
     return response.data.data;
   },
 
-  // Get available status transitions
+  // Get available status transitions - TODO: Check if this endpoint exists in backend
   getAvailableTransitions: async (apartmentId: string) => {
-    const response = await apiClient.get<{ 
-      success: boolean; 
-      data: {
-        currentStatus: string;
-        isOwner: boolean;
-        userRole: string;
-        availableTransitions: StatusTransition[];
-      }
-    }>(`/apartments/${apartmentId}/status/transitions`);
-    return response.data.data;
+    // This endpoint may not exist yet - check backend routes
+    throw new Error('Status transitions endpoint not implemented yet');
+    // const response = await apiClient.get<{ 
+    //   success: boolean; 
+    //   data: {
+    //     currentStatus: string;
+    //     isOwner: boolean;
+    //     userRole: string;
+    //     availableTransitions: StatusTransition[];
+    //   }
+    // }>(`/apartments/${apartmentId}/status/transitions`);
+    // return response.data.data;
   },
 
   // Bulk change status (admin only)

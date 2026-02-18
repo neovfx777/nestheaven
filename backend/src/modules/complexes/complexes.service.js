@@ -37,9 +37,10 @@ function normalizeNearbyPlaces(places) {
           : place.distanceKm != null
           ? Math.round(Number(place.distanceKm) * 1000)
           : null;
-      if (distanceMeters == null || !place.name || !place.type) return null;
+      // Only require name, type is optional (not in validator schema)
+      if (distanceMeters == null || !place.name) return null;
       return {
-        type: String(place.type),
+        type: place.type ? String(place.type) : 'other', // Default type if not provided
         name: String(place.name),
         distanceMeters,
         note: place.note ? String(place.note) : null,
@@ -165,7 +166,7 @@ async function getById(id) {
 
 async function create(data, reqUser, baseUrl) {
   try {
-    const body = data.body;
+    const body = data.body || {};
     const files = data.files || {};
     const complexId = data.meta?.complexId;
 
@@ -173,6 +174,11 @@ async function create(data, reqUser, baseUrl) {
       const err = new Error('Complex ID is missing');
       err.statusCode = 400;
       throw err;
+    }
+
+    // Ensure city is set
+    if (!body.city || (typeof body.city === 'string' && !body.city.trim())) {
+      body.city = 'Unknown';
     }
 
     const bannerFile = getFile(files, 'banner');
@@ -197,26 +203,34 @@ async function create(data, reqUser, baseUrl) {
 
     // Handle title - can be JSON string or object
     let titleJson;
-    if (typeof body.title === 'string') {
+    if (typeof body.title === 'string' && body.title.trim()) {
       try {
         const parsed = JSON.parse(body.title);
         // Ensure it has the required structure
         if (parsed && typeof parsed === 'object' && parsed.uz && parsed.ru && parsed.en) {
-          titleJson = JSON.stringify(parsed);
+          // Validate that at least one language has content
+          const hasContent = (parsed.uz && parsed.uz.trim()) || (parsed.ru && parsed.ru.trim()) || (parsed.en && parsed.en.trim());
+          if (hasContent) {
+            titleJson = JSON.stringify(parsed);
+          } else {
+            // Empty content, use default
+            titleJson = JSON.stringify({ uz: 'Complex', ru: 'Complex', en: 'Complex' });
+          }
         } else {
           // Invalid structure, create default
-          titleJson = JSON.stringify({ uz: body.title || 'Complex', ru: body.title || 'Complex', en: body.title || 'Complex' });
+          titleJson = JSON.stringify({ uz: body.title.trim() || 'Complex', ru: body.title.trim() || 'Complex', en: body.title.trim() || 'Complex' });
         }
       } catch {
         // Old format: plain string
-        titleJson = JSON.stringify({ uz: body.title || 'Complex', ru: body.title || 'Complex', en: body.title || 'Complex' });
+        const titleStr = body.title.trim() || 'Complex';
+        titleJson = JSON.stringify({ uz: titleStr, ru: titleStr, en: titleStr });
       }
     } else if (body.title && typeof body.title === 'object') {
       // Ensure all required fields exist
       const title = {
-        uz: body.title.uz || 'Complex',
-        ru: body.title.ru || 'Complex',
-        en: body.title.en || 'Complex',
+        uz: (body.title.uz && body.title.uz.trim()) || 'Complex',
+        ru: (body.title.ru && body.title.ru.trim()) || 'Complex',
+        en: (body.title.en && body.title.en.trim()) || 'Complex',
       };
       titleJson = JSON.stringify(title);
     } else {
@@ -224,8 +238,18 @@ async function create(data, reqUser, baseUrl) {
       titleJson = JSON.stringify({ uz: 'Complex', ru: 'Complex', en: 'Complex' });
     }
     
-    // Ensure name is never empty (required field)
-    if (!titleJson || titleJson === 'null' || titleJson === '""') {
+    // Ensure name is never empty (required field) - double check
+    if (!titleJson || titleJson.trim() === '' || titleJson === 'null' || titleJson === '""' || titleJson === '{}') {
+      titleJson = JSON.stringify({ uz: 'Complex', ru: 'Complex', en: 'Complex' });
+    }
+    
+    // Final validation: ensure titleJson is a valid non-empty JSON string
+    try {
+      const testParse = JSON.parse(titleJson);
+      if (!testParse || typeof testParse !== 'object') {
+        titleJson = JSON.stringify({ uz: 'Complex', ru: 'Complex', en: 'Complex' });
+      }
+    } catch {
       titleJson = JSON.stringify({ uz: 'Complex', ru: 'Complex', en: 'Complex' });
     }
 
@@ -353,7 +377,7 @@ async function create(data, reqUser, baseUrl) {
       description: descriptionJson,
       name: titleJson, // Legacy field - required, must be non-empty string
       address: addressJson || locationJson || JSON.stringify({ uz: '', ru: '', en: '' }), // Legacy field
-      city: (body.city && body.city.trim()) || 'Unknown', // Required field in schema
+      city: (body.city && typeof body.city === 'string' && body.city.trim()) || 'Unknown', // Required field in schema
       developer: body.developer || null,
       blockCount: body.blockCount ? parseInt(body.blockCount) : 1,
       amenities: amenitiesJson,
@@ -404,10 +428,20 @@ async function create(data, reqUser, baseUrl) {
 
     // Remove undefined values to avoid Prisma errors
     const cleanedData = Object.fromEntries(
-      Object.entries(createData).filter(([_, v]) => v !== undefined)
+      Object.entries(createData).filter(([_, v]) => v !== undefined && v !== null)
     );
 
+    // Ensure required fields are present
+    if (!cleanedData.name || cleanedData.name.trim() === '') {
+      cleanedData.name = JSON.stringify({ uz: 'Complex', ru: 'Complex', en: 'Complex' });
+    }
+    if (!cleanedData.city || cleanedData.city.trim() === '') {
+      cleanedData.city = 'Unknown';
+    }
+
     console.log('Cleaned data keys:', Object.keys(cleanedData));
+    console.log('Name value:', cleanedData.name?.substring(0, 100));
+    console.log('City value:', cleanedData.city);
 
     const created = await prisma.complex.create({
       data: cleanedData,
@@ -426,11 +460,17 @@ async function create(data, reqUser, baseUrl) {
       stack: error.stack,
     });
     console.error('Request data:', {
-      body: JSON.stringify(data.body, null, 2),
-      hasFiles: !!data.files,
-      fileKeys: Object.keys(data.files || {}),
-      complexId: data.meta?.complexId,
+      body: JSON.stringify(data?.body || {}, null, 2),
+      hasFiles: !!data?.files,
+      fileKeys: Object.keys(data?.files || {}),
+      complexId: data?.meta?.complexId,
     });
+    
+    // Ensure error has statusCode for proper error handling
+    if (!error.statusCode) {
+      error.statusCode = 500;
+    }
+    
     throw error;
   }
 }
