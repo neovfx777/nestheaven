@@ -430,7 +430,7 @@ export const apartmentsApi = {
   // Get admin statistics
   getAdminStats: async (): Promise<AdminStats> => {
     try {
-      const response = await apiClient.get<{ success: boolean; data: AdminStats }>('/admin/stats');
+      const response = await apiClient.get<{ success: boolean; data: AdminStats }>('/analytics/stats');
       return response.data.data;
     } catch (error) {
       console.error('Failed to fetch admin stats:', error);
@@ -447,12 +447,14 @@ export const apartmentsApi = {
     }
   },
 
-  // Export apartments data (admin)
+  // Export apartments data (admin) - TODO: Implement this endpoint in backend
   exportApartments: async (format: 'csv' | 'json' = 'csv'): Promise<Blob> => {
-    const response = await apiClient.get(`/admin/export/apartments`, {
-      params: { format },
-      responseType: 'blob'
-    });
-    return response.data;
+    // This endpoint doesn't exist yet in the backend
+    throw new Error('Export endpoint not implemented yet');
+    // const response = await apiClient.get(`/admin/export/apartments`, {
+    //   params: { format },
+    //   responseType: 'blob'
+    // });
+    // return response.data;
   },
 };

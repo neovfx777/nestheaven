@@ -56,11 +56,17 @@ function errorHandler(err, req, res, next) {
     meta: err.meta,
   });
 
-  res.status(500).json({
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message,
-    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
-  });
+  // Ensure response hasn't been sent
+  if (!res.headersSent) {
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message,
+      ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
+    });
+  } else {
+    // If headers already sent, try to end the response
+    res.end();
+  }
 }
 
 module.exports = { errorHandler };
