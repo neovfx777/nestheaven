@@ -21,11 +21,14 @@ import {
   PlusCircle
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
+import { useTranslation } from '../../hooks/useTranslation';
+import { LanguageSelector } from '../../components/ui/LanguageSelector';
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const { user, logout } = useAuthStore();
+  const { t } = useTranslation();
 
   /* =========================
      Helpers
@@ -80,77 +83,16 @@ const DashboardLayout = () => {
   ========================= */
 
   const navigation = [
-    // Common
-    {
-      name: 'Overview',
-      href: '/dashboard',
-      icon: Home,
-      roles: ['USER', 'SELLER', 'ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'],
-    },
-
-    // USER
-    {
-      name: 'My Favorites',
-      href: '/dashboard/favorites',
-      icon: Heart,
-      roles: ['USER'],
-    },
-
-    // SELLER - FIXED: Changed from '/dashboard/seller' to '/dashboard/seller/listings'
-    {
-      name: 'Manage Listings',
-      href: '/dashboard/seller/listings',
-      icon: List,
-      roles: ['SELLER'],
-    },
-
-    // ADMIN
-    {
-      name: 'User Management',
-      href: '/dashboard/admin/users',
-      icon: Users,
-      roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'],
-    },
-    {
-      name: 'Complexes',
-      href: '/dashboard/admin/complexes',
-      icon: Building2,
-      roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'],
-    },
-    {
-      name: 'Analytics',
-      href: '/dashboard/admin/analytics',
-      icon: BarChart3,
-      roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'],
-    },
-
-    // MANAGER_ADMIN
-    {
-      name: 'Admin Management',
-      href: '/dashboard/manager/admins',
-      icon: UserPlus,
-      roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'],
-    },
-    {
-      name: 'Moderation Logs',
-      href: '/dashboard/manager/logs',
-      icon: FileText,
-      roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'],
-    },
-
-    // OWNER_ADMIN
-    {
-      name: 'System Settings',
-      href: '/dashboard/owner/settings',
-      icon: Settings,
-      roles: ['OWNER_ADMIN'],
-    },
-    {
-      name: 'Billing & Payments',
-      href: '/dashboard/owner/billing',
-      icon: BarChart3,
-      roles: ['OWNER_ADMIN'],
-    },
+    { nameKey: 'dashboard.overview', href: '/dashboard', icon: Home, roles: ['USER', 'SELLER', 'ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'] },
+    { nameKey: 'dashboard.myFavorites', href: '/dashboard/favorites', icon: Heart, roles: ['USER'] },
+    { nameKey: 'dashboard.manageListings', href: '/dashboard/seller/listings', icon: List, roles: ['SELLER'] },
+    { nameKey: 'dashboard.userManagement', href: '/dashboard/admin/users', icon: Users, roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'] },
+    { nameKey: 'dashboard.complexes', href: '/dashboard/admin/complexes', icon: Building2, roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'] },
+    { nameKey: 'dashboard.analytics', href: '/dashboard/admin/analytics', icon: BarChart3, roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'] },
+    { nameKey: 'dashboard.adminManagement', href: '/dashboard/manager/admins', icon: UserPlus, roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'] },
+    { nameKey: 'dashboard.moderationLogs', href: '/dashboard/manager/logs', icon: FileText, roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'] },
+    { nameKey: 'dashboard.systemSettings', href: '/dashboard/owner/settings', icon: Settings, roles: ['OWNER_ADMIN'] },
+    { nameKey: 'dashboard.billingPayments', href: '/dashboard/owner/billing', icon: BarChart3, roles: ['OWNER_ADMIN'] },
   ];
 
   const filteredNavigation = navigation.filter(item =>
@@ -168,14 +110,17 @@ const DashboardLayout = () => {
         <button onClick={() => setSidebarOpen(!sidebarOpen)}>
           {sidebarOpen ? <X /> : <Menu />}
         </button>
-        <span className="font-semibold">Dashboard</span>
-        <span
-          className={`px-3 py-1 rounded-full text-sm ${getRoleColor(
-            user?.role || 'USER'
-          )}`}
-        >
-          {user?.role}
-        </span>
+        <span className="font-semibold">{t('navigation.dashboard')}</span>
+        <div className="flex items-center gap-2">
+          <LanguageSelector />
+          <span
+            className={`px-3 py-1 rounded-full text-sm ${getRoleColor(
+              user?.role || 'USER'
+            )}`}
+          >
+            {user?.role ? t(`roles.${user.role}` as any) : ''}
+          </span>
+        </div>
       </div>
 
       <div className="flex">
@@ -188,12 +133,15 @@ const DashboardLayout = () => {
             lg:translate-x-0 lg:static
           `}
         >
-          {/* Logo */}
-          <div className="h-16 flex items-center justify-center border-b">
+          {/* Logo + Language */}
+          <div className="h-16 flex items-center justify-between border-b px-4">
             <Link to="/" className="flex items-center space-x-2">
               <Building2 className="h-8 w-8 text-primary-600" />
               <span className="text-xl font-bold">NestHeaven</span>
             </Link>
+            <div className="hidden lg:block">
+              <LanguageSelector />
+            </div>
           </div>
 
           {/* User Info */}
@@ -207,7 +155,9 @@ const DashboardLayout = () => {
                 <div className="text-sm text-gray-500">{user?.email}</div>
                 <div className="flex items-center mt-1">
                   {getRoleIcon(user?.role || 'USER')}
-                  <span className="ml-2 text-sm font-medium">{user?.role}</span>
+                  <span className="ml-2 text-sm font-medium">
+                    {user?.role ? t(`roles.${user.role}` as any) : ''}
+                  </span>
                 </div>
               </div>
             </div>
@@ -217,7 +167,7 @@ const DashboardLayout = () => {
           <nav className="p-4 space-y-1">
             {filteredNavigation.map(item => (
               <Link
-                key={`${item.name}-${item.href}`}
+                key={item.href}
                 to={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={`
@@ -230,7 +180,7 @@ const DashboardLayout = () => {
                 `}
               >
                 <item.icon className="h-5 w-5 mr-3" />
-                {item.name}
+                {t(item.nameKey as any)}
               </Link>
             ))}
           </nav>
@@ -244,7 +194,7 @@ const DashboardLayout = () => {
                 className="flex items-center justify-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
               >
                 <PlusCircle className="h-5 w-5 mr-2" />
-                Create New Listing
+                {t('dashboard.createNewListing')}
               </Link>
             </div>
           )}
@@ -256,7 +206,7 @@ const DashboardLayout = () => {
               className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg"
             >
               <LogOut className="h-5 w-5 mr-3" />
-              Logout
+              {t('dashboard.logout')}
             </button>
           </div>
         </aside>

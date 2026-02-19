@@ -25,10 +25,12 @@ import { Card } from '../../components/ui/Card';
 import { FavoriteButton } from '../../components/apartments/FavoriteButton';
 import { ComplexLocationMap } from '../../components/maps/ComplexLocationMap';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const ApartmentDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('details');
 
   // Fetch apartment details
@@ -59,7 +61,7 @@ const ApartmentDetailPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading apartment details...</p>
+          <p className="text-gray-600">{t('messages.loadingApartmentDetail')}</p>
         </div>
       </div>
     );
@@ -70,16 +72,16 @@ const ApartmentDetailPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md">
           <div className="text-red-500 text-5xl mb-4">🚫</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Apartment Not Found</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('messages.apartmentNotFoundTitle')}</h2>
           <p className="text-gray-600 mb-6">
-            The apartment you're looking for doesn't exist or has been removed.
+            {t('messages.apartmentNotFound')}
           </p>
           <div className="space-y-3">
             <Button
               onClick={() => navigate('/apartments')}
               className="w-full"
             >
-              Browse All Apartments
+              {t('home.browseAllApartments')}
             </Button>
             <Button
               variant="outline"
@@ -87,7 +89,7 @@ const ApartmentDetailPage = () => {
               className="w-full"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Go Back
+              {t('navigation.back')}
             </Button>
           </div>
         </div>
@@ -122,14 +124,14 @@ const ApartmentDetailPage = () => {
         await navigator.share({ title, text, url });
       } else if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(url);
-        toast.success('Link copied to clipboard');
+        toast.success(t('messages.linkCopied'));
       } else {
         // Fallback: simple prompt
         window.prompt('Copy this link:', url);
       }
     } catch (error: any) {
       console.error('Share failed:', error);
-      toast.error('Could not share this listing');
+      toast.error(t('messages.shareFailed'));
     }
   };
 
@@ -153,9 +155,9 @@ const ApartmentDetailPage = () => {
   const getLocation = (apartment: ApartmentDetailType) => {
     if (apartment.complex?.address && typeof apartment.complex.address === 'object') {
       return (apartment.complex.address as any).en || (apartment.complex.address as any).uz ||
-        (apartment.complex.address as any).ru || 'Location not specified';
+        (apartment.complex.address as any).ru || t('messages.locationNotSpecified');
     }
-    return apartment.complex?.address as string || 'Location not specified';
+    return apartment.complex?.address as string || t('messages.locationNotSpecified');
   };
 
   return (

@@ -10,7 +10,7 @@ import apiClient from '../../../api/client';
 import { toast } from 'react-hot-toast';
 import { useLanguageStore } from '../../../stores/languageStore';
 import { getLocalizedContent } from '../../../utils/translations';
-import { t } from '../../../utils/translations';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface Complex {
   id: string;
@@ -28,6 +28,7 @@ interface Complex {
 
 export function ComplexManagement() {
   const { language } = useLanguageStore();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [cityFilter, setCityFilter] = useState('');
   const queryClient = useQueryClient();
@@ -51,15 +52,15 @@ export function ComplexManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['complexes'] });
-      toast.success('Complex deleted successfully');
+      toast.success(t('messages.complexDeleted'));
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to delete complex');
+      toast.error(error.response?.data?.error || t('messages.deleteComplexFailed'));
     },
   });
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this complex?')) {
+    if (window.confirm(t('messages.confirmDeleteComplex'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -70,13 +71,13 @@ export function ComplexManagement() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Complex Management</h1>
-          <p className="text-gray-600 mt-1">Manage residential complexes</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('dashboard.complexManagementTitle')}</h1>
+          <p className="text-gray-600 mt-1">{t('dashboard.complexManagementSubtitle')}</p>
         </div>
         <Link to="/dashboard/admin/complexes/new">
           <Button className="flex items-center space-x-2">
             <Plus className="h-5 w-5" />
-            <span>Create Complex</span>
+            <span>{t('dashboard.createComplex')}</span>
           </Button>
         </Link>
       </div>
@@ -88,14 +89,14 @@ export function ComplexManagement() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <Input
-                placeholder="Search complexes..."
+                placeholder={t('dashboard.searchComplexes')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
             <Input
-              placeholder="Filter by city..."
+              placeholder={t('dashboard.filterByCity')}
               value={cityFilter}
               onChange={(e) => setCityFilter(e.target.value)}
             />
@@ -107,7 +108,7 @@ export function ComplexManagement() {
                   setCityFilter('');
                 }}
               >
-                Clear Filters
+                {t('dashboard.clearFilters')}
               </Button>
             )}
           </div>
@@ -123,16 +124,16 @@ export function ComplexManagement() {
         <Card>
           <div className="p-12 text-center">
             <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No complexes found</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('emptyState.noComplexesFound')}</h3>
             <p className="text-gray-600 mb-6">
               {searchQuery || cityFilter
-                ? 'Try adjusting your filters'
-                : 'Get started by creating your first complex'}
+                ? t('emptyState.adjustFilters')
+                : t('emptyState.createFirstComplex')}
             </p>
             <Link to="/dashboard/admin/complexes/new">
               <Button>
                 <Plus className="h-5 w-5 mr-2" />
-                Create Complex
+                {t('dashboard.createComplex')}
               </Button>
             </Link>
           </div>
@@ -174,14 +175,14 @@ export function ComplexManagement() {
                   {/* Block Count */}
                   <div className="mb-3">
                     <Badge variant="outline">
-                      {complex.blockCount} {complex.blockCount === 1 ? 'Block' : 'Blocks'}
+                      {complex.blockCount} {complex.blockCount === 1 ? t('dashboard.block') : t('dashboard.blocks')}
                     </Badge>
                   </div>
 
                   {/* Amenities Preview */}
                   {amenities.length > 0 && (
                     <div className="mb-3">
-                      <p className="text-xs text-gray-500 mb-1">Amenities:</p>
+                      <p className="text-xs text-gray-500 mb-1">{t('dashboard.amenitiesLabel')}:</p>
                       <div className="flex flex-wrap gap-1">
                         {amenities.slice(0, 3).map((amenityId: string) => (
                           <Badge key={amenityId} variant="secondary" className="text-xs">
@@ -200,7 +201,7 @@ export function ComplexManagement() {
                   {/* Nearby Places Preview */}
                   {nearbyPlaces.length > 0 && (
                     <div className="mb-3">
-                      <p className="text-xs text-gray-500 mb-1">Nearby:</p>
+                      <p className="text-xs text-gray-500 mb-1">{t('dashboard.nearbyLabel')}:</p>
                       <div className="flex flex-wrap gap-1">
                         {nearbyPlaces.slice(0, 3).map((place: any, idx: number) => (
                           <Badge key={idx} variant="outline" className="text-xs">
@@ -219,7 +220,7 @@ export function ComplexManagement() {
                   {/* Apartment Count */}
                   {complex._count && (
                     <div className="mb-4 text-sm text-gray-600">
-                      {complex._count.apartments} {complex._count.apartments === 1 ? 'apartment' : 'apartments'}
+                      {complex._count.apartments} {complex._count.apartments === 1 ? t('dashboard.apartment') : t('dashboard.apartments')}
                     </div>
                   )}
 
@@ -231,7 +232,7 @@ export function ComplexManagement() {
                     >
                       <Button variant="outline" size="sm" className="w-full">
                         <Edit className="h-4 w-4 mr-2" />
-                        Edit
+                        {t('dashboard.edit')}
                       </Button>
                     </Link>
                     <Button

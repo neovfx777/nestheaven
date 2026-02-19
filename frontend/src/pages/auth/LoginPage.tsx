@@ -4,13 +4,15 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, LoginInput } from '../../utils/validation';
 import { useAuthStore } from '../../stores/authStore';
-import { AuthForm, FormInput } from '../../components/auth/AuthForm'; // <-- FIXED HERE
+import { AuthForm, FormInput } from '../../components/auth/AuthForm';
+import { useTranslation } from '../../hooks/useTranslation';
 import { LogIn } from 'lucide-react';
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { loginUser, isLoading, error, clearError } = useAuthStore();
+  const { t } = useTranslation();
   
   const from = location.state?.from?.pathname || '/';
 
@@ -45,25 +47,25 @@ const LoginPage = () => {
 
   return (
     <AuthForm
-      title="Sign in to your account"
-      subtitle="Enter your credentials to access your dashboard"
+      title={t('auth.signIn')}
+      subtitle={t('auth.signInSubtitle')}
       onSubmit={handleSubmit(onSubmit)}
       isLoading={isLoading}
       error={error}
       footer={
         <p className="text-sm text-gray-600">
-          Don't have an account?{' '}
+          {t('auth.noAccount')}{' '}
           <Link
             to="/register"
             className="font-medium text-primary-600 hover:text-primary-500"
           >
-            Register here
+            {t('auth.registerHere')}
           </Link>
         </p>
       }
     >
       <FormInput
-        label="Email address"
+        label={t('auth.emailAddress')}
         type="email"
         name="email"
         value={undefined} // Controlled by react-hook-form
@@ -75,7 +77,7 @@ const LoginPage = () => {
       />
 
       <FormInput
-        label="Password"
+        label={t('auth.password')}
         type="password"
         name="password"
         value={undefined}
@@ -95,7 +97,7 @@ const LoginPage = () => {
             className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
           />
           <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-            Remember me
+            {t('auth.rememberMe')}
           </label>
         </div>
 
@@ -104,7 +106,7 @@ const LoginPage = () => {
             href="#"
             className="font-medium text-primary-600 hover:text-primary-500"
           >
-            Forgot your password?
+            {t('auth.forgotPassword')}
           </a>
         </div>
       </div>

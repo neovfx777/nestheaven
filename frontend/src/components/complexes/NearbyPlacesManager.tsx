@@ -85,7 +85,7 @@ export function NearbyPlacesManager({
             label={t('common.name') || 'Name'}
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="e.g., Metro Station"
+            placeholder={t('form.placeholderPlaceExample')}
           />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -96,13 +96,13 @@ export function NearbyPlacesManager({
             onChange={(e) =>
               setFormData({ ...formData, distanceMeters: parseInt(e.target.value) || 0 })
             }
-            placeholder="500"
+            placeholder={t('form.placeholderDistance')}
           />
           <Input
             label={t('common.note') || 'Note (optional)'}
             value={formData.note || ''}
             onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-            placeholder="e.g., Blue line"
+            placeholder={t('form.placeholderNoteExample')}
           />
         </div>
         <div className="flex space-x-2">

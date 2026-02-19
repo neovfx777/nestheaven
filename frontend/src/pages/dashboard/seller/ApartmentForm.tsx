@@ -28,6 +28,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface ApartmentFormData {
   title: { uz: string; ru: string; en: string };
@@ -108,6 +109,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const [newImages, setNewImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<ImageType[]>([]);
   const [activeSection, setActiveSection] = useState<'basic' | 'details' | 'media' | 'contact'>('basic');
@@ -183,11 +185,11 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
         uploadImages(data.id);
       } else {
         navigate('/dashboard/seller/listings');
-        toast.success('Apartment created successfully');
+        toast.success(t('messages.apartmentCreated'));
       }
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to create apartment');
+      toast.error(error.message || t('messages.apartmentCreateFailed'));
     }
   });
 
@@ -202,11 +204,11 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
       if (newImages.length > 0 && id) {
         uploadImages(id);
       } else {
-        toast.success('Apartment updated successfully');
+        toast.success(t('messages.apartmentUpdated'));
       }
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to update apartment');
+      toast.error(error.message || t('messages.apartmentUpdateFailed'));
     }
   });
 
@@ -269,17 +271,17 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
   }
 
   const sections = [
-    { id: 'basic', label: 'Basic Information', icon: <Home className="h-5 w-5" /> },
-    { id: 'details', label: 'Technical Details', icon: <Layers className="h-5 w-5" /> },
+    { id: 'basic', label: t('form.basicInfo'), icon: <Home className="h-5 w-5" /> },
+    { id: 'details', label: t('form.technicalDetails'), icon: <Layers className="h-5 w-5" /> },
     { id: 'media', label: 'Media & Images', icon: <Building2 className="h-5 w-5" /> },
-    { id: 'contact', label: 'Contact Info', icon: <Phone className="h-5 w-5" /> },
+    { id: 'contact', label: t('form.contactInfo'), icon: <Phone className="h-5 w-5" /> },
   ];
 
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">
-          {mode === 'create' ? 'Create New Apartment Listing' : 'Edit Apartment Listing'}
+          {mode === 'create' ? t('form.createNewListing') : t('form.editListing')}
         </h1>
         <p className="text-gray-600 mt-2">
           Fill in the details below. Fields marked with * are required.
@@ -429,7 +431,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
                       <Layers className="h-6 w-6 text-blue-600" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-900">Technical Details</h3>
+                      <h3 className="text-xl font-semibold text-gray-900">{t('form.technicalDetails')}</h3>
                       <p className="text-gray-600">
                         Universal properties that are the same in all languages
                       </p>
@@ -610,10 +612,10 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
                   {mode === 'edit' && (
                     <div className="mt-8">
                       <Select
-                        label="Listing Status"
+                        label={t('form.listingStatus')}
                         options={[
-                          { value: 'active', label: 'Active' },
-                          { value: 'hidden', label: 'Hidden' },
+                          { value: 'active', label: t('statusChange.active') },
+                          { value: 'hidden', label: t('statusChange.hidden') },
                           { value: 'sold', label: 'Sold' }
                         ]}
                         value={form.watch('status') || 'active'}
@@ -651,7 +653,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
                       <Phone className="h-6 w-6 text-green-600" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-900">Contact Information</h3>
+                      <h3 className="text-xl font-semibold text-gray-900">{t('form.contactInfo')}</h3>
                       <p className="text-gray-600">
                         How potential buyers can contact you
                       </p>
@@ -703,7 +705,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
                       }
                       value={form.watch('address')}
                       onChange={(e) => form.setValue('address', e.target.value)}
-                      placeholder="Nearby landmark or metro station"
+                      placeholder={t('form.nearbyLandmark')}
                     />
                   </div>
                 </div>
@@ -755,7 +757,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
                         </span>
                       ) : (
                         <span className="flex items-center justify-center">
-                          {mode === 'create' ? 'Publish Listing' : 'Update Listing'}
+                          {mode === 'create' ? t('form.publishListing') : t('form.updateListing')}
                         </span>
                       )}
                     </Button>

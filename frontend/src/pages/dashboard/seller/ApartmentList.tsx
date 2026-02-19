@@ -16,6 +16,7 @@ import {
   RefreshCw,
   PlusCircle
 } from 'lucide-react';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface Apartment {
   id: string;
@@ -37,6 +38,7 @@ interface Apartment {
 }
 
 export const SellerApartmentList: React.FC = () => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -158,14 +160,14 @@ export const SellerApartmentList: React.FC = () => {
       {filteredApartments.length === 0 ? (
         <Card className="p-12 text-center">
           <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No listings found</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">{t('emptyState.noListings')}</h3>
           <p className="text-gray-500 mb-6">
             {searchTerm || statusFilter !== 'all' 
-              ? 'Try adjusting your search filters' 
-              : 'Start by creating your first apartment listing'}
+              ? t('emptyState.adjustFilters') 
+              : t('emptyState.createFirstListing')}
           </p>
           <Link to="/dashboard/seller/apartments/new">
-            <Button>Create Your First Listing</Button>
+            <Button>{t('dashboard.createNewListing')}</Button>
           </Link>
         </Card>
       ) : (
