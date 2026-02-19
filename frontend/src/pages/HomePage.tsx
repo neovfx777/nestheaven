@@ -7,9 +7,11 @@ import { apartmentsApi, Apartment, Complex } from '../api/apartments';
 import { defaultComplexData, defaultApartmentsData } from '../data/defaultData';
 import { DefaultApartmentData } from '../data/types';
 import { useAuthStore } from '../stores/authStore';
+import { useTranslation } from '../hooks/useTranslation';
 
 const HomePage = () => {
   const { user, isAuthenticated } = useAuthStore();
+  const { t } = useTranslation();
   const [useDefaultData, setUseDefaultData] = useState(false);
 
   // Check if user is premium (has paid role)
@@ -132,15 +134,15 @@ const HomePage = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
-                <span>{complexData.totalApartments} Apartments</span>
+                <span>{complexData.totalApartments} {t('home.apartmentsCount')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                <span>Completion: {new Date(complexData.completionDate).getFullYear()}</span>
+                <span>{t('header.completion')}: {new Date(complexData.completionDate).getFullYear()}</span>
               </div>
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
-                <span>{complexData.investmentGrowthPercent}% Growth</span>
+                <span>{complexData.investmentGrowthPercent}% {t('header.investmentGrowth')}</span>
               </div>
             </div>
           </div>
@@ -167,17 +169,17 @@ const HomePage = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
               <h2 className="text-3xl font-bold text-gray-900">
-                Yangi turar-joy komplekslari
+                {t('home.newComplexes')}
               </h2>
               <p className="text-gray-600">
-                NestHeaven platformasidagi mashhur loyihalar
+                {t('home.popularProjects')}
               </p>
             </div>
             <Link
               to="/complexes"
               className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
             >
-              Barcha komplekslarni ko‘rish
+              {t('home.viewAllComplexes')}
             </Link>
           </div>
 
@@ -223,7 +225,7 @@ const HomePage = () => {
                       <div className="flex items-center gap-1">
                         <Building2 className="h-4 w-4 text-blue-600" />
                         <span>
-                          {complex._count?.apartments ?? 0} ta kvartira
+                          {complex._count?.apartments ?? 0} {t('home.apartmentsCount')}
                         </span>
                       </div>
                       <span className="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
@@ -241,8 +243,8 @@ const HomePage = () => {
       {/* Featured Apartments Carousel (Free) */}
       {featuredFormatted.length > 0 && (
         <ApartmentCarousel
-          title="Qaynoq sotilyotgan uylar"
-          subtitle="Eng ko'p ko'rilgan va qiziqilgan uy-joylar"
+          title={t('home.featuredTitle')}
+          subtitle={t('home.featuredSubtitle')}
           apartments={featuredFormatted}
           showBadge={true}
           badgeText="BEPUL"
@@ -253,8 +255,8 @@ const HomePage = () => {
       {/* Recommended Apartments Carousel (Paid) */}
       {recommendedFormatted.length > 0 && (
         <ApartmentCarousel
-          title="Tavsiya etilgan uylar"
-          subtitle="Premium uy-joylar - sizga mos keladigan variantlar"
+          title={t('home.recommendedTitle')}
+          subtitle={t('home.recommendedSubtitle')}
           apartments={recommendedFormatted}
           showBadge={true}
           badgeText="PREMIUM"
@@ -277,23 +279,23 @@ const HomePage = () => {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Ready to Find Your Dream Home?
+            {t('home.ctaTitle')}
           </h2>
           <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            Browse our complete collection of newly built apartments and find the perfect place for you.
+            {t('home.ctaSubtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/apartments"
               className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
-              Browse All Apartments
+              {t('home.browseAllApartments')}
             </Link>
             <Link
               to="/complexes"
               className="bg-gray-100 text-gray-900 px-8 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium"
             >
-              View Complexes
+              {t('home.viewAllComplexes')}
             </Link>
           </div>
         </div>

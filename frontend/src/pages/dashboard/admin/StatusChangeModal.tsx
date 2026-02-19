@@ -4,6 +4,7 @@ import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
 import { Textarea } from '../../../components/ui/Textarea';
 import { Select } from '../../../components/ui/Select';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface StatusChangeModalProps {
   apartmentId: string;
@@ -18,19 +19,20 @@ export const StatusChangeModal: React.FC<StatusChangeModalProps> = ({
   onClose,
   onStatusChange,
 }) => {
+  const { t } = useTranslation();
   const normalizedCurrent = currentStatus?.toUpperCase() || '';
   const [status, setStatus] = useState('');
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const statusOptions = [
-    { value: 'ACTIVE', label: 'Active', description: 'Make apartment visible to users' },
-    { value: 'HIDDEN', label: 'Hidden', description: 'Hide apartment from public view' },
+    { value: 'ACTIVE', label: t('statusChange.active'), description: t('statusChange.activeDescription') },
+    { value: 'HIDDEN', label: t('statusChange.hidden'), description: t('statusChange.hiddenDescription') },
   ].filter(option => option.value !== normalizedCurrent);
 
   const handleSubmit = async () => {
     if (!status) {
-      alert('Please select a status');
+      alert(t('messages.selectStatus'));
       return;
     }
 

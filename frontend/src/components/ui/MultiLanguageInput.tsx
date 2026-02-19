@@ -3,6 +3,7 @@ import { Input } from './Input';
 import { Textarea } from './Textarea';
 import { Button } from './Button';
 import { Globe, ChevronRight, Check, AlertCircle } from 'lucide-react';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface LanguageContent {
   uz: string;
@@ -33,6 +34,7 @@ export const MultiLanguageInput: React.FC<MultiLanguageInputProps> = ({
   className = '',
   showValidation = true,
 }) => {
+  const { t } = useTranslation();
   const [activeLang, setActiveLang] = useState<'uz' | 'ru' | 'en'>('en');
   const [descriptionCharCount, setDescriptionCharCount] = useState<Record<string, number>>({
     uz: descriptionValue?.uz?.length || 0,
@@ -138,7 +140,7 @@ export const MultiLanguageInput: React.FC<MultiLanguageInputProps> = ({
               <Globe className="h-5 w-5 text-primary-600" />
             </div>
             <div>
-              <h3 className="font-medium text-gray-900">Multi-Language Content</h3>
+              <h3 className="font-medium text-gray-900">{t('form.multiLanguageContent')}</h3>
               <p className="text-sm text-gray-600">
                 Edit title and description in Uzbek, Russian, and English
               </p>
@@ -180,7 +182,7 @@ export const MultiLanguageInput: React.FC<MultiLanguageInputProps> = ({
                     <div className="text-left">
                       <div className="font-medium">{langLabel}</div>
                       <div className="text-xs text-gray-500">
-                        Title: {titleCount}/80 • Desc: {descCount}/200
+                        {t('form.titleShort')}: {titleCount}/80 • {t('form.descShort')}: {descCount}/200
                       </div>
                     </div>
                   </div>
@@ -189,13 +191,13 @@ export const MultiLanguageInput: React.FC<MultiLanguageInputProps> = ({
                     <div className={`px-2 py-1 rounded-full text-xs ${statusColors[titleStatus]}`}>
                       <div className="flex items-center space-x-1">
                         {statusIcons[titleStatus]}
-                        <span className="text-xs">Title</span>
+                        <span className="text-xs">{t('form.titleShort')}</span>
                       </div>
                     </div>
                     <div className={`px-2 py-1 rounded-full text-xs ${statusColors[descStatus]}`}>
                       <div className="flex items-center space-x-1">
                         {statusIcons[descStatus]}
-                        <span className="text-xs">Desc</span>
+                        <span className="text-xs">{t('form.descShort')}</span>
                       </div>
                     </div>
                   </div>
@@ -213,7 +215,7 @@ export const MultiLanguageInput: React.FC<MultiLanguageInputProps> = ({
           <div className="px-4 py-3 border-t border-gray-200">
             <div className="text-xs text-gray-600">
               <div className="flex justify-between mb-1">
-                <span>Title Completion:</span>
+                <span>{t('form.titleShort')} Completion:</span>
                 <span className="font-medium">
                   {Object.values(titleValue || {}).filter(v => v?.trim()).length}/3
                 </span>
@@ -244,7 +246,7 @@ export const MultiLanguageInput: React.FC<MultiLanguageInputProps> = ({
           </div>
         </div>
 
-        {/* Right Content Area - Title FIRST, then Description */}
+        {/* Right Content Area - {t('form.titleShort')} FIRST, then Description */}
         <div className="flex-1 p-6">
           {languages.map(({ code, label: langLabel, flag }) => (
             <div
@@ -268,7 +270,7 @@ export const MultiLanguageInput: React.FC<MultiLanguageInputProps> = ({
                 {/* TITLE (Input) - ON TOP */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Title
+                    {t('form.titleShort')}
                     {required && <span className="text-red-500 ml-1">*</span>}
                   </label>
                   <Input
@@ -299,10 +301,10 @@ export const MultiLanguageInput: React.FC<MultiLanguageInputProps> = ({
                   <div className="mt-2 text-xs text-gray-500 flex justify-between">
                     <div>
                       {descriptionCharCount[code] < 30 && (
-                        <span className="text-yellow-600">Add more details for better conversion</span>
+                        <span className="text-yellow-600">{t('form.addMoreDetails')}</span>
                       )}
                       {descriptionCharCount[code] >= 30 && descriptionCharCount[code] < 100 && (
-                        <span className="text-green-600">Good length for descriptions</span>
+                        <span className="text-green-600">{t('form.goodLength')}</span>
                       )}
                       {descriptionCharCount[code] >= 100 && (
                         <span className="text-orange-600">Consider making it more concise</span>

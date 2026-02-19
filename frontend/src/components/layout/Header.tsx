@@ -5,11 +5,13 @@ import { useAuthStore } from '../../stores/authStore';
 import { defaultComplexData } from '../../data/defaultData';
 import { broadcastsApi } from '../../api/broadcasts';
 import { LanguageSelector } from '../ui/LanguageSelector';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const Header = () => {
   const { isAuthenticated, user } = useAuthStore();
   const location = useLocation();
   const isHomePage = location.pathname === '/';
+  const { t, getLocalizedContent } = useTranslation();
 
   const complexData = defaultComplexData;
 
@@ -21,10 +23,9 @@ const Header = () => {
   });
 
   const latestBroadcast = broadcasts?.[0];
-  const bannerTitle = latestBroadcast?.title || 'Yangi uy-joylar keldi!';
+  const bannerTitle = latestBroadcast?.title || t('header.defaultBannerTitle');
   const bannerMessage =
-    latestBroadcast?.message ||
-    'Premium kvartiralarni ko‘rib chiqing va 15% gacha chegirma oling!';
+    latestBroadcast?.message || t('header.defaultBannerMessage');
 
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -48,7 +49,7 @@ const Header = () => {
                     : 'text-gray-700 hover:text-blue-600'
                 }`}
               >
-                Home
+                {t('navigation.home')}
               </Link>
               <Link 
                 to="/apartments" 
@@ -58,7 +59,7 @@ const Header = () => {
                     : 'text-gray-700 hover:text-blue-600'
                 }`}
               >
-                Apartments
+                {t('navigation.apartments')}
               </Link>
               <Link 
                 to="/complexes" 
@@ -68,7 +69,7 @@ const Header = () => {
                     : 'text-gray-700 hover:text-blue-600'
                 }`}
               >
-                Complexes
+                {t('navigation.complexes')}
               </Link>
             </nav>
 
@@ -83,7 +84,7 @@ const Header = () => {
                     className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <User className="h-5 w-5" />
-                    <span className="hidden sm:inline">Dashboard</span>
+                    <span className="hidden sm:inline">{t('navigation.dashboard')}</span>
                   </Link>
                 </div>
               ) : (
@@ -93,13 +94,13 @@ const Header = () => {
                     className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors"
                   >
                     <LogIn className="h-5 w-5" />
-                    <span className="hidden sm:inline">Login</span>
+                    <span className="hidden sm:inline">{t('navigation.login')}</span>
                   </Link>
                   <Link
                     to="/register"
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Register
+                    {t('navigation.register')}
                   </Link>
                 </div>
               )}
@@ -120,7 +121,7 @@ const Header = () => {
               to="/apartments"
               className="ml-2 px-3 py-1 bg-white text-orange-600 rounded-md font-semibold hover:bg-gray-100 transition-colors whitespace-nowrap"
             >
-              Ko'rish →
+              {t('navigation.view')} →
             </Link>
           </div>
         </div>
@@ -145,14 +146,14 @@ const Header = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-blue-600" />
-                <span>Completion: {new Date(complexData.completionDate).getFullYear()}</span>
+                <span>{t('header.completion')}: {new Date(complexData.completionDate).getFullYear()}</span>
               </div>
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-blue-600" />
-                <span className="font-semibold text-green-600">{complexData.investmentGrowthPercent}% Investment Growth</span>
+                <span className="font-semibold text-green-600">{complexData.investmentGrowthPercent}% {t('header.investmentGrowth')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-medium">{complexData.totalApartments} Apartments Available</span>
+                <span className="font-medium">{complexData.totalApartments} {t('header.apartmentsAvailable')}</span>
               </div>
             </div>
           </div>

@@ -174,7 +174,7 @@ export function ComplexFormNew() {
       return response.data;
     },
     onSuccess: () => {
-      toast.success(isEdit ? 'Complex updated successfully' : 'Complex created successfully');
+      toast.success(isEdit ? t('messages.complexUpdated') : t('messages.complexCreated'));
       navigate('/dashboard/admin/complexes');
     },
     onError: (error: any) => {
@@ -182,7 +182,7 @@ export function ComplexFormNew() {
       const errorMessage = error.response?.data?.error 
         || error.response?.data?.details?.[0]?.message
         || error.message 
-        || 'Failed to save complex';
+        || t('messages.saveComplexFailed');
       toast.error(errorMessage);
     },
   });
@@ -232,19 +232,19 @@ export function ComplexFormNew() {
     // Validate title has at least one non-empty value
     const hasTitle = formData.title.uz.trim() || formData.title.ru.trim() || formData.title.en.trim();
     if (!hasTitle) {
-      toast.error('Please enter a title in at least one language');
+      toast.error(t('messages.titleRequired'));
       return;
     }
 
     // Validate city
     if (!formData.city.trim()) {
-      toast.error('City is required');
+      toast.error(t('messages.cityRequired'));
       return;
     }
 
     // Validate developer
     if (!formData.developer.trim()) {
-      toast.error('Developer is required');
+      toast.error(t('messages.developerRequired'));
       return;
     }
 
@@ -253,7 +253,7 @@ export function ComplexFormNew() {
                       formData.location.address.ru.trim() || 
                       formData.location.address.en.trim();
     if (!hasAddress) {
-      toast.error('Please enter an address in at least one language');
+      toast.error(t('messages.addressRequired'));
       return;
     }
 
@@ -295,9 +295,9 @@ export function ComplexFormNew() {
             console.error('Form validation errors:', errors);
             const errorMessages = Object.values(errors).map(err => err?.message).filter(Boolean);
             if (errorMessages.length > 0) {
-              toast.error(`Please fix form errors: ${errorMessages.join(', ')}`);
+              toast.error(`${t('messages.fixFormErrors')}: ${errorMessages.join(', ')}`);
             } else {
-              toast.error('Please fix form errors before submitting');
+              toast.error(t('messages.fixFormErrors'));
             }
             // Scroll to first error
             const firstError = Object.keys(errors)[0];

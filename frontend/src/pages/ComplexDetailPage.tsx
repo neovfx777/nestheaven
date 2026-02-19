@@ -59,7 +59,7 @@ const ComplexDetailPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4" />
-          <p className="text-gray-600">Kompleks ma&apos;lumotlari yuklanmoqda...</p>
+          <p className="text-gray-600">{t('complexDetail.loading')}</p>
         </div>
       </div>
     );
@@ -70,12 +70,12 @@ const ComplexDetailPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Complex topilmadi
+            {t('complexDetail.notFound')}
           </h2>
           <p className="text-gray-600 mb-6">
-            Siz qidirayotgan kompleks mavjud emas yoki o&apos;chirilgan bo&apos;lishi mumkin.
+            {t('complexDetail.notFoundDescription')}
           </p>
-          <Button onClick={() => navigate('/complexes')}>Barcha komplekslar</Button>
+          <Button onClick={() => navigate('/complexes')}>{t('complexDetail.backToComplexes')}</Button>
         </div>
       </div>
     );
@@ -85,7 +85,7 @@ const ComplexDetailPage = () => {
     (complex.name as any)?.en ||
     (complex.name as any)?.uz ||
     (complex.name as any)?.ru ||
-    (typeof complex.name === 'string' ? complex.name : 'Kompleks');
+    (typeof complex.name === 'string' ? complex.name : t('complex.title'));
 
   const complexTitle =
     (typeof complex.title === 'string' && complex.title) ||
@@ -108,9 +108,9 @@ const ComplexDetailPage = () => {
     complex.bannerImageUrl || complex.coverImage || null
   );
   const permissionLinks = [
-    { label: 'Permission 1', url: complex.permission1Url },
-    { label: 'Permission 2', url: complex.permission2Url },
-    { label: 'Permission 3', url: complex.permission3Url },
+    { label: t('complexDetail.permission1'), url: complex.permission1Url },
+    { label: t('complexDetail.permission2'), url: complex.permission2Url },
+    { label: t('complexDetail.permission3'), url: complex.permission3Url },
   ]
     .map((item) => ({ ...item, url: getAssetUrl(item.url || null) }))
     .filter((item) => item.url);
@@ -151,13 +151,13 @@ const ComplexDetailPage = () => {
             className="flex items-center text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Orqaga
+            {t('navigation.back')}
           </Button>
           <Link
             to="/complexes"
             className="text-sm text-blue-600 hover:text-blue-700 font-medium"
           >
-            Barcha komplekslarni ko‘rish
+            {t('complexDetail.backToComplexes')}
           </Link>
         </div>
       </div>
@@ -196,19 +196,19 @@ const ComplexDetailPage = () => {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm text-gray-700">
               <div className="bg-gray-50 rounded-lg px-4 py-3">
-                <div className="text-xs text-gray-500 mb-1">Kvartiralar soni</div>
+                <div className="text-xs text-gray-500 mb-1">{t('complexDetail.apartmentCount')}</div>
                 <div className="text-lg font-semibold">
-                  {totalApartments} ta uy
+                  {totalApartments}
                 </div>
               </div>
               <div className="bg-gray-50 rounded-lg px-4 py-3">
-                <div className="text-xs text-gray-500 mb-1">Status</div>
-                <div className="text-lg font-semibold">Faol loyiha</div>
+                <div className="text-xs text-gray-500 mb-1">{t('complexDetail.status')}</div>
+                <div className="text-lg font-semibold">{t('complexDetail.activeProject')}</div>
               </div>
               <div className="bg-gray-50 rounded-lg px-4 py-3">
                 <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
                   <Footprints className="h-3 w-3" />
-                  Walkability
+                  {t('complexDetail.walkability')}
                 </div>
                 <div className="text-lg font-semibold">
                   {walkability != null ? `${walkability}/10` : '—'}
@@ -217,7 +217,7 @@ const ComplexDetailPage = () => {
               <div className="bg-gray-50 rounded-lg px-4 py-3">
                 <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
                   <Wind className="h-3 w-3" />
-                  Air Quality
+                  {t('complexDetail.airQuality')}
                 </div>
                 <div className="text-lg font-semibold">
                   {airQuality != null ? `${airQuality}/10` : '—'}
@@ -231,7 +231,7 @@ const ComplexDetailPage = () => {
         {descriptionText && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Tavsif</CardTitle>
+              <CardTitle className="text-lg">{t('complexDetail.description')}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
@@ -247,7 +247,7 @@ const ComplexDetailPage = () => {
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-blue-600" />
-                Joylashuv
+                {t('complexDetail.location')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -255,12 +255,12 @@ const ComplexDetailPage = () => {
                 <p className="text-sm text-gray-700 mb-2">{complexAddress || '—'}</p>
                 {complex.developer && (
                   <p className="text-sm text-gray-600">
-                    <span className="font-medium">Developer:</span> {complex.developer}
+                    <span className="font-medium">{t('complexDetail.developer')}:</span> {complex.developer}
                   </p>
                 )}
                 {complex.blockCount && (
                   <p className="text-sm text-gray-600">
-                    <span className="font-medium">Block Count:</span> {complex.blockCount}
+                    <span className="font-medium">{t('complexDetail.blockCount')}:</span> {complex.blockCount}
                   </p>
                 )}
               </div>
@@ -278,19 +278,19 @@ const ComplexDetailPage = () => {
         {/* Complex info */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Kompleks haqida</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6 text-sm text-gray-700">
+<CardTitle className="text-lg">{t('complexDetail.aboutComplex')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6 text-sm text-gray-700">
             {/* Ratings */}
             {(walkability != null || airQuality != null) && (
               <div>
-                <div className="text-xs text-gray-500 mb-2 font-medium">Baholar</div>
+                <div className="text-xs text-gray-500 mb-2 font-medium">{t('complexDetail.ratings')}</div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {walkability != null && (
                     <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
                       <Footprints className="h-5 w-5 text-blue-600" />
                       <div>
-                        <div className="font-semibold text-gray-900">Walkability</div>
+                        <div className="font-semibold text-gray-900">{t('complexDetail.walkability')}</div>
                         <div className="text-xs text-gray-600">{walkability}/10</div>
                       </div>
                     </div>
@@ -299,7 +299,7 @@ const ComplexDetailPage = () => {
                     <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
                       <Wind className="h-5 w-5 text-green-600" />
                       <div>
-                        <div className="font-semibold text-gray-900">Air Quality</div>
+                        <div className="font-semibold text-gray-900">{t('complexDetail.airQuality')}</div>
                         <div className="text-xs text-gray-600">{airQuality}/10</div>
                       </div>
                     </div>
@@ -310,7 +310,7 @@ const ComplexDetailPage = () => {
 
             {amenities.length > 0 && (
               <div>
-                <div className="text-xs text-gray-500 mb-2">Ichki imkoniyatlar</div>
+                <div className="text-xs text-gray-500 mb-2">{t('complexDetail.amenitiesLabel')}</div>
                 <div className="flex flex-wrap gap-2">
                   {amenities.map((item) => (
                     <span
@@ -326,7 +326,7 @@ const ComplexDetailPage = () => {
 
             {nearbyPlaces.length > 0 && (
               <div>
-                <div className="text-xs text-gray-500 mb-3 font-medium">Yaqin joylar</div>
+                <div className="text-xs text-gray-500 mb-3 font-medium">{t('complexDetail.nearbyPlacesLabel')}</div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {nearbyPlaces.map((place, idx) => (
                     <div 
@@ -356,7 +356,7 @@ const ComplexDetailPage = () => {
 
             {permissionLinks.length > 0 && (
               <div>
-                <div className="text-xs text-gray-500 mb-2">Ruxsatnomalar</div>
+                <div className="text-xs text-gray-500 mb-2">{t('complexDetail.permissionsLabel')}</div>
                 <div className="flex flex-wrap gap-3">
                   {permissionLinks.map((item) => (
                     <a
@@ -380,13 +380,13 @@ const ComplexDetailPage = () => {
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">
-              Bu kompleksdagi uylar ({apartments.length})
+              {t('complexDetail.apartmentsInComplex')} ({apartments.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             {apartments.length === 0 ? (
               <p className="text-sm text-gray-600">
-                Hozircha bu kompleksga biriktirilgan uylar mavjud emas.
+                {t('complexDetail.noApartments')}
               </p>
             ) : (
               <div className="space-y-4">

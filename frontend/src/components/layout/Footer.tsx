@@ -1,8 +1,10 @@
 import { Building2, Mail, Phone, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const { t } = useTranslation();
 
   return (
     <footer className="bg-gray-900 text-white mt-16">
@@ -15,7 +17,7 @@ const Footer = () => {
               <span className="text-2xl font-bold">NestHeaven</span>
             </Link>
             <p className="text-gray-400 mb-6">
-              Your trusted platform for newly built apartments. Find your perfect home with confidence.
+              {t('footer.tagline')}
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-white transition-colors">
@@ -39,31 +41,31 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('footer.quickLinks')}</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/apartments" className="text-gray-400 hover:text-white transition-colors">
-                  Browse Apartments
+                  {t('footer.browseApartments')}
                 </Link>
               </li>
               <li>
                 <Link to="/complexes" className="text-gray-400 hover:text-white transition-colors">
-                  View Complexes
+                  {t('footer.viewComplexes')}
                 </Link>
               </li>
               <li>
                 <Link to="/dashboard" className="text-gray-400 hover:text-white transition-colors">
-                  Seller Dashboard
+                  {t('footer.sellerDashboard')}
                 </Link>
               </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  How It Works
+                  {t('footer.howItWorks')}
                 </a>
               </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Success Stories
+                  {t('footer.successStories')}
                 </a>
               </li>
             </ul>
@@ -71,31 +73,31 @@ const Footer = () => {
 
           {/* For Sellers */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">For Sellers</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('footer.forSellers')}</h3>
             <ul className="space-y-2">
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  List Your Property
+                  {t('footer.listProperty')}
                 </a>
               </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Seller Resources
+                  {t('footer.sellerResources')}
                 </a>
               </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Pricing Plans
+                  {t('footer.pricingPlans')}
                 </a>
               </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Success Guide
+                  {t('footer.successGuide')}
                 </a>
               </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Seller Support
+                  {t('footer.sellerSupport')}
                 </a>
               </li>
             </ul>
@@ -103,7 +105,7 @@ const Footer = () => {
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('footer.contactUs')}</h3>
             <ul className="space-y-3">
               <li className="flex items-start">
                 <MapPin className="h-5 w-5 text-primary-400 mr-3 mt-0.5 flex-shrink-0" />
@@ -125,15 +127,15 @@ const Footer = () => {
 
             {/* Newsletter */}
             <div className="mt-6">
-              <h4 className="text-sm font-semibold mb-2">Stay Updated</h4>
+              <h4 className="text-sm font-semibold mb-2">{t('footer.stayUpdated')}</h4>
               <div className="flex">
                 <input
                   type="email"
-                  placeholder="Your email"
+                  placeholder={t('footer.yourEmail')}
                   className="flex-grow px-3 py-2 bg-gray-800 border border-gray-700 rounded-l-md focus:outline-none focus:ring-1 focus:ring-primary-500"
                 />
                 <button className="bg-primary-600 hover:bg-primary-700 px-4 py-2 rounded-r-md transition-colors">
-                  Subscribe
+                  {t('footer.subscribe')}
                 </button>
               </div>
             </div>
@@ -143,20 +145,20 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <div className="text-gray-400 text-sm mb-4 md:mb-0">
-            © {currentYear} NestHeaven. All rights reserved.
+            © {currentYear} NestHeaven. {t('footer.allRightsReserved')}
           </div>
           <div className="flex space-x-6 text-sm">
             <a href="#" className="text-gray-400 hover:text-white transition-colors">
-              Privacy Policy
+              {t('footer.privacyPolicy')}
             </a>
             <a href="#" className="text-gray-400 hover:text-white transition-colors">
-              Terms of Service
+              {t('footer.termsOfService')}
             </a>
             <a href="#" className="text-gray-400 hover:text-white transition-colors">
-              Cookie Policy
+              {t('footer.cookiePolicy')}
             </a>
             <a href="#" className="text-gray-400 hover:text-white transition-colors">
-              Sitemap
+              {t('footer.sitemap')}
             </a>
           </div>
         </div>

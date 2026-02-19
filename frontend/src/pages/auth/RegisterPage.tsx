@@ -4,12 +4,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, RegisterInput } from '../../utils/validation';
 import { useAuthStore } from '../../stores/authStore';
-import { AuthForm,  FormInput } from '../../components/auth/AuthForm';
+import { AuthForm, FormInput } from '../../components/auth/AuthForm';
+import { useTranslation } from '../../hooks/useTranslation';
 import { UserPlus } from 'lucide-react';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
   const { registerUser, isLoading, error, clearError } = useAuthStore();
+  const { t } = useTranslation();
 
   const {
     register,
@@ -48,60 +50,60 @@ const RegisterPage = () => {
 
   return (
     <AuthForm
-      title="Create your account"
-      subtitle="Join NestHeaven to find your perfect apartment"
+      title={t('auth.registerTitle')}
+      subtitle={t('auth.registerSubtitle')}
       onSubmit={handleSubmit(onSubmit)}
       isLoading={isLoading}
       error={error}
       footer={
         <p className="text-sm text-gray-600">
-          Already have an account?{' '}
+          {t('auth.haveAccount')}{' '}
           <Link
             to="/login"
             className="font-medium text-primary-600 hover:text-primary-500"
           >
-            Sign in here
+            {t('auth.signInHere')}
           </Link>
         </p>
       }
     >
       <FormInput
-        label="Full Name"
+        label={t('auth.fullName')}
         type="text"
         name="fullName"
         value={undefined}
         onChange={() => {}}
         error={errors.fullName?.message}
-        placeholder="John Doe"
+        placeholder={t('form.placeholderName')}
         required
         {...register('fullName')}
       />
 
       <FormInput
-        label="Email address"
+        label={t('auth.emailAddress')}
         type="email"
         name="email"
         value={undefined}
         onChange={() => {}}
         error={errors.email?.message}
-        placeholder="you@example.com"
+        placeholder={t('form.placeholderEmail')}
         required
         {...register('email')}
       />
 
       <FormInput
-        label="Phone Number (optional)"
+        label={t('auth.phoneOptional')}
         type="tel"
         name="phone"
         value={undefined}
         onChange={() => {}}
         error={errors.phone?.message}
-        placeholder="+998 90 123 45 67"
+        placeholder={t('form.placeholderPhone')}
         {...register('phone')}
       />
 
       <FormInput
-        label="Password"
+        label={t('auth.password')}
         type="password"
         name="password"
         value={undefined}
@@ -113,7 +115,7 @@ const RegisterPage = () => {
       />
 
       <FormInput
-        label="Confirm Password"
+        label={t('auth.confirmPassword')}
         type="password"
         name="confirmPassword"
         value={undefined}
@@ -125,19 +127,19 @@ const RegisterPage = () => {
       />
 
       <div className="mt-4 p-4 bg-blue-50 rounded-md">
-        <h4 className="text-sm font-medium text-blue-800 mb-2">Password Requirements:</h4>
+        <h4 className="text-sm font-medium text-blue-800 mb-2">{t('form.passwordRequirements')}</h4>
         <ul className="text-sm text-blue-700 space-y-1">
           <li className={`flex items-center ${password?.length >= 8 ? 'text-green-600' : ''}`}>
-            • At least 8 characters
+            • {t('form.atLeast8Chars')}
           </li>
           <li className={`flex items-center ${/[A-Z]/.test(password || '') ? 'text-green-600' : ''}`}>
-            • One uppercase letter
+            • {t('form.oneUppercase')}
           </li>
           <li className={`flex items-center ${/[a-z]/.test(password || '') ? 'text-green-600' : ''}`}>
-            • One lowercase letter
+            • {t('form.oneLowercase')}
           </li>
           <li className={`flex items-center ${/[0-9]/.test(password || '') ? 'text-green-600' : ''}`}>
-            • One number
+            • {t('form.oneNumber')}
           </li>
         </ul>
       </div>
@@ -151,13 +153,13 @@ const RegisterPage = () => {
           className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
         />
         <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
-          I agree to the{' '}
+          {t('form.agreeTerms')}{' '}
           <a href="#" className="text-primary-600 hover:text-primary-500">
-            Terms of Service
+            {t('form.termsOfService')}
           </a>{' '}
-          and{' '}
+          {t('form.and')}{' '}
           <a href="#" className="text-primary-600 hover:text-primary-500">
-            Privacy Policy
+            {t('form.privacyPolicy')}
           </a>
         </label>
       </div>
