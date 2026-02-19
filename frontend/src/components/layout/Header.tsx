@@ -2,7 +2,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Building2, User, LogIn, MapPin, TrendingUp, Calendar } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
-import { defaultComplexData } from '../../data/defaultData';
 import { broadcastsApi } from '../../api/broadcasts';
 import { LanguageSelector } from '../ui/LanguageSelector';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -12,8 +11,6 @@ const Header = () => {
   const location = useLocation();
   const isHomePage = location.pathname === '/';
   const { t, getLocalizedContent } = useTranslation();
-
-  const complexData = defaultComplexData;
 
   const { data: broadcasts } = useQuery({
     queryKey: ['broadcasts', 'latest'],
@@ -135,25 +132,25 @@ const Header = () => {
               <div className="flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-blue-600" />
                 <span className="font-medium">
-                  {typeof complexData.name === 'string' ? complexData.name : complexData.name?.en || 'NestHeaven'}
+                  NestHeaven
                 </span>
               </div>
               <div className="hidden md:flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-blue-600" />
                 <span>
-                  {typeof complexData.address === 'string' ? complexData.address : complexData.address?.en || 'Tashkent, Uzbekistan'}
+                  Tashkent, Uzbekistan
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-blue-600" />
-                <span>{t('header.completion')}: {new Date(complexData.completionDate).getFullYear()}</span>
+                <span>{t('header.completion')}: 2025</span>
               </div>
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-blue-600" />
-                <span className="font-semibold text-green-600">{complexData.investmentGrowthPercent}% {t('header.investmentGrowth')}</span>
+                <span className="font-semibold text-green-600">15% {t('header.investmentGrowth')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-medium">{complexData.totalApartments} {t('header.apartmentsAvailable')}</span>
+                <span className="font-medium">0 {t('header.apartmentsAvailable')}</span>
               </div>
             </div>
           </div>
