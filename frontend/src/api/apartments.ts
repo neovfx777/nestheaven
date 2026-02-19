@@ -136,23 +136,48 @@ export interface Complex {
   address?: { uz: string; ru: string; en: string } | string;
   city: string;
   coverImage: string | null;
-    title?: string;
-    locationText?: string;
-    locationLat?: number;
-    locationLng?: number;
-    bannerImageUrl?: string | null;
-    permission1Url?: string | null;
-    permission2Url?: string | null;
-    permission3Url?: string | null;
-    walkabilityRating?: number | null;
-    airQualityRating?: number | null;
-    nearbyNote?: string | null;
-    nearbyPlaces?: Array<{
-      name: string;
-      distanceMeters: number;
-      note?: string | null;
-    }> | null;
-    amenities?: string[];
+  title?: { uz: string; ru: string; en: string } | string;
+  description?: { uz: string; ru: string; en: string } | string | null;
+  developer?: string | null;
+  blockCount?: number;
+  locationText?: string;
+  locationLat?: number;
+  locationLng?: number;
+  location?: {
+    lat: number;
+    lng: number;
+    address: { uz: string; ru: string; en: string };
+  };
+  bannerImageUrl?: string | null;
+  permission1Url?: string | null;
+  permission2Url?: string | null;
+  permission3Url?: string | null;
+  permissions?: {
+    permission1: string;
+    permission2: string;
+    permission3: string;
+  } | null;
+  walkability?: number | null;
+  airQuality?: number | null;
+  walkabilityRating?: number | null; // Legacy field
+  airQualityRating?: number | null; // Legacy field
+  nearbyNote?: string | null;
+  nearbyPlaces?: Array<{
+    name: string;
+    type?: string;
+    distanceMeters?: number;
+    distanceKm?: number;
+    note?: string | null;
+  }> | null;
+  nearby?: Array<{
+    name: string;
+    type?: string;
+    distanceMeters?: number;
+    distanceKm?: number;
+    note?: string | null;
+  }> | null;
+  amenities?: string[];
+  allowedSellers?: string[];
   _count?: {
     apartments: number;
   };

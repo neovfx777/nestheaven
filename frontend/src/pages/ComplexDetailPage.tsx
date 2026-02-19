@@ -8,16 +8,20 @@ import {
   Square,
   Layers,
   Calendar,
-  Info,
+  Wind,
+  Footprints,
 } from 'lucide-react';
 import { apartmentsApi, Apartment, Complex } from '../api/apartments';
 import { getAssetUrl } from '../api/client';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { ComplexLocationMap } from '../components/maps/ComplexLocationMap';
+import { useTranslation } from '../hooks/useTranslation';
 
 const ComplexDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t, getLocalizedContent } = useTranslation();
 
   // Fetch all complexes and find current one
   const {
@@ -112,10 +116,29 @@ const ComplexDetailPage = () => {
     .filter((item) => item.url);
 
   const amenities = complex.amenities || [];
-  const nearbyPlaces = complex.nearbyPlaces || [];
+  const nearbyPlaces = complex.nearbyPlaces || complex.nearby || [];
 
   const totalApartments =
     complex._count?.apartments ?? apartments.length ?? 0;
+
+  // Get description in current language
+  const complexDescription = complex.description
+    ? typeof complex.description === 'string'
+      ? JSON.parse(complex.description)
+      : complex.description
+    : null;
+  
+  const descriptionText = complexDescription
+    ? getLocalizedContent(complexDescription)
+    : null;
+
+  // Get walkability and airQuality (backend returns as walkability/airQuality, not walkabilityRating/airQualityRating)
+  const walkability = complex.walkability ?? complex.walkabilityRating ?? null;
+  const airQuality = complex.airQuality ?? complex.airQualityRating ?? null;
+
+  // Get location coordinates
+  const locationLat = complex.locationLat ?? complex.location?.lat ?? null;
+  const locationLng = complex.locationLng ?? complex.location?.lng ?? null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -183,49 +206,105 @@ const ComplexDetailPage = () => {
                 <div className="text-lg font-semibold">Faol loyiha</div>
               </div>
               <div className="bg-gray-50 rounded-lg px-4 py-3">
-                <div className="text-xs text-gray-500 mb-1">Walkability</div>
+                <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                  <Footprints className="h-3 w-3" />
+                  Walkability
+                </div>
                 <div className="text-lg font-semibold">
-                  {complex.walkabilityRating ?? '—'}/10
+                  {walkability != null ? `${walkability}/10` : '—'}
                 </div>
               </div>
               <div className="bg-gray-50 rounded-lg px-4 py-3">
-                <div className="text-xs text-gray-500 mb-1">Air quality</div>
+                <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                  <Wind className="h-3 w-3" />
+                  Air Quality
+                </div>
                 <div className="text-lg font-semibold">
-                  {complex.airQualityRating ?? '—'}/10
+                  {airQuality != null ? `${airQuality}/10` : '—'}
                 </div>
               </div>
             </div>
           </CardHeader>
         </Card>
 
+        {/* Description */}
+        {descriptionText && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Tavsif</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                {descriptionText}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Location Map */}
+        {locationLat != null && locationLng != null && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-blue-600" />
+                Joylashuv
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4">
+                <p className="text-sm text-gray-700 mb-2">{complexAddress || '—'}</p>
+                {complex.developer && (
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Developer:</span> {complex.developer}
+                  </p>
+                )}
+                {complex.blockCount && (
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Block Count:</span> {complex.blockCount}
+                  </p>
+                )}
+              </div>
+              <ComplexLocationMap
+                latitude={locationLat}
+                longitude={locationLng}
+                locationText={complexAddress}
+                complexName={complexTitle}
+                heightClassName="h-96"
+              />
+            </CardContent>
+          </Card>
+        )}
+
         {/* Complex info */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Kompleks haqida</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm text-gray-700">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="space-y-6 text-sm text-gray-700">
+            {/* Ratings */}
+            {(walkability != null || airQuality != null) && (
               <div>
-                <div className="text-xs text-gray-500 mb-1">Manzil</div>
-                <div>{complexAddress || '—'}</div>
-                {(complex.locationLat != null || complex.locationLng != null) && (
-                  <div className="text-xs text-gray-500 mt-2">
-                    Koordinatalar: {complex.locationLat ?? '—'},{' '}
-                    {complex.locationLng ?? '—'}
-                  </div>
-                )}
-              </div>
-              <div>
-                <div className="text-xs text-gray-500 mb-1">Baholar</div>
-                <div>Walkability: {complex.walkabilityRating ?? '—'}/10</div>
-                <div>Air quality: {complex.airQualityRating ?? '—'}/10</div>
-              </div>
-            </div>
-
-            {complex.nearbyNote && (
-              <div>
-                <div className="text-xs text-gray-500 mb-1">Atrof</div>
-                <div>{complex.nearbyNote}</div>
+                <div className="text-xs text-gray-500 mb-2 font-medium">Baholar</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {walkability != null && (
+                    <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
+                      <Footprints className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <div className="font-semibold text-gray-900">Walkability</div>
+                        <div className="text-xs text-gray-600">{walkability}/10</div>
+                      </div>
+                    </div>
+                  )}
+                  {airQuality != null && (
+                    <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                      <Wind className="h-5 w-5 text-green-600" />
+                      <div>
+                        <div className="font-semibold text-gray-900">Air Quality</div>
+                        <div className="text-xs text-gray-600">{airQuality}/10</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -247,17 +326,28 @@ const ComplexDetailPage = () => {
 
             {nearbyPlaces.length > 0 && (
               <div>
-                <div className="text-xs text-gray-500 mb-2">Yaqin joylar</div>
-                <div className="space-y-2">
+                <div className="text-xs text-gray-500 mb-3 font-medium">Yaqin joylar</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {nearbyPlaces.map((place, idx) => (
-                    <div key={`${place.name}-${idx}`} className="flex flex-wrap gap-2">
-                      <span className="font-medium">{place.name}</span>
-                      <span className="text-gray-500">
-                        {place.distanceMeters} m
-                      </span>
-                      {place.note && (
-                        <span className="text-gray-500">({place.note})</span>
-                      )}
+                    <div 
+                      key={`${place.name}-${idx}`} 
+                      className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200"
+                    >
+                      <MapPin className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-900">{place.name}</div>
+                        <div className="text-xs text-gray-600 mt-1">
+                          {place.distanceMeters ? `${place.distanceMeters} m` : place.distanceKm ? `${place.distanceKm} km` : ''}
+                          {place.type && (
+                            <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
+                              {place.type}
+                            </span>
+                          )}
+                        </div>
+                        {place.note && (
+                          <div className="text-xs text-gray-500 mt-1">{place.note}</div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -285,33 +375,6 @@ const ComplexDetailPage = () => {
           </CardContent>
         </Card>
 
-        {/* Info about materials / infrastructure (overall) */}
-        <Card>
-          <CardHeader className="flex items-center gap-2">
-            <Info className="h-5 w-5 text-blue-600" />
-            <CardTitle className="text-lg">Materiallar va infratuzilma</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {apartments.length === 0 ? (
-              <p className="text-sm text-gray-600">
-                Hozircha bu kompleksga bog‘langan uylar yo‘q.
-              </p>
-            ) : (
-              <div className="space-y-4 text-sm text-gray-700">
-                <p>
-                  Quyida keltirilgan uylar misolida siz kompleksda
-                  ishlatilgan <strong>qurilish materiallari</strong> va{' '}
-                  <strong>atrofidagi infratuzilma</strong> haqida ma’lumotlarni
-                  ko‘rishingiz mumkin.
-                </p>
-                <p className="text-gray-500">
-                  Batafsil ma’lumot har bir uy kartasida &quot;Materiallar&quot; va
-                  &quot;Atrof infratuzilma&quot; bo‘limlarida ko‘rsatilgan.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
         {/* Apartments list */}
         <Card>
@@ -334,18 +397,6 @@ const ComplexDetailPage = () => {
                     (apt.title as any)?.ru ||
                     'Apartment';
 
-                  const materials =
-                    (apt.materials as any)?.en ||
-                    (apt.materials as any)?.uz ||
-                    (apt.materials as any)?.ru ||
-                    '';
-
-                  const infra =
-                    (apt.infrastructureNote as any)?.en ||
-                    (apt.infrastructureNote as any)?.uz ||
-                    (apt.infrastructureNote as any)?.ru ||
-                    '';
-
                   return (
                     <Link
                       key={apt.id}
@@ -357,7 +408,7 @@ const ComplexDetailPage = () => {
                           <h3 className="text-lg font-semibold text-gray-900 mb-1">
                             {title}
                           </h3>
-                          <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-3">
+                          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                             <span className="inline-flex items-center gap-1">
                               <Bed className="h-4 w-4" />
                               {apt.rooms} xonali
@@ -375,20 +426,6 @@ const ComplexDetailPage = () => {
                               {new Date(apt.createdAt).toLocaleDateString()}
                             </span>
                           </div>
-                          {materials && (
-                            <p className="text-sm text-gray-700 mb-2">
-                              <span className="font-medium">Materiallar:</span>{' '}
-                              {materials}
-                            </p>
-                          )}
-                          {infra && (
-                            <p className="text-sm text-gray-700">
-                              <span className="font-medium">
-                                Atrof infratuzilma:
-                              </span>{' '}
-                              {infra}
-                            </p>
-                          )}
                         </div>
                       </div>
                     </Link>
