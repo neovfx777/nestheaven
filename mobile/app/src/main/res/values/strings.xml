@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NestHeaven</string>
+    <string name="load_error">Could not load the app. Check internet and WEB_APP_URL.</string>
+</resources>
+

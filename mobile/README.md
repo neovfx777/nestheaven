@@ -1,30 +1,48 @@
-# NestHeaven Mobile (Expo Router)
+# NestHeaven Android (Kotlin)
 
-## Setup
+This folder now contains the Android native app in Kotlin.
+React Native / Expo mobile code has been removed.
 
-1. Install dependencies
+## What this app does
 
-```bash
+- Opens your frontend in an Android `WebView`
+- Supports auth/session cookies
+- Supports file chooser uploads from web forms
+- Produces installable APK
+
+## Configure frontend URL
+
+Edit `mobile/gradle.properties`:
+
+```properties
+WEB_APP_URL=https://your-frontend-domain.com
+```
+
+Or override during build:
+
+```powershell
+.\gradlew assembleDebug -PWEB_APP_URL=https://your-frontend-domain.com
+```
+
+## Build Debug APK
+
+```powershell
 cd mobile
-npm install
+.\gradlew assembleDebug
 ```
 
-2. Configure API URL
+APK output:
 
-`mobile/.env` uses `EXPO_PUBLIC_API_URL`. For real devices, use your LAN IP:
+`mobile\app\build\outputs\apk\debug\app-debug.apk`
 
-```
-EXPO_PUBLIC_API_URL=http://192.168.x.x:3000/api
-```
+## Build Release APK
 
-3. Run the app
-
-```bash
-npm run start
+```powershell
+cd mobile
+.\gradlew assembleRelease
 ```
 
-## Notes
+Release APK output:
 
-- Expo Router is used for navigation.
-- Admin/Manager/Owner/Seller/User roles are enforced in screens.
-- Complex creation supports map selection + banner + permission files.
+`mobile\app\build\outputs\apk\release\app-release.apk`
+
