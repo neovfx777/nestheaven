@@ -1,6 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">NestHeaven</string>
-    <string name="load_error">Could not load the app. Check internet and WEB_APP_URL.</string>
-</resources>
 
+    <string name="auth_title">NestHeaven Mobile</string>
+    <string name="auth_subtitle">Bu native Android ilova backend API bilan to\'g\'ridan-to\'g\'ri ishlaydi.</string>
+    <string name="login">Kirish</string>
+    <string name="logout">Chiqish</string>
+    <string name="register">Ro\'yxatdan o\'tish</string>
+    <string name="email">Email</string>
+    <string name="password">Parol</string>
+    <string name="first_name">Ism</string>
+    <string name="last_name">Familiya</string>
+    <string name="phone">Telefon</string>
+
+    <string name="tab_apartments">Kvartiralar</string>
+    <string name="tab_complexes">Komplekslar</string>
+    <string name="tab_favorites">Saqlanganlar</string>
+    <string name="tab_profile">Profil</string>
+
+    <string name="search">Qidirish</string>
+    <string name="search_hint">Nom, shahar yoki kalit so\'z</string>
+    <string name="refresh">Yangilash</string>
+    <string name="image">Rasm</string>
+    <string name="favorite">Sevimli</string>
+
+    <string name="favorite_add">Sevimlilarga qo\'shish</string>
+    <string name="favorite_remove">Sevimlidan olib tashlash</string>
+    <string name="favorite_added">Sevimlilarga qo\'shildi</string>
+    <string name="favorite_removed">Sevimlidan olib tashlandi</string>
+    <string name="favorite_failed">Sevimli amalini bajarib bo\'lmadi</string>
+
+    <string name="empty_apartments">Kvartiralar topilmadi</string>
+    <string name="empty_complexes">Komplekslar topilmadi</string>
+    <string name="empty_favorites">Sevimlilar ro\'yxati bo\'sh</string>
+
+    <string name="error_fill_login">Email va parolni kiriting</string>
+    <string name="error_fill_register">Ro\'yxatdan o\'tish maydonlarini to\'ldiring</string>
+    <string name="error_password_short">Parol kamida 6 ta belgidan iborat bo\'lsin</string>
+    <string name="error_login_failed">Kirish amalga oshmadi</string>
+    <string name="error_register_failed">Ro\'yxatdan o\'tishda xato</string>
+    <string name="error_load_apartments">Kvartiralarni yuklashda xato</string>
+    <string name="error_load_complexes">Komplekslarni yuklashda xato</string>
+    <string name="error_load_favorites">Sevimlilarni yuklashda xato</string>
+    <string name="error_load_details">Detal ma\'lumotni yuklashda xato</string>
+    <string name="register_success">Ro\'yxatdan o\'tish muvaffaqiyatli</string>
+
+    <string name="login_required">Bu amal uchun avval tizimga kiring</string>
+    <string name="login_required_favorites">Sevimlilarni ko\'rish uchun tizimga kirish kerak</string>
+
+    <string name="profile_loading">Profil yuklanmoqda...</string>
+    <string name="profile_synced">Profil holati: sinxron</string>
+    <string name="profile_failed">Profilni yangilab bo\'lmadi</string>
+    <string name="profile_login_required">Profilni ko\'rish uchun tizimga kiring</string>
+    <string name="profile_name">Ism-familiya</string>
+    <string name="profile_email">Email</string>
+    <string name="profile_role">Rol</string>
+    <string name="profile_phone">Telefon</string>
+</resources>
