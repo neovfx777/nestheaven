@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="error_container">#FDECEC</color>
+    <color name="on_error_container">#7A0A0A</color>
+</resources>
+
