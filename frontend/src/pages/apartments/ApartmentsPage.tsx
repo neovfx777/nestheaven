@@ -8,9 +8,11 @@ import ApartmentFilters, {
   ApartmentFilterState,
   DEFAULT_APARTMENT_FILTERS,
 } from '../../components/apartments/ApartmentFilters';
+import ApartmentAssistantWidget from '../../components/chat/ApartmentAssistantWidget';
 import { SaveSearchModal } from '../../components/apartments/SaveSearchModal';
 import { Modal } from '../../components/ui/Modal';
 import { Apartment, apartmentsApi, FilterParams as ApiFilterParams } from '../../api/apartments';
+import { AssistantFilterPatch } from '../../api/chat';
 import { useAuthStore } from '../../stores/authStore';
 
 const pageSize = 12;
@@ -309,6 +311,15 @@ const ApartmentsPage = () => {
     setSearchParams({});
   };
 
+  const handleAssistantApplyFilters = (patch: AssistantFilterPatch) => {
+    const nextFilters: ApartmentFilterState = {
+      ...filters,
+      ...patch,
+    };
+    setFilters(nextFilters);
+    setSearchParams(buildSearchParams(nextFilters, 1));
+  };
+
   const handlePageChange = (nextPage: number) => {
     const clampedPage = Math.max(1, Math.min(nextPage, totalPages));
     setSearchParams(buildSearchParams(filters, clampedPage));
@@ -496,6 +507,8 @@ const ApartmentsPage = () => {
           )}
         </div>
       </Modal>
+
+      <ApartmentAssistantWidget onApplyFilters={handleAssistantApplyFilters} />
     </div>
   );
 };
