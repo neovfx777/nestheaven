@@ -22,9 +22,15 @@ MAX_FILE_SIZE_MB=10
 # CORS (comma-separated origins, or * for all)
 CORS_ORIGINS=http://localhost:3000,http://localhost:5173
 
-# Seed (optional - for initial OWNER_ADMIN)
-OWNER_ADMIN_EMAIL=admin@nestheaven.uz
-OWNER_ADMIN_PASSWORD=Admin123!
+# Seed/reset accounts
+OWNER_ADMIN_EMAIL=
+OWNER_ADMIN_PASSWORD=
+ADMIN_EMAIL=
+ADMIN_PASSWORD=
+MANAGER_ADMIN_EMAIL=
+MANAGER_ADMIN_PASSWORD=
+SELLER_EMAIL=
+SELLER_PASSWORD=
 ```
 
 ## 2. Database Setup
@@ -50,10 +56,8 @@ Run the seed script to create admin users:
 npx prisma db seed
 ```
 
-This will create three admin users:
-- **Super Admin**: `admin@nestheaven.uz` / `Admin123!`
-- **Manager Admin**: `manager@nestheaven.uz` / `Manager123!`
-- **Owner Admin**: `owner@nestheaven.uz` / `Owner123!`
+Seed uses explicit account credentials from environment variables
+(`OWNER_ADMIN_*`, `ADMIN_*`, `MANAGER_ADMIN_*`, `SELLER_*`).
 
 ## 5. Start Backend Server
 

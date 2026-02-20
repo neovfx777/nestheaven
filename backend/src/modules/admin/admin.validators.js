@@ -1,10 +1,16 @@
 const { z } = require('zod');
 const { ROLES } = require('../../utils/roles');
 
+const passwordSchema = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[A-Za-z]/, 'Password must include at least one letter')
+  .regex(/\d/, 'Password must include at least one number');
+
 const createUserSchema = z.object({
   body: z.object({
     email: z.string().email('Invalid email'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    password: passwordSchema,
     role: z.enum([ROLES.USER, ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN]),
     firstName: z.string().optional(),
     lastName: z.string().optional(),

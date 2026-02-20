@@ -18,12 +18,24 @@ cmd /c npm run start
 
 Statik serverga `frontend/dist` papkani qo'ying.
 
+Muhim: eski `assets/*` fayllar qolib ketmasligi uchun deployni **to'liq almashtirish** rejimida qiling (`rsync --delete` yoki oldin papkani tozalang).
+
 Yoki local test:
 
 ```powershell
 cd frontend
 cmd /c npm install
 cmd /c npx vite preview --host --port 4173
+```
+
+Linux deploy misol:
+
+```bash
+cd /path/to/project/frontend
+npm ci
+npm run build
+sudo rsync -av --delete dist/ /var/www/nestheaven/
+sudo systemctl reload nginx
 ```
 
 ## Eslatma
