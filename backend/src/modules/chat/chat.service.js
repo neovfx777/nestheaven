@@ -237,49 +237,57 @@ async function resolveIntentWithOpenRouter({ message, history, language }) {
     .map((item) => `${item.role}: ${item.content}`)
     .join('\n');
 
-  const response = await fetch(OPENROUTER_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-      'HTTP-Referer': env.OPENROUTER_SITE_URL || 'http://localhost:5173',
-      'X-Title': env.OPENROUTER_APP_NAME || 'NestHeaven Apartment Assistant',
-    },
-    body: JSON.stringify({
-      model: env.OPENROUTER_MODEL || 'openai/gpt-4o-mini',
-      response_format: { type: 'json_object' },
-      temperature: 0.1,
-      max_tokens: 300,
-      messages: [
-        {
-          role: 'system',
-          content: [
-            'You are an intent parser for apartment search.',
-            'Return ONLY a JSON object.',
-            'Extract these fields:',
-            'minPrice, maxPrice, minRooms, maxRooms, minArea, maxArea, city, complexName, nearMetro, nearbyKeyword, status, freeText.',
-            'nearbyKeyword should be one short term like school, kindergarten, hospital, park, mall.',
-            'status can be active or sold or null.',
-            'If a field is missing, set it to null.',
-          ].join(' '),
-        },
-        {
-          role: 'user',
-          content: [
-            `Language: ${language || 'uz'}`,
-            conversationContext ? `Conversation:\n${conversationContext}` : '',
-            `Latest message: ${message}`,
-          ]
-            .filter(Boolean)
-            .join('\n\n'),
-        },
-      ],
-    }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+
+  let response;
+  try {
+    response = await fetch(OPENROUTER_URL, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
+        'HTTP-Referer': env.OPENROUTER_SITE_URL || 'http://localhost:5173',
+        'X-Title': env.OPENROUTER_APP_NAME || 'NestHeaven Apartment Assistant',
+      },
+      body: JSON.stringify({
+        model: env.OPENROUTER_MODEL || 'openai/gpt-4o-mini',
+        response_format: { type: 'json_object' },
+        temperature: 0.1,
+        max_tokens: 300,
+        messages: [
+          {
+            role: 'system',
+            content: [
+              'You are an intent parser for apartment search.',
+              'Return ONLY a JSON object.',
+              'Extract these fields:',
+              'minPrice, maxPrice, minRooms, maxRooms, minArea, maxArea, city, complexName, nearMetro, nearbyKeyword, status, freeText.',
+              'nearbyKeyword should be one short term like school, kindergarten, hospital, park, mall.',
+              'status can be active or sold or null.',
+              'If a field is missing, set it to null.',
+            ].join(' '),
+          },
+          {
+            role: 'user',
+            content: [
+              `Language: ${language || 'uz'}`,
+              conversationContext ? `Conversation:\n${conversationContext}` : '',
+              `Latest message: ${message}`,
+            ]
+              .filter(Boolean)
+              .join('\n\n'),
+          },
+        ],
+      }),
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`OpenRouter intent parse failed (${response.status}): ${errorText}`);
+    throw new Error(`OpenRouter intent parse failed (${response.status})`);
   }
 
   const payload = await response.json();
