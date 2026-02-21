@@ -25,6 +25,10 @@ interface ApiService {
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20,
         @Query("search") search: String? = null,
+        @Query("minPrice") minPrice: Double? = null,
+        @Query("maxPrice") maxPrice: Double? = null,
+        @Query("rooms") rooms: Int? = null,
+        @Query("status") status: String? = null,
     ): Response<JsonObject>
 
     @GET("apartments/{id}")

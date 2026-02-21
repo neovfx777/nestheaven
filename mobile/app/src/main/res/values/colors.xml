@@ -1,5 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="nh_blue_50">#EFF6FF</color>
+    <color name="nh_blue_600">#2563EB</color>
+    <color name="nh_blue_700">#1D4ED8</color>
+    <color name="nh_indigo_50">#EEF2FF</color>
+    <color name="nh_indigo_800">#3730A3</color>
+
+    <color name="nh_surface">#F8FAFC</color>
+    <color name="nh_surface_card">#FFFFFF</color>
+    <color name="nh_surface_muted">#F3F4F6</color>
+
+    <color name="nh_text_primary">#111827</color>
+    <color name="nh_text_secondary">#6B7280</color>
+    <color name="nh_text_inverse">#FFFFFF</color>
+    <color name="nh_border">#E5E7EB</color>
+
+    <color name="nh_success_bg">#DCFCE7</color>
+    <color name="nh_success_fg">#166534</color>
+    <color name="nh_error_bg">#FEE2E2</color>
+    <color name="nh_error_fg">#991B1B</color>
+    <color name="nh_neutral_bg">#E5E7EB</color>
+    <color name="nh_neutral_fg">#374151</color>
+    <color name="nh_info_bg">#DBEAFE</color>
+    <color name="nh_info_fg">#1E3A8A</color>
+    <color name="nh_warning">#F59E0B</color>
+
+    <color name="nh_price_bg">#111827</color>
+    <color name="nh_on_price">#FFFFFF</color>
+
+    <color name="nh_divider">#D1D5DB</color>
+
     <color name="error_container">#FDECEC</color>
     <color name="on_error_container">#7A0A0A</color>
 </resources>

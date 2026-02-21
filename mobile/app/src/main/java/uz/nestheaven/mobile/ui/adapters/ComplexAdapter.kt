@@ -42,8 +42,9 @@ class ComplexAdapter(
 
         fun bind(item: ComplexCardModel) {
             textTitle.text = item.title
-            textMeta.text = "${item.city} • ${item.blocksText}"
+            textMeta.text = "${item.city} - ${item.blocksText}"
             textRating.text = item.ratingText
+            textRating.visibility = if (item.ratingText.isBlank()) View.GONE else View.VISIBLE
 
             Glide.with(itemView)
                 .load(item.imageUrl)
