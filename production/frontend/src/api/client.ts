@@ -2,8 +2,13 @@ import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
 // Create axios instance
-// Default backend URL points to local development API; can be overridden via VITE_API_URL
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://45.92.173.175:3000/api';
+// In production, always use same-origin '/api' (served via Nginx proxy).
+// In local dev, allow VITE_API_URL override.
+const envApiBaseUrl = (import.meta.env.VITE_API_URL || '').trim();
+const isLocalhost =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const apiBaseUrl = isLocalhost ? envApiBaseUrl || '/api' : '/api';
 const apiClient = axios.create({
   baseURL: apiBaseUrl,
   headers: {

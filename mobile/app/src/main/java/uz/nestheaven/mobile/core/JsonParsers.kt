@@ -3,7 +3,6 @@ package uz.nestheaven.mobile.core
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
-import uz.nestheaven.mobile.BuildConfig
 import java.text.DecimalFormat
 
 object JsonParsers {
@@ -215,7 +214,7 @@ object JsonParsers {
         if (url.isNullOrBlank()) return null
         if (url.startsWith("http://") || url.startsWith("https://")) return url
 
-        val baseHost = BuildConfig.API_BASE_URL.replace(Regex("/api/?$"), "")
+        val baseHost = ApiClient.activeBaseUrl.replace(Regex("/api/?$"), "")
         return if (url.startsWith("/")) "$baseHost$url" else "$baseHost/$url"
     }
 

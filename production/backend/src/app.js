@@ -1,8 +1,12 @@
 const express = require('express');
+const compression = require('compression');
 const cors = require('cors');
+const helmet = require('helmet');
+const hpp = require('hpp');
 const path = require('path');
 const env = require('./config/env');
 const { errorHandler } = require('./middleware/errorHandler');
+const { buildCorsOptions, apiLimiter, authLimiter, chatLimiter } = require('./middleware/security');
 const routes = require('./routes');
 
 // Route imports
@@ -11,17 +15,45 @@ const sellersRoutes = require('./modules/users/sellers.routes');
 
 const app = express();
 
-const corsOptions = {
-  origin: env.CORS_ORIGINS === '*' ? true : env.CORS_ORIGINS.split(',').map((o) => o.trim()),
-  credentials: true,
-};
-app.use(cors(corsOptions));
+app.disable('x-powered-by');
+if (env.TRUST_PROXY) {
+  app.set('trust proxy', 1);
+}
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false,
+  })
+);
+app.use(
+  compression({
+    level: 6,
+    threshold: 1024,
+  })
+);
+app.use(hpp());
+app.use(cors(buildCorsOptions()));
+app.use(express.json({ limit: env.BODY_LIMIT }));
+app.use(express.urlencoded({ extended: true, limit: env.BODY_LIMIT }));
+
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/chat', chatLimiter);
+app.use('/api', apiLimiter);
 
 // Static files
-app.use('/uploads', express.static(path.join(process.cwd(), env.UPLOAD_DIR)));
+app.use(
+  '/uploads',
+  express.static(path.join(process.cwd(), env.UPLOAD_DIR), {
+    dotfiles: 'deny',
+    index: false,
+    maxAge: '1d',
+    setHeaders(res) {
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+    },
+  })
+);
 
 // IMPORTANT: Specific routes FIRST, then general routes
 app.use('/api/users/sellers', sellersRoutes);

@@ -6,6 +6,7 @@ const userRoutes = require('./modules/users/users.routes');
 const analyticsRoutes = require('./modules/analytics/analytics.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
 const broadcastRoutes = require('./modules/broadcasts/broadcasts.routes');
+const chatRoutes = require('./modules/chat/chat.routes');
 
 const router = express.Router();
 
@@ -16,5 +17,6 @@ router.use('/users', userRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/admin', adminRoutes);
 router.use('/broadcasts', broadcastRoutes);
+router.use('/chat', chatRoutes);
 
 module.exports = router;

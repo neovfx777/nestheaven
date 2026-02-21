@@ -3,9 +3,24 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+fun normalizeApiBaseUrl(raw: String?, fallback: String): String {
+    val value = raw?.trim().orEmpty().ifBlank { fallback }
+    return if (value.endsWith("/")) value else "$value/"
+}
+
 android {
     namespace = "uz.nestheaven.mobile"
     compileSdk = 36
+
+    val debugApiBaseUrl = normalizeApiBaseUrl(
+        (project.findProperty("API_BASE_URL_DEBUG") as String?)
+            ?: (project.findProperty("API_BASE_URL") as String?),
+        "http://10.0.2.2:3000/api/",
+    )
+    val releaseApiBaseUrl = normalizeApiBaseUrl(
+        project.findProperty("API_BASE_URL_RELEASE") as String?,
+        "http://nestheaven.uz/api/",
+    )
 
     defaultConfig {
         applicationId = "uz.nestheaven.mobile"
@@ -15,17 +30,18 @@ android {
         versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        val apiBaseUrl = (project.findProperty("API_BASE_URL") as String?) ?: "http://45.92.173.175:3000/api/"
-        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "API_BASE_URL", "\"$debugApiBaseUrl\"")
     }
 
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+            buildConfigField("String", "API_BASE_URL", "\"$debugApiBaseUrl\"")
         }
         release {
             isMinifyEnabled = false
+            buildConfigField("String", "API_BASE_URL", "\"$releaseApiBaseUrl\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

@@ -733,8 +733,8 @@ async function remove(id, reqUser) {
 
 async function getForSeller(data, reqUser) {
   try {
-    if (!reqUser || reqUser.role !== 'SELLER') {
-      const err = new Error('Access denied. Seller role required.');
+    if (!reqUser || !['SELLER', 'OWNER_ADMIN'].includes(reqUser.role)) {
+      const err = new Error('Access denied. Seller or owner admin role required.');
       err.statusCode = 403;
       throw err;
     }
@@ -749,18 +749,21 @@ async function getForSeller(data, reqUser) {
       },
     });
 
-    // Filter complexes where seller is in allowedSellers
-    let filtered = allComplexes.filter((complex) => {
-      // If allowedSellers is null/empty, complex is accessible to all sellers
-      if (!complex.allowedSellers) return true;
-      
-      try {
-        const allowed = JSON.parse(complex.allowedSellers);
-        return Array.isArray(allowed) && allowed.includes(reqUser.id);
-      } catch {
-        return false;
-      }
-    });
+    // Owner admin can access all complexes, sellers only their allowed complexes
+    let filtered = allComplexes;
+    if (reqUser.role !== 'OWNER_ADMIN') {
+      filtered = allComplexes.filter((complex) => {
+        // If allowedSellers is null/empty, complex is accessible to all sellers
+        if (!complex.allowedSellers) return true;
+
+        try {
+          const allowed = JSON.parse(complex.allowedSellers);
+          return Array.isArray(allowed) && allowed.includes(reqUser.id);
+        } catch {
+          return false;
+        }
+      });
+    }
 
     // Apply search filter
     if (search) {

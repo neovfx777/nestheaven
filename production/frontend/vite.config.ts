@@ -1,30 +1,30 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import path from "path";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
-// https://vitejs.dev/config/
+const devApiTarget = process.env.VITE_DEV_API_TARGET || 'http://localhost:3000';
+
 export default defineConfig({
   plugins: [react()],
 
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
 
   server: {
-    host: "0.0.0.0", // 🔥 tashqaridan ochilishi uchun
+    host: '127.0.0.1',
     port: 5173,
     strictPort: true,
-
     proxy: {
-      "/api": {
-        target: "http://45.92.173.175:3000", // ✅ BACKEND IP
+      '/api': {
+        target: devApiTarget,
         changeOrigin: true,
         secure: false,
       },
-      "/uploads": {
-        target: "http://45.92.173.175:3000",
+      '/uploads': {
+        target: devApiTarget,
         changeOrigin: true,
         secure: false,
       },
@@ -32,13 +32,15 @@ export default defineConfig({
   },
 
   preview: {
-    host: "0.0.0.0",
+    host: '127.0.0.1',
     port: 4173,
     strictPort: true,
   },
 
   build: {
-    outDir: "dist",
-    sourcemap: true,
+    outDir: 'dist',
+    sourcemap: false,
+    target: 'es2020',
+    chunkSizeWarningLimit: 1200,
   },
 });
