@@ -13,13 +13,46 @@
     <string name="last_name">Familiya</string>
     <string name="phone">Telefon</string>
 
+    <string name="tab_home">Bosh sahifa</string>
     <string name="tab_apartments">Kvartiralar</string>
     <string name="tab_complexes">Komplekslar</string>
     <string name="tab_favorites">Saqlanganlar</string>
     <string name="tab_profile">Profil</string>
 
+    <string name="home_title">NestHeaven</string>
+    <string name="home_subtitle">Yangi kvartira va komplekslarni bir joyda toping</string>
+    <string name="home_browse_apartments">Kvartiralarni ko\'rish</string>
+    <string name="home_browse_complexes">Komplekslarni ko\'rish</string>
+    <string name="home_stat_apartments">E\'lonlar</string>
+    <string name="home_stat_complexes">Komplekslar</string>
+    <string name="home_stat_favorites">Sevimlilar</string>
+    <string name="home_broadcast_title">Yangiliklar</string>
+    <string name="home_featured_title">Tanlangan e\'lonlar</string>
+    <string name="home_recommended_title">Siz uchun tavsiyalar</string>
+    <string name="home_complexes_title">Mashhur komplekslar</string>
+    <string name="home_broadcast_empty">Hozircha yangiliklar yo\'q</string>
+    <string name="home_load_failed">Bosh sahifa ma\'lumotini yuklab bo\'lmadi</string>
+
     <string name="search">Qidirish</string>
     <string name="search_hint">Nom, shahar yoki kalit so\'z</string>
+    <string name="filter_min_price">Min narx</string>
+    <string name="filter_max_price">Max narx</string>
+    <string name="filter_rooms">Xona</string>
+    <string name="filter_status">Status</string>
+    <string name="filter_sort">Saralash</string>
+    <string name="filter_apply">Filterni qo\'llash</string>
+    <string name="filter_reset">Tozalash</string>
+    <string name="filter_status_all">Barchasi</string>
+    <string name="filter_status_active">Faqat faol</string>
+    <string name="filter_status_sold">Faqat sotilgan</string>
+    <string name="filter_status_hidden">Faqat yashirin</string>
+    <string name="filter_sort_newest">Eng yangi</string>
+    <string name="filter_sort_price_asc">Narx: arzon -&gt; qimmat</string>
+    <string name="filter_sort_price_desc">Narx: qimmat -&gt; arzon</string>
+    <string name="filter_sort_area_asc">Maydon: kichik -&gt; katta</string>
+    <string name="filter_sort_area_desc">Maydon: katta -&gt; kichik</string>
+    <string name="filter_sort_rooms_asc">Xona: kam -&gt; ko\'p</string>
+    <string name="filter_sort_rooms_desc">Xona: ko\'p -&gt; kam</string>
     <string name="refresh">Yangilash</string>
     <string name="image">Rasm</string>
     <string name="favorite">Sevimli</string>

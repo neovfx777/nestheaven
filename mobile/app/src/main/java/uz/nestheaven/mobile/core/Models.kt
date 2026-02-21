@@ -41,6 +41,11 @@ data class ApartmentCardModel(
     val roomsText: String,
     val statusText: String,
     val imageUrl: String?,
+    val statusRaw: String = "",
+    val priceValue: Double? = null,
+    val roomsValue: Int? = null,
+    val areaValue: Double? = null,
+    val createdAt: String? = null,
 )
 
 data class ComplexCardModel(

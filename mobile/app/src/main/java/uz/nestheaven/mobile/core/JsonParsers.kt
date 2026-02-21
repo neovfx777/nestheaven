@@ -18,9 +18,13 @@ object JsonParsers {
             val title = localized(obj.get("title"))
             val complex = obj.optObject("complex")
             val city = complex?.optString("city") ?: obj.optString("city").orEmpty()
-            val priceText = obj.optNumber("price")?.let { "${moneyFormat.format(it)} UZS" } ?: "-"
-            val roomsText = obj.optNumber("rooms")?.let { "${it.toInt()} xonali" } ?: "-"
-            val statusText = normalizeStatus(obj.optString("status"))
+            val priceValue = obj.optNumber("price")
+            val roomsValue = obj.optNumber("rooms")?.toInt()
+            val areaValue = obj.optNumber("area")
+            val statusRaw = obj.optString("status")?.lowercase().orEmpty()
+            val priceText = priceValue?.let { "${moneyFormat.format(it)} UZS" } ?: "-"
+            val roomsText = roomsValue?.let { "${it} xonali" } ?: "-"
+            val statusText = normalizeStatus(statusRaw)
             val coverImage = obj.optString("coverImage")
                 ?: obj.optArray("images")?.firstObject()?.optString("url")
                 ?: complex?.optString("bannerImageUrl")
@@ -33,12 +37,19 @@ object JsonParsers {
                 roomsText = roomsText,
                 statusText = statusText,
                 imageUrl = resolveAssetUrl(coverImage),
+                statusRaw = statusRaw,
+                priceValue = priceValue,
+                roomsValue = roomsValue,
+                areaValue = areaValue,
+                createdAt = obj.optString("createdAt"),
             )
         }
     }
 
     fun parseComplexes(root: JsonObject?): List<ComplexCardModel> {
-        val complexes = root.optArray("data") ?: return emptyList()
+        val complexes = root.optArray("data")
+            ?: root.optObject("data").optArray("items")
+            ?: return emptyList()
         return complexes.mapNotNull { element ->
             val obj = element.optObject() ?: return@mapNotNull null
             val id = obj.optString("id") ?: return@mapNotNull null
@@ -77,9 +88,13 @@ object JsonParsers {
             val title = localized(obj.get("title"))
             val complex = obj.optObject("complex")
             val city = complex?.optString("city") ?: obj.optString("city").orEmpty()
-            val priceText = obj.optNumber("price")?.let { "${moneyFormat.format(it)} UZS" } ?: "-"
-            val roomsText = obj.optNumber("rooms")?.let { "${it.toInt()} xonali" } ?: "-"
-            val statusText = normalizeStatus(obj.optString("status"))
+            val priceValue = obj.optNumber("price")
+            val roomsValue = obj.optNumber("rooms")?.toInt()
+            val areaValue = obj.optNumber("area")
+            val statusRaw = obj.optString("status")?.lowercase().orEmpty()
+            val priceText = priceValue?.let { "${moneyFormat.format(it)} UZS" } ?: "-"
+            val roomsText = roomsValue?.let { "${it} xonali" } ?: "-"
+            val statusText = normalizeStatus(statusRaw)
             val coverImage = obj.optString("coverImage")
                 ?: obj.optArray("images")?.firstObject()?.optString("url")
 
@@ -91,6 +106,11 @@ object JsonParsers {
                 roomsText = roomsText,
                 statusText = statusText,
                 imageUrl = resolveAssetUrl(coverImage),
+                statusRaw = statusRaw,
+                priceValue = priceValue,
+                roomsValue = roomsValue,
+                areaValue = areaValue,
+                createdAt = obj.optString("createdAt"),
             )
         }
     }
@@ -200,11 +220,12 @@ object JsonParsers {
     }
 
     private fun normalizeStatus(raw: String?): String {
-        return when (raw?.lowercase()) {
+        val normalized = raw?.trim()?.lowercase()
+        return when (normalized) {
             "active" -> "Faol"
             "sold" -> "Sotilgan"
             "hidden" -> "Yashirilgan"
-            else -> raw ?: "Noma'lum"
+            else -> if (raw.isNullOrBlank()) "Noma'lum" else raw
         }
     }
 
@@ -219,7 +240,7 @@ object JsonParsers {
     }
 
     private fun JsonArray.firstObject(): JsonObject? {
-        if (isEmpty) return null
+        if (size() == 0) return null
         return this[0].optObject()
     }
 

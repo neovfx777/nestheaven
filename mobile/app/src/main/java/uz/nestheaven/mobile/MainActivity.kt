@@ -3,19 +3,20 @@ package uz.nestheaven.mobile
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isVisible
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import uz.nestheaven.mobile.core.ApiClient
 import uz.nestheaven.mobile.core.SessionManager
 import uz.nestheaven.mobile.ui.fragments.ApartmentsFragment
 import uz.nestheaven.mobile.ui.fragments.AuthFragment
 import uz.nestheaven.mobile.ui.fragments.ComplexesFragment
 import uz.nestheaven.mobile.ui.fragments.FavoritesFragment
+import uz.nestheaven.mobile.ui.fragments.HomeFragment
 import uz.nestheaven.mobile.ui.fragments.ProfileFragment
 
 class MainActivity : AppCompatActivity(),
     AuthFragment.AuthHost,
+    HomeFragment.HomeHost,
     ApartmentsFragment.ApartmentsHost,
     ComplexesFragment.ComplexesHost,
     FavoritesFragment.FavoritesHost,
@@ -38,6 +39,10 @@ class MainActivity : AppCompatActivity(),
 
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
+                R.id.nav_home -> {
+                    openFragment(HomeFragment(), getString(R.string.tab_home))
+                    true
+                }
                 R.id.nav_apartments -> {
                     openFragment(ApartmentsFragment(), getString(R.string.tab_apartments))
                     true
@@ -51,7 +56,7 @@ class MainActivity : AppCompatActivity(),
                     true
                 }
                 R.id.nav_profile -> {
-                    openFragment(ProfileFragment(), getString(R.string.tab_profile))
+                    openProfileTab()
                     true
                 }
                 else -> false
@@ -59,26 +64,15 @@ class MainActivity : AppCompatActivity(),
         }
 
         if (savedInstanceState == null) {
-            if (sessionManager.isLoggedIn()) {
-                showMainUi(selectApartments = true)
-            } else {
-                showAuthUi()
-            }
+            bottomNav.selectedItemId = R.id.nav_home
         }
     }
 
-    private fun showAuthUi() {
-        bottomNav.isVisible = false
-        toolbar.title = getString(R.string.auth_title)
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, AuthFragment())
-            .commit()
-    }
-
-    private fun showMainUi(selectApartments: Boolean = false) {
-        bottomNav.isVisible = true
-        if (selectApartments) {
-            bottomNav.selectedItemId = R.id.nav_apartments
+    private fun openProfileTab() {
+        if (sessionManager.isLoggedIn()) {
+            openFragment(ProfileFragment(), getString(R.string.tab_profile))
+        } else {
+            openFragment(AuthFragment(), getString(R.string.auth_title))
         }
     }
 
@@ -90,7 +84,7 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun onAuthenticated() {
-        showMainUi(selectApartments = true)
+        openProfileTab()
     }
 
     override fun openApartmentDetail(id: String) {
@@ -106,10 +100,18 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun requestLogin() {
-        showAuthUi()
+        bottomNav.selectedItemId = R.id.nav_profile
     }
 
     override fun onLogoutRequested() {
-        showAuthUi()
+        openProfileTab()
+    }
+
+    override fun openApartmentsTab() {
+        bottomNav.selectedItemId = R.id.nav_apartments
+    }
+
+    override fun openComplexesTab() {
+        bottomNav.selectedItemId = R.id.nav_complexes
     }
 }

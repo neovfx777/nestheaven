@@ -1,48 +1,58 @@
-# NestHeaven Android (Kotlin)
+# NestHeaven Android (Native Kotlin)
 
-This folder now contains the Android native app in Kotlin.
-React Native / Expo mobile code has been removed.
+Bu modul `WebView` emas. Ilova Android native Kotlin kodida yozilgan va backend API bilan to'g'ridan-to'g'ri ishlaydi.
 
-## What this app does
+## Nimalar bor
 
-- Opens your frontend in an Android `WebView`
-- Supports auth/session cookies
-- Supports file chooser uploads from web forms
-- Produces installable APK
+- Public home + apartments + complexes oqimi (login shartsiz)
+- Auth (login/register) va profil
+- Favorites qo'shish/olib tashlash
+- Apartment filter/sort (narx, xona, status, saralash)
+- Apartment va complex detail sahifalari
+- API token `SharedPreferences` orqali saqlanadi
 
-## Configure frontend URL
+## API bazasini sozlash
 
-Edit `mobile/gradle.properties`:
+`mobile/gradle.properties`:
 
 ```properties
-WEB_APP_URL=https://your-frontend-domain.com
+API_BASE_URL=http://45.92.173.175:3000/api/
 ```
 
-Or override during build:
+Build vaqtida ham override qilish mumkin:
 
 ```powershell
-.\gradlew assembleDebug -PWEB_APP_URL=https://your-frontend-domain.com
+.\gradlew.bat assembleDebug -PAPI_BASE_URL=http://45.92.173.175:3000/api/
 ```
 
-## Build Debug APK
+## Android SDK sozlash
+
+Gradle ishga tushishi uchun `mobile/local.properties` faylida SDK yo'lini ko'rsating:
+
+```properties
+sdk.dir=C\:\\Users\\<USERNAME>\\AppData\\Local\\Android\\Sdk
+```
+
+Yoki `ANDROID_HOME` env var orqali belgilang.
+
+## Debug APK build
 
 ```powershell
 cd mobile
-.\gradlew assembleDebug
+.\gradlew.bat assembleDebug
 ```
 
-APK output:
+APK:
 
 `mobile\app\build\outputs\apk\debug\app-debug.apk`
 
-## Build Release APK
+## Release APK build
 
 ```powershell
 cd mobile
-.\gradlew assembleRelease
+.\gradlew.bat assembleRelease
 ```
 
-Release APK output:
+APK:
 
 `mobile\app\build\outputs\apk\release\app-release.apk`
-
