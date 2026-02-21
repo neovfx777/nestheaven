@@ -361,30 +361,16 @@ export const apartmentsApi = {
     }
   },
 
-  // Create apartment (seller only)
-  createApartment: async (data: CreateApartmentData, images: File[] = []): Promise<ApartmentDetail> => {
-    const formData = new FormData();
-
-    // Append apartment data as JSON
-    formData.append('apartment', JSON.stringify(data));
-
-    // Append images
-    images.forEach(image => {
-      formData.append('images', image);
-    });
-
-    const response = await apiClient.post<{ success: boolean; data: ApartmentDetail }>('/apartments', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data.data;
+  // Create apartment (seller/owner admin)
+  createApartment: async (data: CreateApartmentData): Promise<ApartmentDetail> => {
+    const response = await apiClient.post<ApartmentDetail>('/apartments', data);
+    return response.data;
   },
 
   // Update apartment
   updateApartment: async (id: string, data: UpdateApartmentData): Promise<ApartmentDetail> => {
-    const response = await apiClient.put<{ success: boolean; data: ApartmentDetail }>(`/apartments/${id}`, data);
-    return response.data.data;
+    const response = await apiClient.patch<ApartmentDetail>(`/apartments/${id}`, data);
+    return response.data;
   },
 
   // Delete apartment
@@ -410,6 +396,12 @@ export const apartmentsApi = {
       return [];
     }
   },
+
+  // Backward-compatible aliases used by dashboard forms
+  getById: async (id: string): Promise<ApartmentDetail> => apartmentsApi.getApartmentById(id),
+  create: async (data: CreateApartmentData): Promise<ApartmentDetail> => apartmentsApi.createApartment(data),
+  update: async (id: string, data: UpdateApartmentData): Promise<ApartmentDetail> =>
+    apartmentsApi.updateApartment(id, data),
 
   // Upload images for apartment
   uploadImages: async (apartmentId: string, images: File[]): Promise<ApartmentDetail> => {

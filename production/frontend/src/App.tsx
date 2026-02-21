@@ -115,7 +115,7 @@ function App() {
           <Route
             path="seller/listings"
             element={
-              <ProtectedRoute requireRole={['SELLER']}>
+              <ProtectedRoute requireRole={['SELLER', 'OWNER_ADMIN']}>
                 <SellerApartmentList />
               </ProtectedRoute>
             }
@@ -123,16 +123,24 @@ function App() {
           <Route
             path="seller/apartments/new"
             element={
-              <ProtectedRoute requireRole={['SELLER']}>
-                <ApartmentForm />
+              <ProtectedRoute requireRole={['SELLER', 'OWNER_ADMIN']}>
+                <ApartmentForm mode="create" />
               </ProtectedRoute>
             }
           />
           <Route
             path="seller/apartments/:id/edit"
             element={
-              <ProtectedRoute requireRole={['SELLER']}>
-                <ApartmentForm />
+              <ProtectedRoute requireRole={['SELLER', 'OWNER_ADMIN']}>
+                <ApartmentForm mode="edit" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="seller/apartments/edit/:id"
+            element={
+              <ProtectedRoute requireRole={['SELLER', 'OWNER_ADMIN']}>
+                <ApartmentForm mode="edit" />
               </ProtectedRoute>
             }
           />

@@ -1,24 +1,44 @@
 const app = require('./app');
 const env = require('./config/env');
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  console.error('Stack:', reason?.stack);
-  // Don't exit the process, just log the error
+let server;
+
+function logFatal(label, error) {
+  if (env.NODE_ENV === 'production') {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`${label}: ${message}`);
+    return;
+  }
+  console.error(label, error);
+}
+
+function shutdown(exitCode = 0) {
+  if (!server) {
+    process.exit(exitCode);
+    return;
+  }
+
+  server.close(() => {
+    process.exit(exitCode);
+  });
+
+  setTimeout(() => process.exit(exitCode), 10000).unref();
+}
+
+process.on('unhandledRejection', (reason) => {
+  logFatal('Unhandled Rejection', reason);
+  shutdown(1);
 });
 
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  console.error('Stack:', error.stack);
-  // Don't exit the process, just log the error
+  logFatal('Uncaught Exception', error);
+  shutdown(1);
 });
 
-const server = app.listen(env.PORT, () => {
-  console.log(`Server running on port ${env.PORT} (${env.NODE_ENV})`);
-  console.log(`Health check: http://localhost:${env.PORT}/health`);
+server = app.listen(env.PORT, env.HOST, () => {
+  console.log(`Server running on ${env.HOST}:${env.PORT} (${env.NODE_ENV})`);
 });
 
-// Handle server errors
 server.on('error', (error) => {
   console.error('Server error:', error);
   if (error.code === 'EADDRINUSE') {
@@ -26,24 +46,14 @@ server.on('error', (error) => {
   }
 });
 
-// Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('Process terminated');
-  });
+  shutdown(0);
 });
 
-
-// Add this near the top of server.js after imports
-process.on('uncaughtException', (error) => {
-  console.error('UNCAUGHT EXCEPTION:', error);
-  console.error('Stack:', error.stack);
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  shutdown(0);
 });
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('UNHANDLED REJECTION at:', promise, 'reason:', reason);
-});
-
 
 module.exports = server;

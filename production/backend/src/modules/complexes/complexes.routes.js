@@ -8,7 +8,7 @@ const {
   validateList,
 } = require('./complexes.validators');
 const { authMiddleware } = require('../../middleware/auth');
-const { requireManagerAdmin, requireOwnerAdmin } = require('../../middleware/roles');
+const { requireManagerAdmin, requireOwnerAdmin, requireSeller } = require('../../middleware/roles');
 const { complexUpload } = require('../../middleware/upload');
 
 const router = express.Router();
@@ -20,6 +20,20 @@ function assignComplexId(req, res, next) {
 
 // Public read endpoints
 router.get('/', validateList, complexesController.list);
+// Get complexes for seller/owner (must be before '/:id' route)
+router.get(
+  '/for-seller',
+  authMiddleware,
+  requireSeller,
+  validateList,
+  (req, res, next) => {
+    // If controller method doesn't exist yet, return empty array
+    if (!complexesController.getForSeller) {
+      return res.json({ success: true, data: [] });
+    }
+    complexesController.getForSeller(req, res, next);
+  }
+);
 router.get('/:id', validateGetById, complexesController.getById);
 
 // Multer error handler middleware
@@ -90,21 +104,6 @@ router.delete(
   requireOwnerAdmin,
   validateGetById,
   complexesController.remove
-);
-
-// Get complexes for seller (only complexes where seller is in allowedSellers)
-// Make sure this controller method exists
-router.get(
-  '/for-seller',
-  authMiddleware,
-  validateList,
-  (req, res, next) => {
-    // If controller method doesn't exist yet, return empty array
-    if (!complexesController.getForSeller) {
-      return res.json({ success: true, data: [] });
-    }
-    complexesController.getForSeller(req, res, next);
-  }
 );
 
 module.exports = router;

@@ -16,13 +16,20 @@ Bu modul `WebView` emas. Ilova Android native Kotlin kodida yozilgan va backend 
 `mobile/gradle.properties`:
 
 ```properties
-API_BASE_URL=http://45.92.173.175:3000/api/
+API_BASE_URL_DEBUG=http://10.0.2.2:3000/api/
+API_BASE_URL_RELEASE=http://nestheaven.uz/api/
 ```
+
+Muhim:
+- Android Emulator uchun `localhost` o'rniga `10.0.2.2` ishlatiladi.
+- Release APK uchun API avtomatik VPS (`API_BASE_URL_RELEASE`) dan olinadi.
+- Real telefonni lokal backend bilan test qilmoqchi bo'lsangiz LAN IP ishlating.
 
 Build vaqtida ham override qilish mumkin:
 
 ```powershell
-.\gradlew.bat assembleDebug -PAPI_BASE_URL=http://45.92.173.175:3000/api/
+.\gradlew.bat assembleDebug -PAPI_BASE_URL_DEBUG=http://192.168.1.50:3000/api/
+.\gradlew.bat assembleRelease -PAPI_BASE_URL_RELEASE=http://nestheaven.uz/api/
 ```
 
 ## Android SDK sozlash

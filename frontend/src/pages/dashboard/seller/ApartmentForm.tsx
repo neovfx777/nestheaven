@@ -214,10 +214,15 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
 
   const uploadImages = async (apartmentId: string) => {
     try {
-      // Note: You need to implement uploadImages method in your apartmentsApi
-      // For now, we'll just show success message
-      toast.success('Apartment saved successfully (images would be uploaded here)');
-      navigate('/dashboard/seller/listings');
+      await apartmentsApi.uploadImages(apartmentId, newImages);
+      setNewImages([]);
+      queryClient.invalidateQueries({ queryKey: ['apartment', apartmentId] });
+      queryClient.invalidateQueries({ queryKey: ['seller-apartments'] });
+      toast.success(mode === 'create' ? t('messages.apartmentCreated') : t('messages.apartmentUpdated'));
+
+      if (mode === 'create') {
+        navigate('/dashboard/seller/listings');
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to upload images');
     }

@@ -13,9 +13,6 @@ import {
   Menu,
   X,
   User,
-  Filter,
-  AlertTriangle,
-  CheckCircle,
   Heart,
   List,
   PlusCircle
@@ -85,7 +82,7 @@ const DashboardLayout = () => {
   const navigation = [
     { nameKey: 'dashboard.overview', href: '/dashboard', icon: Home, roles: ['USER', 'SELLER', 'ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'] },
     { nameKey: 'dashboard.myFavorites', href: '/dashboard/favorites', icon: Heart, roles: ['USER'] },
-    { nameKey: 'dashboard.manageListings', href: '/dashboard/seller/listings', icon: List, roles: ['SELLER'] },
+    { nameKey: 'dashboard.manageListings', href: '/dashboard/seller/listings', icon: List, roles: ['SELLER', 'OWNER_ADMIN'] },
     { nameKey: 'dashboard.userManagement', href: '/dashboard/admin/users', icon: Users, roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'] },
     { nameKey: 'dashboard.complexes', href: '/dashboard/admin/complexes', icon: Building2, roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'] },
     { nameKey: 'dashboard.analytics', href: '/dashboard/admin/analytics', icon: BarChart3, roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'] },
@@ -127,7 +124,7 @@ const DashboardLayout = () => {
         {/* Sidebar */}
         <aside
           className={`
-            fixed inset-y-0 left-0 z-30 w-64 bg-white border-r
+            fixed inset-y-0 left-0 z-30 w-64 bg-white border-r flex flex-col h-screen
             transform transition-transform duration-200
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
             lg:translate-x-0 lg:static
@@ -150,9 +147,9 @@ const DashboardLayout = () => {
               <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
                 <User className="h-6 w-6 text-primary-600" />
               </div>
-              <div>
-                <div className="font-medium">{user?.fullName}</div>
-                <div className="text-sm text-gray-500">{user?.email}</div>
+              <div className="min-w-0">
+                <div className="font-medium truncate">{user?.fullName}</div>
+                <div className="text-sm text-gray-500 truncate">{user?.email}</div>
                 <div className="flex items-center mt-1">
                   {getRoleIcon(user?.role || 'USER')}
                   <span className="ml-2 text-sm font-medium">
@@ -164,7 +161,7 @@ const DashboardLayout = () => {
           </div>
 
           {/* Navigation */}
-          <nav className="p-4 space-y-1">
+          <nav className="flex-1 overflow-y-auto p-4 space-y-1">
             {filteredNavigation.map(item => (
               <Link
                 key={item.href}
@@ -185,9 +182,9 @@ const DashboardLayout = () => {
             ))}
           </nav>
 
-          {/* Quick Create Button for Sellers */}
-          {user?.role === 'SELLER' && (
-            <div className="px-4 py-3">
+          {/* Quick Create Button */}
+          {(user?.role === 'SELLER' || user?.role === 'OWNER_ADMIN') && (
+            <div className="p-4 border-t">
               <Link
                 to="/dashboard/seller/apartments/new"
                 onClick={() => setSidebarOpen(false)}
@@ -200,7 +197,7 @@ const DashboardLayout = () => {
           )}
 
           {/* Logout */}
-          <div className="absolute bottom-0 w-full p-4 border-t">
+          <div className="p-4 border-t">
             <button
               onClick={handleLogout}
               className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg"

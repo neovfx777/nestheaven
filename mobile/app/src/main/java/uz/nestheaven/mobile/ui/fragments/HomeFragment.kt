@@ -17,6 +17,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import uz.nestheaven.mobile.R
 import uz.nestheaven.mobile.core.ApiClient
 import uz.nestheaven.mobile.core.BroadcastModel
@@ -168,21 +169,39 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             errorText.isVisible = false
 
             try {
-                val apartmentsDeferred = async { ApiClient.service.getApartments(page = 1, limit = 40) }
-                val complexesDeferred = async { ApiClient.service.getComplexes(page = 1, limit = 20) }
-                val broadcastsDeferred = async { ApiClient.service.getBroadcasts(limit = 5) }
-                val favoritesDeferred = if (sessionManager.isLoggedIn()) {
-                    async { ApiClient.service.getFavorites(page = 1, limit = 100) }
+                val apartmentsResponse = supervisorScope {
+                    val apartmentsDeferred = async {
+                        runCatching { ApiClient.service.getApartments(page = 1, limit = 40) }
+                    }
+                    apartmentsDeferred.await().getOrNull()
+                }
+
+                val complexesResponse = supervisorScope {
+                    val complexesDeferred = async {
+                        runCatching { ApiClient.service.getComplexes(page = 1, limit = 20) }
+                    }
+                    complexesDeferred.await().getOrNull()
+                }
+
+                val broadcastsResponse = supervisorScope {
+                    val broadcastsDeferred = async {
+                        runCatching { ApiClient.service.getBroadcasts(limit = 5) }
+                    }
+                    broadcastsDeferred.await().getOrNull()
+                }
+
+                val favoritesResponse = if (sessionManager.isLoggedIn()) {
+                    supervisorScope {
+                        val favoritesDeferred = async {
+                            runCatching { ApiClient.service.getFavorites(page = 1, limit = 100) }
+                        }
+                        favoritesDeferred.await().getOrNull()
+                    }
                 } else {
                     null
                 }
 
-                val apartmentsResponse = apartmentsDeferred.await()
-                val complexesResponse = complexesDeferred.await()
-                val broadcastsResponse = broadcastsDeferred.await()
-                val favoritesResponse = favoritesDeferred?.await()
-
-                val apartments = if (apartmentsResponse.isSuccessful) {
+                val apartments = if (apartmentsResponse?.isSuccessful == true) {
                     JsonParsers.parseApartments(apartmentsResponse.body()).sortedByDescending {
                         parseTimestamp(it.createdAt)
                     }
@@ -193,13 +212,13 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 val featured = apartments.take(6)
                 val recommended = apartments.drop(6).take(6)
 
-                val complexes = if (complexesResponse.isSuccessful) {
+                val complexes = if (complexesResponse?.isSuccessful == true) {
                     JsonParsers.parseComplexes(complexesResponse.body()).take(4)
                 } else {
                     emptyList()
                 }
 
-                val broadcasts = if (broadcastsResponse.isSuccessful) {
+                val broadcasts = if (broadcastsResponse?.isSuccessful == true) {
                     JsonParsers.parseBroadcasts(broadcastsResponse.body())
                 } else {
                     emptyList()
