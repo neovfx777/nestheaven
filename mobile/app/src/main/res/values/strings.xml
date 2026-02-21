@@ -4,6 +4,16 @@
 
     <string name="auth_title">NestHeaven Mobile</string>
     <string name="auth_subtitle">Bu native Android ilova backend API bilan to\'g\'ridan-to\'g\'ri ishlaydi.</string>
+    <string name="auth_hero_badge">VPS Live API</string>
+    <string name="auth_welcome_title">NestHeaven akkauntiga xavfsiz kirish</string>
+    <string name="auth_welcome_subtitle">Kirish yoki ro\'yxatdan o\'tishni tanlang. Barcha ma\'lumotlar to\'g\'ridan-to\'g\'ri VPS server bilan sinxron ishlaydi.</string>
+    <string name="auth_mode_hint">Davom etish uchun rejimni tanlang</string>
+    <string name="auth_login_title">Akkauntga kirish</string>
+    <string name="auth_login_desc">Email va parolingizni kiriting</string>
+    <string name="auth_register_title">Yangi akkaunt yaratish</string>
+    <string name="auth_register_desc">Asosiy ma\'lumotlaringizni to\'ldiring</string>
+    <string name="auth_prompt_no_account">Akkauntingiz yo\'qmi?</string>
+    <string name="auth_prompt_have_account">Akkauntingiz bormi?</string>
     <string name="login">Kirish</string>
     <string name="logout">Chiqish</string>
     <string name="register">Ro\'yxatdan o\'tish</string>
@@ -72,6 +82,7 @@
     <string name="error_password_short">Parol kamida 6 ta belgidan iborat bo\'lsin</string>
     <string name="error_login_failed">Kirish amalga oshmadi</string>
     <string name="error_register_failed">Ro\'yxatdan o\'tishda xato</string>
+    <string name="error_network_generic">Tarmoqda xatolik, internet yoki serverni tekshiring</string>
     <string name="error_load_apartments">Kvartiralarni yuklashda xato</string>
     <string name="error_load_complexes">Komplekslarni yuklashda xato</string>
     <string name="error_load_favorites">Sevimlilarni yuklashda xato</string>
