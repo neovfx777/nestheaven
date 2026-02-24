@@ -420,8 +420,9 @@ async function getMyListings(options) {
 // CREATE apartment
 async function create(data, reqUser) {
   try {
-    if (reqUser.role !== 'SELLER' && reqUser.role !== 'OWNER_ADMIN') {
-      const err = new Error('Only sellers can create apartments');
+    const canCreateApartment = [ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN].includes(reqUser.role);
+    if (!canCreateApartment) {
+      const err = new Error('Only sellers and admins can create apartments');
       err.statusCode = 403;
       throw err;
     }

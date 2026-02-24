@@ -16,6 +16,9 @@ import ComplexDetailPage from './pages/ComplexDetailPage';
 // Auth pages
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import VerifyEmailPage from './pages/auth/VerifyEmailPage';
 
 // Dashboard pages
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -29,7 +32,6 @@ import OwnerBillingPage from './pages/dashboard/owner/OwnerBillingPage';
 import FavoritesPage from './pages/dashboard/FavoritesPage';
 
 // Admin dashboard pages
-import { ComplexList } from './pages/dashboard/admin/ComplexList';
 import { ComplexFormNew } from './pages/dashboard/admin/ComplexFormNew';
 import { ComplexManagement } from './pages/dashboard/admin/ComplexManagement';
 import { AnalyticsDashboard } from './pages/dashboard/admin/AnalyticsDashboard';
@@ -73,6 +75,9 @@ function App() {
           </Route>
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
+          <Route path="forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="reset-password" element={<ResetPasswordPage />} />
+          <Route path="verify-email" element={<VerifyEmailPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
@@ -123,7 +128,7 @@ function App() {
           <Route
             path="seller/apartments/new"
             element={
-              <ProtectedRoute requireRole={['SELLER', 'OWNER_ADMIN']}>
+              <ProtectedRoute requireRole={['SELLER', 'ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN']}>
                 <ApartmentForm mode="create" />
               </ProtectedRoute>
             }
@@ -206,15 +211,6 @@ function App() {
           />
         </Route>
 
-        {/* Direct protected routes without dashboard layout */}
-        <Route
-          path="/apartments/:id"
-          element={
-            <Layout>
-              <ApartmentDetailPage />
-            </Layout>
-          }
-        />
       </Routes>
     </Router>
   );

@@ -183,7 +183,7 @@ const DashboardLayout = () => {
           </nav>
 
           {/* Quick Create Button */}
-          {(user?.role === 'SELLER' || user?.role === 'OWNER_ADMIN') && (
+          {(user?.role === 'SELLER' || user?.role === 'ADMIN' || user?.role === 'MANAGER_ADMIN' || user?.role === 'OWNER_ADMIN') && (
             <div className="p-4 border-t">
               <Link
                 to="/dashboard/seller/apartments/new"

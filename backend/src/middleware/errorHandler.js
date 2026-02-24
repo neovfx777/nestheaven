@@ -51,6 +51,7 @@ function errorHandler(err, req, res, next) {
     res.status(err.statusCode).json({
       error: err.name || 'Error',
       message: err.message,
+      ...(err.errorCode && { code: err.errorCode }),
     });
     return;
   }

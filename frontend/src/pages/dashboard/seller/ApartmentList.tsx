@@ -32,7 +32,7 @@ interface Apartment {
   images?: Array<{ url: string }>;
   complex?: {
     id: string;
-    name: string;
+    name: string | { uz?: string; ru?: string; en?: string };
   };
   createdAt: string;
 }
@@ -68,10 +68,17 @@ export const SellerApartmentList: React.FC = () => {
     return apartment.title?.en || apartment.title?.uz || apartment.title?.ru || 'Untitled';
   };
 
+  const getComplexName = (apartment: Apartment) => {
+    const value = apartment.complex?.name;
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    return value.en || value.uz || value.ru || '';
+  };
+
   const filteredApartments = apartments?.filter((apt: Apartment) => {
     const matchesSearch = searchTerm === '' || 
       getTitle(apt).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      apt.complex?.name.toLowerCase().includes(searchTerm.toLowerCase());
+      getComplexName(apt).toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || apt.status.toLowerCase() === statusFilter.toLowerCase();
     
@@ -194,7 +201,7 @@ export const SellerApartmentList: React.FC = () => {
                 {apt.complex && (
                   <div className="absolute bottom-2 left-2">
                     <Badge variant="outline" className="bg-white/90">
-                      {apt.complex.name}
+                      {getComplexName(apt) || 'Complex'}
                     </Badge>
                   </div>
                 )}

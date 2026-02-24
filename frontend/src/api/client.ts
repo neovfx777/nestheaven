@@ -49,8 +49,14 @@ apiClient.interceptors.response.use(
     // Don't auto-logout on auth endpoints themselves
     const isAuthEndpoint =
       url?.includes('/auth/login') || url?.includes('/auth/register');
+    const isAuthFlowEndpoint =
+      isAuthEndpoint ||
+      url?.includes('/auth/verify-email') ||
+      url?.includes('/auth/resend-verification') ||
+      url?.includes('/auth/forgot-password') ||
+      url?.includes('/auth/reset-password');
 
-    if ((status === 401 || (status === 403 && message.toLowerCase().includes('deactivated'))) && !isAuthEndpoint) {
+    if ((status === 401 || (status === 403 && message.toLowerCase().includes('deactivated'))) && !isAuthFlowEndpoint) {
       // Token expired or invalid on protected route
       useAuthStore.getState().logout();
       window.location.href = '/login';

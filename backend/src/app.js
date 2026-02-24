@@ -6,7 +6,15 @@ const hpp = require('hpp');
 const path = require('path');
 const env = require('./config/env');
 const { errorHandler } = require('./middleware/errorHandler');
-const { buildCorsOptions, apiLimiter, authLimiter, chatLimiter } = require('./middleware/security');
+const {
+  buildCorsOptions,
+  hostGuard,
+  mutationLimiter,
+  apiLimiter,
+  authLimiter,
+  adminLimiter,
+  chatLimiter,
+} = require('./middleware/security');
 const routes = require('./routes');
 
 // Route imports
@@ -20,6 +28,7 @@ if (env.TRUST_PROXY) {
   app.set('trust proxy', 1);
 }
 
+app.use(hostGuard);
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
@@ -39,7 +48,13 @@ app.use(express.urlencoded({ extended: true, limit: env.BODY_LIMIT }));
 
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/verify-email', authLimiter);
+app.use('/api/auth/resend-verification', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
+app.use('/api/auth/reset-password', authLimiter);
 app.use('/api/chat', chatLimiter);
+app.use('/api/admin', adminLimiter);
+app.use('/api', mutationLimiter);
 app.use('/api', apiLimiter);
 
 // Static files
@@ -64,18 +79,25 @@ app.use('/api', routes);
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  const payload = {
+    status: 'ok',
     timestamp: new Date().toISOString(),
-    environment: env.NODE_ENV,
-    uptime: process.uptime()
-  });
+  };
+
+  if (env.NODE_ENV !== 'production') {
+    payload.environment = env.NODE_ENV;
+    payload.uptime = process.uptime();
+  }
+
+  res.json(payload);
 });
 
 // Test endpoint
-app.get('/api/test', (req, res) => {
-  res.json({ success: true, message: 'API is working' });
-});
+if (env.NODE_ENV !== 'production') {
+  app.get('/api/test', (req, res) => {
+    res.json({ success: true, message: 'API is working' });
+  });
+}
 
 // 404 handler
 app.use((req, res) => {

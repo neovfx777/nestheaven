@@ -8,7 +8,6 @@ import {
   Home,
   Landmark,
   Layers,
-  Search,
   Sparkles,
   Square,
   Star,
@@ -216,13 +215,6 @@ const ApartmentFilters = ({
     onSearch(searchInput.trim());
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      handleSearch();
-    }
-  };
-
   const handleQuickRoomSelect = (value: string) => {
     if (value === '5+') {
       applyPatch({ minRooms: '5', maxRooms: '' });
@@ -369,11 +361,13 @@ const ApartmentFilters = ({
       <div className="space-y-6">
         <div className="space-y-3 pb-5 border-b border-gray-100">
           <p className="text-xs uppercase tracking-wide font-semibold text-gray-500">
-            Aqlli qidiruv
+            Aqlli va ovozli qidiruv
           </p>
           <VoiceSearch
             onSearch={handleVoiceSearch}
-            placeholder="Ovoz bilan qidiring..."
+            value={searchInput}
+            onChange={setSearchInput}
+            placeholder="Ovoz yoki matn bilan qidiring..."
             disabled={isAiSearching}
           />
           {voiceAiEnabled ? (
@@ -385,23 +379,9 @@ const ApartmentFilters = ({
               AI kaliti yo`q. Oddiy ovozli qidiruv ishlaydi.
             </p>
           )}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Nom, manzil, kalit so'z..."
-              className="w-full pl-9 pr-24 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
-            <button
-              onClick={handleSearch}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-md text-sm font-medium bg-primary-600 text-white hover:bg-primary-700"
-            >
-              Qidirish
-            </button>
-          </div>
+          <p className="text-xs text-gray-500">
+            Matn kiriting va `Enter` bosing yoki mikrofon orqali ayting.
+          </p>
         </div>
 
         <div className="space-y-3 pb-5 border-b border-gray-100">
