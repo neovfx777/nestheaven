@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.NestHeaven" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/nh_blue_600</item>
+        <item name="colorOnPrimary">@color/nh_text_inverse</item>
+        <item name="colorPrimaryContainer">@color/nh_blue_50</item>
+        <item name="colorOnPrimaryContainer">@color/nh_blue_700</item>
+        <item name="colorSecondary">@color/nh_blue_700</item>
+        <item name="colorOnSecondary">@color/nh_text_inverse</item>
+        <item name="colorSurface">@color/nh_surface_card</item>
+        <item name="colorOnSurface">@color/nh_text_primary</item>
+        <item name="colorSurfaceVariant">@color/nh_surface_muted</item>
+        <item name="colorOnSurfaceVariant">@color/nh_text_secondary</item>
+        <item name="colorOutline">@color/nh_border</item>
+
+        <item name="android:windowBackground">@color/nh_surface</item>
+        <item name="android:statusBarColor">@color/nh_surface_card</item>
+        <item name="android:navigationBarColor">@color/nh_surface_card</item>
+    </style>
+</resources>
+
