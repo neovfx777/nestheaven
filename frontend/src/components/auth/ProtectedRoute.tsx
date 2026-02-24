@@ -23,8 +23,13 @@ const ProtectedRoute = ({ children, roles, requireRole }: ProtectedRouteProps) =
 
   const allowedRoles = requireRole || roles;
 
+  if (!user) {
+    // Prevent access when auth state is inconsistent (token flag without user profile)
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
   // Check role-based access if roles are specified
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
     // Redirect to appropriate dashboard based on role
     let redirectPath = '/dashboard';
 

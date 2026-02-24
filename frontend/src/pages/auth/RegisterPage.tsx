@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,7 +6,6 @@ import { registerSchema, RegisterInput } from '../../utils/validation';
 import { useAuthStore } from '../../stores/authStore';
 import { AuthForm, FormInput } from '../../components/auth/AuthForm';
 import { useTranslation } from '../../hooks/useTranslation';
-import { UserPlus } from 'lucide-react';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -40,7 +39,13 @@ const RegisterPage = () => {
 
   const onSubmit = async (data: RegisterInput) => {
     try {
-      await registerUser(data);
+      const result = await registerUser(data);
+      if (result.requiresEmailVerification) {
+        const email = encodeURIComponent(result.email || data.email);
+        navigate(`/login?verifyEmail=pending&email=${email}`, { replace: true });
+        return;
+      }
+
       navigate('/dashboard', { replace: true });
     } catch (error) {
       // Error is handled by the store
@@ -54,7 +59,7 @@ const RegisterPage = () => {
       subtitle={t('auth.registerSubtitle')}
       onSubmit={handleSubmit(onSubmit)}
       isLoading={isLoading}
-      error={error}
+      error={error || undefined}
       footer={
         <p className="text-sm text-gray-600">
           {t('auth.haveAccount')}{' '}
@@ -70,9 +75,6 @@ const RegisterPage = () => {
       <FormInput
         label={t('auth.fullName')}
         type="text"
-        name="fullName"
-        value={undefined}
-        onChange={() => {}}
         error={errors.fullName?.message}
         placeholder={t('form.placeholderName')}
         required
@@ -82,9 +84,6 @@ const RegisterPage = () => {
       <FormInput
         label={t('auth.emailAddress')}
         type="email"
-        name="email"
-        value={undefined}
-        onChange={() => {}}
         error={errors.email?.message}
         placeholder={t('form.placeholderEmail')}
         required
@@ -94,9 +93,6 @@ const RegisterPage = () => {
       <FormInput
         label={t('auth.phoneOptional')}
         type="tel"
-        name="phone"
-        value={undefined}
-        onChange={() => {}}
         error={errors.phone?.message}
         placeholder={t('form.placeholderPhone')}
         {...register('phone')}
@@ -105,11 +101,8 @@ const RegisterPage = () => {
       <FormInput
         label={t('auth.password')}
         type="password"
-        name="password"
-        value={undefined}
-        onChange={() => {}}
         error={errors.password?.message}
-        placeholder="••••••••"
+        placeholder="********"
         required
         {...register('password')}
       />
@@ -117,11 +110,8 @@ const RegisterPage = () => {
       <FormInput
         label={t('auth.confirmPassword')}
         type="password"
-        name="confirmPassword"
-        value={undefined}
-        onChange={() => {}}
         error={errors.confirmPassword?.message}
-        placeholder="••••••••"
+        placeholder="********"
         required
         {...register('confirmPassword')}
       />

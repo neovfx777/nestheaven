@@ -12,7 +12,7 @@ import { ImageUpload } from '../../../components/ui/ImageUpload';
 import { MultiLanguageInput } from '../../../components/ui/MultiLanguageInput';
 import { InheritedComplexData } from '../../../components/apartments/InheritedComplexData';
 import { toast } from 'react-hot-toast';
-import { 
+import {
   Globe, 
   DollarSign, 
   Home, 
@@ -29,6 +29,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useTranslation } from '../../../hooks/useTranslation';
+import { useAuthStore } from '../../../stores/authStore';
 
 interface ApartmentFormData {
   title: { uz: string; ru: string; en: string };
@@ -110,9 +111,19 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  const { user } = useAuthStore();
   const [newImages, setNewImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<ImageType[]>([]);
   const [activeSection, setActiveSection] = useState<'basic' | 'details' | 'media' | 'contact'>('basic');
+  const envDefaultContactPhone = (import.meta.env.VITE_DEFAULT_CONTACT_PHONE || '').trim();
+  const envDefaultContactTelegram = (import.meta.env.VITE_DEFAULT_CONTACT_TELEGRAM || '').trim();
+  const envDefaultContactEmail = (import.meta.env.VITE_DEFAULT_CONTACT_EMAIL || '').trim();
+  const userPhone = typeof (user as any)?.phone === 'string' ? (user as any).phone.trim() : '';
+  const userEmail = typeof user?.email === 'string' ? user.email.trim() : '';
+  const returnPath =
+    user?.role === 'SELLER' || user?.role === 'OWNER_ADMIN'
+      ? '/dashboard/seller/listings'
+      : '/dashboard/admin';
   
   const { data: complexes = [] } = useQuery<Complex[]>({
     queryKey: ['complexes-for-seller'],
@@ -137,12 +148,35 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
       complexId: '',
       address: '',
       developer: '',
-      contactPhone: '',
-      contactTelegram: '',
-      contactEmail: '',
+      contactPhone: userPhone || envDefaultContactPhone,
+      contactTelegram: envDefaultContactTelegram,
+      contactEmail: userEmail || envDefaultContactEmail,
       status: 'active'
     }
   });
+
+  useEffect(() => {
+    if (mode !== 'create') return;
+
+    const currentValues = form.getValues();
+    if (!currentValues.contactPhone) {
+      form.setValue('contactPhone', userPhone || envDefaultContactPhone);
+    }
+    if (!currentValues.contactTelegram && envDefaultContactTelegram) {
+      form.setValue('contactTelegram', envDefaultContactTelegram);
+    }
+    if (!currentValues.contactEmail) {
+      form.setValue('contactEmail', userEmail || envDefaultContactEmail);
+    }
+  }, [
+    mode,
+    form,
+    userPhone,
+    userEmail,
+    envDefaultContactPhone,
+    envDefaultContactTelegram,
+    envDefaultContactEmail,
+  ]);
 
   useEffect(() => {
     if (apartment && mode === 'edit') {
@@ -184,7 +218,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
       if (newImages.length > 0 && data.id) {
         uploadImages(data.id);
       } else {
-        navigate('/dashboard/seller/listings');
+        navigate(returnPath);
         toast.success(t('messages.apartmentCreated'));
       }
     },
@@ -221,7 +255,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
       toast.success(mode === 'create' ? t('messages.apartmentCreated') : t('messages.apartmentUpdated'));
 
       if (mode === 'create') {
-        navigate('/dashboard/seller/listings');
+        navigate(returnPath);
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to upload images');
@@ -379,7 +413,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
         {/* Main Form Content */}
         <div className="flex-1">
           <Card className="p-6">
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               {/* Section 1: Language Content */}
               <div className={`${activeSection === 'basic' ? 'block' : 'hidden'}`}>
                 <div className="mb-8">
@@ -524,6 +558,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
 
                     <Select
                       label="Complex *"
+                      name="complexId"
                       options={[
                         { value: '', label: 'Select Complex...' },
                         ...(complexes?.map(c => {
@@ -733,7 +768,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => navigate('/dashboard/seller/listings')}
+                      onClick={() => navigate(returnPath)}
                     >
                       Cancel
                     </Button>

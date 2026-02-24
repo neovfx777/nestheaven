@@ -1,20 +1,22 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, LoginInput } from '../../utils/validation';
 import { useAuthStore } from '../../stores/authStore';
 import { AuthForm, FormInput } from '../../components/auth/AuthForm';
 import { useTranslation } from '../../hooks/useTranslation';
-import { LogIn } from 'lucide-react';
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { loginUser, isLoading, error, clearError } = useAuthStore();
   const { t } = useTranslation();
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
   
   const from = location.state?.from?.pathname || '/';
+  const pendingEmail = useMemo(() => searchParams.get('email') || '', [searchParams]);
 
   const {
     register,
@@ -35,6 +37,33 @@ const LoginPage = () => {
     setFocus('email');
   }, [clearError, setFocus]);
 
+  useEffect(() => {
+    const verifyState = searchParams.get('verifyEmail');
+    const resetState = searchParams.get('reset');
+
+    if (verifyState === 'pending') {
+      setInfoMessage('Tasdiqlash xabari emailingizga yuborildi. Emailni tasdiqlang va keyin login qiling.');
+      return;
+    }
+
+    if (verifyState === 'success') {
+      setInfoMessage('Email muvaffaqiyatli tasdiqlandi. Endi tizimga kirishingiz mumkin.');
+      return;
+    }
+
+    if (verifyState === 'failed') {
+      setInfoMessage('Tasdiqlash linki yaroqsiz yoki muddati tugagan. Qayta yuboring.');
+      return;
+    }
+
+    if (resetState === 'success') {
+      setInfoMessage('Parol yangilandi. Endi yangi parol bilan kiring.');
+      return;
+    }
+
+    setInfoMessage(null);
+  }, [searchParams]);
+
   const onSubmit = async (data: LoginInput) => {
     try {
       await loginUser(data);
@@ -51,7 +80,7 @@ const LoginPage = () => {
       subtitle={t('auth.signInSubtitle')}
       onSubmit={handleSubmit(onSubmit)}
       isLoading={isLoading}
-      error={error}
+      error={error || undefined}
       footer={
         <p className="text-sm text-gray-600">
           {t('auth.noAccount')}{' '}
@@ -64,12 +93,25 @@ const LoginPage = () => {
         </p>
       }
     >
+      {infoMessage && (
+        <div className="rounded-md bg-blue-50 p-4">
+          <p className="text-sm text-blue-700">{infoMessage}</p>
+        </div>
+      )}
+
+      {pendingEmail && (
+        <div className="rounded-md bg-amber-50 p-4">
+          <p className="text-sm text-amber-700">
+            Agar email kelmagan bo'lsa, shu email bilan login qilib ko'ring.
+            Tasdiqlanmagan akkauntga kirishda havola avtomatik qayta yuboriladi.
+          </p>
+          <p className="mt-1 text-xs text-amber-700">Email: {pendingEmail}</p>
+        </div>
+      )}
+
       <FormInput
         label={t('auth.emailAddress')}
         type="email"
-        name="email"
-        value={undefined} // Controlled by react-hook-form
-        onChange={() => {}} // Handled by react-hook-form
         error={errors.email?.message}
         placeholder="you@example.com"
         required
@@ -79,11 +121,8 @@ const LoginPage = () => {
       <FormInput
         label={t('auth.password')}
         type="password"
-        name="password"
-        value={undefined}
-        onChange={() => {}}
         error={errors.password?.message}
-        placeholder="••••••••"
+        placeholder="********"
         required
         {...register('password')}
       />
@@ -102,12 +141,12 @@ const LoginPage = () => {
         </div>
 
         <div className="text-sm">
-          <a
-            href="#"
+          <Link
+            to="/forgot-password"
             className="font-medium text-primary-600 hover:text-primary-500"
           >
             {t('auth.forgotPassword')}
-          </a>
+          </Link>
         </div>
       </div>
     </AuthForm>

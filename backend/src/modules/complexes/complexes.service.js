@@ -733,8 +733,9 @@ async function remove(id, reqUser) {
 
 async function getForSeller(data, reqUser) {
   try {
-    if (!reqUser || !['SELLER', 'OWNER_ADMIN'].includes(reqUser.role)) {
-      const err = new Error('Access denied. Seller or owner admin role required.');
+    const creatorRoles = ['SELLER', 'ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'];
+    if (!reqUser || !creatorRoles.includes(reqUser.role)) {
+      const err = new Error('Access denied. Seller/admin role required.');
       err.statusCode = 403;
       throw err;
     }
@@ -749,9 +750,9 @@ async function getForSeller(data, reqUser) {
       },
     });
 
-    // Owner admin can access all complexes, sellers only their allowed complexes
+    // Admin roles can access all complexes, sellers only their allowed complexes
     let filtered = allComplexes;
-    if (reqUser.role !== 'OWNER_ADMIN') {
+    if (reqUser.role === 'SELLER') {
       filtered = allComplexes.filter((complex) => {
         // If allowedSellers is null/empty, complex is accessible to all sellers
         if (!complex.allowedSellers) return true;

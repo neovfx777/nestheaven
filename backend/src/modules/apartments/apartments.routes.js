@@ -20,8 +20,14 @@ router.get('/', optionalAuth, validateList, apartmentsController.list);
 router.get('/seller/my', authMiddleware, requireSeller, apartmentsController.getMyListings);
 router.get('/:id', optionalAuth, validateGetById, apartmentsController.getById);
 
-// Seller endpoints
-router.post('/', authMiddleware, requireSeller, validateCreate, apartmentsController.create);
+// Seller/Admin create endpoint
+router.post(
+  '/',
+  authMiddleware,
+  requireRoles(ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN),
+  validateCreate,
+  apartmentsController.create
+);
 router.post('/:id/sold', authMiddleware, requireSeller, validateMarkSold, apartmentsController.markSold);
 
 // Seller can update own listing, owner admin can update all
@@ -52,6 +58,12 @@ router.patch(
 );
 
 // Seller can upload images for own listing
-router.post('/:id/images', authMiddleware, requireSeller, upload.array('images', 10), apartmentsController.uploadImages);
+router.post(
+  '/:id/images',
+  authMiddleware,
+  requireRoles(ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN),
+  upload.array('images', 10),
+  apartmentsController.uploadImages
+);
 
 module.exports = router;

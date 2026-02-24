@@ -6,14 +6,31 @@ interface VoiceSearchProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  value?: string;
+  onChange?: (value: string) => void;
 }
 
-const VoiceSearch = ({ onSearch, placeholder = "Search...", className = "", disabled = false }: VoiceSearchProps) => {
+const VoiceSearch = ({
+  onSearch,
+  placeholder = "Search...",
+  className = "",
+  disabled = false,
+  value,
+  onChange,
+}: VoiceSearchProps) => {
   const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState("");
+  const [internalTranscript, setInternalTranscript] = useState("");
   const [isSupported, setIsSupported] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
+  const transcript = value ?? internalTranscript;
+
+  const setTranscript = (nextValue: string) => {
+    if (value === undefined) {
+      setInternalTranscript(nextValue);
+    }
+    onChange?.(nextValue);
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -92,7 +109,7 @@ const VoiceSearch = ({ onSearch, placeholder = "Search...", className = "", disa
             type="text"
             value={transcript}
             onChange={(e) => setTranscript(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleManualSearch()}
+            onKeyDown={(e) => e.key === 'Enter' && handleManualSearch()}
             placeholder={placeholder}
             className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           />
@@ -112,7 +129,7 @@ const VoiceSearch = ({ onSearch, placeholder = "Search...", className = "", disa
           type="text"
           value={transcript}
           onChange={(e) => setTranscript(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleManualSearch()}
+          onKeyDown={(e) => e.key === 'Enter' && handleManualSearch()}
           placeholder={placeholder}
           disabled={disabled}
           className={`w-full px-3 py-2 pr-10 border rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
