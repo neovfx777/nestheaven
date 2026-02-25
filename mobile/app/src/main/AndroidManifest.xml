@@ -11,6 +11,12 @@
         android:theme="@style/Theme.NestHeaven"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".ComplexDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ApartmentDetailActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">

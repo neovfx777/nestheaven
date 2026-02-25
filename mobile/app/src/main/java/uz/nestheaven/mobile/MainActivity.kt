@@ -1,142 +1,117 @@
 package uz.nestheaven.mobile
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.view.View
-import android.webkit.CookieManager
-import android.webkit.ValueCallback
-import android.webkit.WebChromeClient
-import android.webkit.WebResourceRequest
-import android.webkit.WebSettings
-import android.webkit.WebView
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.webkit.WebResourceErrorCompat
-import androidx.webkit.WebViewClientCompat
-import uz.nestheaven.mobile.databinding.ActivityMainBinding
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import uz.nestheaven.mobile.core.ApiClient
+import uz.nestheaven.mobile.core.SessionManager
+import uz.nestheaven.mobile.ui.fragments.ApartmentsFragment
+import uz.nestheaven.mobile.ui.fragments.AuthFragment
+import uz.nestheaven.mobile.ui.fragments.ComplexesFragment
+import uz.nestheaven.mobile.ui.fragments.FavoritesFragment
+import uz.nestheaven.mobile.ui.fragments.HomeFragment
+import uz.nestheaven.mobile.ui.fragments.ProfileFragment
 
-class MainActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityMainBinding
-    private var fileChooserCallback: ValueCallback<Array<Uri>>? = null
+class MainActivity : AppCompatActivity(),
+    AuthFragment.AuthHost,
+    HomeFragment.HomeHost,
+    ApartmentsFragment.ApartmentsHost,
+    ComplexesFragment.ComplexesHost,
+    FavoritesFragment.FavoritesHost,
+    ProfileFragment.ProfileHost {
 
-    private val fileChooserLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            val uris = WebChromeClient.FileChooserParams.parseResult(result.resultCode, result.data)
-            fileChooserCallback?.onReceiveValue(uris)
-            fileChooserCallback = null
-        }
+    private lateinit var sessionManager: SessionManager
+    private lateinit var toolbar: MaterialToolbar
+    private lateinit var bottomNav: BottomNavigationView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        ApiClient.init(applicationContext)
+        sessionManager = SessionManager(this)
 
-        configureWebView()
+        setContentView(R.layout.activity_main)
+
+        toolbar = findViewById(R.id.mainToolbar)
+        bottomNav = findViewById(R.id.bottomNav)
+        setSupportActionBar(toolbar)
+
+        bottomNav.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_home -> {
+                    openFragment(HomeFragment(), getString(R.string.tab_home))
+                    true
+                }
+                R.id.nav_apartments -> {
+                    openFragment(ApartmentsFragment(), getString(R.string.tab_apartments))
+                    true
+                }
+                R.id.nav_complexes -> {
+                    openFragment(ComplexesFragment(), getString(R.string.tab_complexes))
+                    true
+                }
+                R.id.nav_favorites -> {
+                    openFragment(FavoritesFragment(), getString(R.string.tab_favorites))
+                    true
+                }
+                R.id.nav_profile -> {
+                    openProfileTab()
+                    true
+                }
+                else -> false
+            }
+        }
 
         if (savedInstanceState == null) {
-            binding.webView.loadUrl(BuildConfig.WEB_APP_URL)
+            bottomNav.selectedItemId = R.id.nav_home
+        }
+    }
+
+    private fun openProfileTab() {
+        if (sessionManager.isLoggedIn()) {
+            openFragment(ProfileFragment(), getString(R.string.tab_profile))
         } else {
-            binding.webView.restoreState(savedInstanceState)
+            openFragment(AuthFragment(), getString(R.string.auth_title))
         }
     }
 
-    private fun configureWebView() {
-        with(binding.webView.settings) {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            databaseEnabled = true
-            builtInZoomControls = false
-            displayZoomControls = false
-            javaScriptCanOpenWindowsAutomatically = true
-            mediaPlaybackRequiresUserGesture = false
-            mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-            userAgentString = "$userAgentString NestHeavenAndroid/1.0"
-        }
-
-        CookieManager.getInstance().setAcceptCookie(true)
-        CookieManager.getInstance().setAcceptThirdPartyCookies(binding.webView, true)
-
-        binding.webView.webViewClient = object : WebViewClientCompat() {
-            override fun shouldOverrideUrlLoading(
-                view: WebView,
-                request: WebResourceRequest
-            ): Boolean {
-                val uri = request.url
-                val scheme = uri.scheme
-                if (scheme == "http" || scheme == "https") {
-                    return false
-                }
-                runCatching {
-                    startActivity(Intent(Intent.ACTION_VIEW, uri))
-                }
-                return true
-            }
-
-            override fun onReceivedError(
-                view: WebView,
-                request: WebResourceRequest,
-                error: WebResourceErrorCompat
-            ) {
-                super.onReceivedError(view, request, error)
-                if (request.isForMainFrame) {
-                    binding.errorText.visibility = View.VISIBLE
-                }
-            }
-
-            override fun onPageFinished(view: WebView, url: String?) {
-                super.onPageFinished(view, url)
-                binding.errorText.visibility = View.GONE
-            }
-        }
-
-        binding.webView.webChromeClient = object : WebChromeClient() {
-            override fun onShowFileChooser(
-                webView: WebView?,
-                filePathCallback: ValueCallback<Array<Uri>>?,
-                fileChooserParams: FileChooserParams?
-            ): Boolean {
-                if (filePathCallback == null || fileChooserParams == null) {
-                    return false
-                }
-                fileChooserCallback?.onReceiveValue(null)
-                fileChooserCallback = filePathCallback
-
-                return runCatching {
-                    fileChooserLauncher.launch(fileChooserParams.createIntent())
-                    true
-                }.getOrElse {
-                    fileChooserCallback = null
-                    false
-                }
-            }
-        }
+    private fun openFragment(fragment: androidx.fragment.app.Fragment, title: String) {
+        toolbar.title = title
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, fragment)
+            .commit()
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        if (binding.webView.canGoBack()) {
-            binding.webView.goBack()
-        } else {
-            super.onBackPressed()
-        }
+    override fun onAuthenticated() {
+        openProfileTab()
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        binding.webView.saveState(outState)
+    override fun openApartmentDetail(id: String) {
+        val intent = Intent(this, ApartmentDetailActivity::class.java)
+        intent.putExtra(ApartmentDetailActivity.EXTRA_APARTMENT_ID, id)
+        startActivity(intent)
     }
 
-    override fun onDestroy() {
-        binding.webView.apply {
-            clearHistory()
-            clearCache(true)
-            loadUrl("about:blank")
-            onPause()
-            removeAllViews()
-            destroy()
-        }
-        super.onDestroy()
+    override fun openComplexDetail(id: String) {
+        val intent = Intent(this, ComplexDetailActivity::class.java)
+        intent.putExtra(ComplexDetailActivity.EXTRA_COMPLEX_ID, id)
+        startActivity(intent)
+    }
+
+    override fun requestLogin() {
+        bottomNav.selectedItemId = R.id.nav_profile
+    }
+
+    override fun onLogoutRequested() {
+        openProfileTab()
+    }
+
+    override fun openApartmentsTab() {
+        bottomNav.selectedItemId = R.id.nav_apartments
+    }
+
+    override fun openComplexesTab() {
+        bottomNav.selectedItemId = R.id.nav_complexes
     }
 }
-

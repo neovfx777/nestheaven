@@ -375,6 +375,7 @@ export const apartmentsApi = {
     }
   },
 
+<<<<<<< HEAD
   getById: async (id: string): Promise<ApartmentDetail> => apartmentsApi.getApartmentById(id),
 
   create: async (data: Record<string, unknown>): Promise<ApartmentDetail> => {
@@ -405,12 +406,18 @@ export const apartmentsApi = {
       },
     });
     return response.data.data;
+=======
+  // Create apartment (seller/owner admin)
+  createApartment: async (data: CreateApartmentData): Promise<ApartmentDetail> => {
+    const response = await apiClient.post<ApartmentDetail>('/apartments', data);
+    return response.data;
+>>>>>>> 0abd38e674230bb7faff8463c1a7d98e727441ff
   },
 
   // Update apartment
   updateApartment: async (id: string, data: UpdateApartmentData): Promise<ApartmentDetail> => {
-    const response = await apiClient.put<{ success: boolean; data: ApartmentDetail }>(`/apartments/${id}`, data);
-    return response.data.data;
+    const response = await apiClient.patch<ApartmentDetail>(`/apartments/${id}`, data);
+    return response.data;
   },
 
   // Delete apartment
@@ -436,6 +443,12 @@ export const apartmentsApi = {
       return [];
     }
   },
+
+  // Backward-compatible aliases used by dashboard forms
+  getById: async (id: string): Promise<ApartmentDetail> => apartmentsApi.getApartmentById(id),
+  create: async (data: CreateApartmentData): Promise<ApartmentDetail> => apartmentsApi.createApartment(data),
+  update: async (id: string, data: UpdateApartmentData): Promise<ApartmentDetail> =>
+    apartmentsApi.updateApartment(id, data),
 
   // Upload images for apartment
   uploadImages: async (apartmentId: string, images: File[]): Promise<ApartmentDetail> => {

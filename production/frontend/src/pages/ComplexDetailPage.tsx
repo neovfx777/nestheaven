@@ -17,6 +17,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card'
 import { Button } from '../components/ui/Button';
 import { ComplexLocationMap } from '../components/maps/ComplexLocationMap';
 import { useTranslation } from '../hooks/useTranslation';
+import { AMENITY_CATEGORIES } from '../constants/amenities';
 
 const ComplexDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -312,14 +313,21 @@ const ComplexDetailPage = () => {
               <div>
                 <div className="text-xs text-gray-500 mb-2">{t('complexDetail.amenitiesLabel')}</div>
                 <div className="flex flex-wrap gap-2">
-                  {amenities.map((item) => (
-                    <span
-                      key={item}
-                      className="px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs"
-                    >
-                      {item}
-                    </span>
-                  ))}
+                  {amenities.map((amenityId) => {
+                    const amenity = AMENITY_CATEGORIES.flatMap((cat) => cat.amenities).find(
+                      (a) => a.id === amenityId
+                    );
+                    if (!amenity) return null;
+                    
+                    return (
+                      <span
+                        key={amenityId}
+                        className="px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs"
+                      >
+                        {getLocalizedContent(amenity.label)}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             )}

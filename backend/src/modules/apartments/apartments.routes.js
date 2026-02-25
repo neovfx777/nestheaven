@@ -15,27 +15,55 @@ const { upload } = require('../../middleware/upload');
 
 const router = express.Router();
 
-// Ochiq route'lar
-router.get('/', optionalAuth, validateList, (req, res, next) => {
-  console.log('🚀 Apartments route hit:', req.query);
-  next();
-}, apartmentsController.list);
+// Public endpoints
+router.get('/', optionalAuth, validateList, apartmentsController.list);
+router.get('/seller/my', authMiddleware, requireSeller, apartmentsController.getMyListings);
 router.get('/:id', optionalAuth, validateGetById, apartmentsController.getById);
 
-// Seller uchun maxsus route'lar
-router.get('/seller/my', authMiddleware, requireSeller, apartmentsController.getMyListings); // YANGI ENDPOINT
-router.post('/', authMiddleware, requireSeller, validateCreate, apartmentsController.create);
+// Seller/Admin create endpoint
+router.post(
+  '/',
+  authMiddleware,
+  requireRoles(ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN),
+  validateCreate,
+  apartmentsController.create
+);
 router.post('/:id/sold', authMiddleware, requireSeller, validateMarkSold, apartmentsController.markSold);
 
-// Yangilash (seller o'z listlarini, owner_admin hammasini)
-router.patch('/:id', authMiddleware, requireRoles(ROLES.SELLER, ROLES.OWNER_ADMIN), validateUpdate, apartmentsController.update);
-// Faqat owner admin butkul o'chira oladi
-router.delete('/:id', authMiddleware, requireRoles(ROLES.OWNER_ADMIN), validateGetById, apartmentsController.remove);
+// Seller can update own listing, owner admin can update all
+router.patch(
+  '/:id',
+  authMiddleware,
+  requireRoles(ROLES.SELLER, ROLES.OWNER_ADMIN),
+  validateUpdate,
+  apartmentsController.update
+);
 
-// Admin uchun route'lar
-router.patch('/:id/visibility', authMiddleware, requireAdmin, validateHideUnhide, apartmentsController.hideUnhide);
+// Only owner admin can delete permanently
+router.delete(
+  '/:id',
+  authMiddleware,
+  requireRoles(ROLES.OWNER_ADMIN),
+  validateGetById,
+  apartmentsController.remove
+);
 
-// Rasm yuklash (seller o'z listlariga rasm yuklay oladi)
-router.post('/:id/images', authMiddleware, requireSeller, upload.array('images', 10), apartmentsController.uploadImages);
+// Admin visibility endpoint
+router.patch(
+  '/:id/visibility',
+  authMiddleware,
+  requireAdmin,
+  validateHideUnhide,
+  apartmentsController.hideUnhide
+);
+
+// Seller can upload images for own listing
+router.post(
+  '/:id/images',
+  authMiddleware,
+  requireRoles(ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN),
+  upload.array('images', 10),
+  apartmentsController.uploadImages
+);
 
 module.exports = router;

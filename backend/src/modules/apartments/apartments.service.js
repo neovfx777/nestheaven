@@ -1,5 +1,12 @@
 const { prisma } = require('../../config/db');
 const { ROLES } = require('../../utils/roles');
+const isDev = process.env.NODE_ENV !== 'production';
+
+function debugLog(...args) {
+  if (isDev) {
+    console.log(...args);
+  }
+}
 
 function ensureI18n(val) {
   if (typeof val === 'string') return { uz: val, ru: val, en: val };
@@ -84,19 +91,32 @@ function getAddressText(complexSummary) {
 async function list(data, reqUser) {
   try {
     const { page = 1, limit = 20, complexId, minPrice, maxPrice, rooms, status } = data.query;
-    const skip = (page - 1) * limit;
+    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+    const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+    const skip = (pageNum - 1) * limitNum;
 
-    console.log('Apartments list called:', {
-      page, limit, complexId, minPrice, maxPrice, rooms, status,
+    debugLog('Apartments list called:', {
+      page: pageNum,
+      limit: limitNum,
+      complexId,
+      minPrice,
+      maxPrice,
+      rooms,
+      status,
       userRole: reqUser?.role || 'anonymous'
     });
 
     const where = {};
 
     if (complexId) where.complexId = complexId;
-    if (minPrice != null) where.price = { gte: parseFloat(minPrice) };
-    if (maxPrice != null) where.price = { lte: parseFloat(maxPrice) };
-    if (rooms != null) where.rooms = parseInt(rooms);
+    if (minPrice != null || maxPrice != null) {
+      where.price = {};
+      if (minPrice != null && minPrice !== '') where.price.gte = parseFloat(minPrice);
+      if (maxPrice != null && maxPrice !== '') where.price.lte = parseFloat(maxPrice);
+    }
+    if (rooms != null && rooms !== '') {
+      where.rooms = parseInt(rooms, 10);
+    }
 
     if (status) {
       where.status = status;
@@ -106,15 +126,15 @@ async function list(data, reqUser) {
       where.status = { in: ['active', 'sold'] };
     }
 
-    console.log('Where clause:', JSON.stringify(where, null, 2));
+    debugLog('Where clause:', JSON.stringify(where, null, 2));
 
     const total = await prisma.apartment.count({ where });
-    console.log('Total apartments:', total);
+    debugLog('Total apartments:', total);
 
     const items = await prisma.apartment.findMany({
       where,
       skip,
-      take: parseInt(limit),
+      take: limitNum,
       orderBy: { createdAt: 'desc' },
       include: {
         complex: {
@@ -151,7 +171,7 @@ async function list(data, reqUser) {
       },
     });
 
-    console.log('Found apartments:', items.length);
+    debugLog('Found apartments:', items.length);
 
     const formattedApartments = items.map(apartment => {
       try {
@@ -192,9 +212,9 @@ async function list(data, reqUser) {
       apartments: formattedApartments,
       pagination: {
         total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(total / limit),
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
       }
     };
   } catch (error) {
@@ -206,7 +226,7 @@ async function list(data, reqUser) {
 // GET BY ID funksiyasini soddalashtiramiz
 async function getById(id, reqUser) {
   try {
-    console.log('Getting apartment by ID:', id);
+    debugLog('Getting apartment by ID:', id);
 
     const apartment = await prisma.apartment.findUnique({
       where: { id },
@@ -400,8 +420,9 @@ async function getMyListings(options) {
 // CREATE apartment
 async function create(data, reqUser) {
   try {
-    if (reqUser.role !== 'SELLER' && reqUser.role !== 'OWNER_ADMIN') {
-      const err = new Error('Only sellers can create apartments');
+    const canCreateApartment = [ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN].includes(reqUser.role);
+    if (!canCreateApartment) {
+      const err = new Error('Only sellers and admins can create apartments');
       err.statusCode = 403;
       throw err;
     }

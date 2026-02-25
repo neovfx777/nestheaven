@@ -49,15 +49,15 @@ const HomePage = () => {
   const homeComplexes: Complex[] = complexesData && complexesData.length > 0 ? complexesData.slice(0, 4) : [];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-slate-50">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white py-20">
+      <section className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white py-14 sm:py-20">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center mb-12">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+          <div className="max-w-4xl mx-auto text-center mb-10 sm:mb-12">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6">
               NestHeaven
             </h1>
-            <p className="text-xl md:text-2xl text-blue-100 mb-8">
+            <p className="text-base sm:text-xl md:text-2xl text-blue-100 mb-6 sm:mb-8">
               {t('footer.tagline')}
             </p>
           </div>
@@ -65,14 +65,14 @@ const HomePage = () => {
       </section>
 
       {/* Complexes Grid Section */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-10 sm:py-16 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 sm:mb-8">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 {t('home.newComplexes')}
               </h2>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-sm sm:text-base">
                 {t('home.popularProjects')}
               </p>
             </div>
@@ -84,7 +84,7 @@ const HomePage = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {homeComplexes.map((complex) => {
               const complexName =
                 (complex.name as any)?.en ||
@@ -104,10 +104,10 @@ const HomePage = () => {
                 <Link
                   key={complex.id}
                   to={`/complexes/${complex.id}`}
-                  className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow block"
+                  className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow block"
                 >
                   {complex.coverImage && (
-                    <div className="h-40 w-full overflow-hidden">
+                    <div className="h-36 sm:h-40 w-full overflow-hidden">
                       <img
                         src={complex.coverImage}
                         alt={complexName}
@@ -115,14 +115,14 @@ const HomePage = () => {
                       />
                     </div>
                   )}
-                  <div className="p-5">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  <div className="p-4 sm:p-5">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">
                       {complexName}
                     </h3>
-                    <p className="text-sm text-gray-500 mb-3">
+                    <p className="text-xs sm:text-sm text-gray-500 mb-3">
                       {complexAddress}
                     </p>
-                    <div className="flex items-center justify-between text-sm text-gray-600">
+                    <div className="flex items-center justify-between text-xs sm:text-sm text-gray-600 gap-2">
                       <div className="flex items-center gap-1">
                         <Building2 className="h-4 w-4 text-blue-600" />
                         <span>
@@ -167,7 +167,7 @@ const HomePage = () => {
 
       {/* Loading State */}
       {isLoading && featuredApartments.length === 0 && recommendedApartments.length === 0 && (
-        <section className="py-16 bg-gray-50">
+        <section className="py-12 sm:py-16 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
@@ -177,12 +177,12 @@ const HomePage = () => {
       )}
 
       {/* CTA Section */}
-      <section className="py-16 bg-white">
+      <section className="py-12 sm:py-16 bg-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
             {t('home.ctaTitle')}
           </h2>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-gray-600 text-sm sm:text-base mb-8 max-w-2xl mx-auto">
             {t('home.ctaSubtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

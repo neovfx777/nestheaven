@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const { prisma } = require('../../config/db');
 const { canCreateRole } = require('../../utils/roles');
 const { ROLES } = require('../../utils/roles');
+const { getFirebaseAuth } = require('../../utils/firebaseAdmin');
 
 async function createUser(data, reqUser) {
   const { role } = data.body;
@@ -45,6 +46,25 @@ async function createUser(data, reqUser) {
       createdAt: true,
     },
   });
+
+  try {
+    const auth = getFirebaseAuth();
+    const displayName = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+    await auth.createUser({
+      email: user.email,
+      password: data.body.password,
+      emailVerified: user.emailVerified !== false,
+      ...(displayName && { displayName }),
+    });
+  } catch (error) {
+    if (error?.code !== 'auth/email-already-exists') {
+      console.warn('[firebase] Failed to create firebase user for admin-created account:', {
+        email: user.email,
+        code: error?.code,
+        message: error?.message,
+      });
+    }
+  }
 
   return user;
 }

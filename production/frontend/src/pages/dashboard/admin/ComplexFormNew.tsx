@@ -24,6 +24,9 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useTranslation } from '../../../hooks/useTranslation';
+import { regions, getDistrictsByRegionId, getRegionById, getDistrictById } from '../../../data/regions';
+import { Select } from '../../../components/ui/Select';
+import { useLanguageStore } from '../../../stores/languageStore';
 
 export function ComplexFormNew() {
   const { id } = useParams();
@@ -39,6 +42,8 @@ export function ComplexFormNew() {
   const [nearbyPlaces, setNearbyPlaces] = useState<NearbyPlace[]>([]);
   const [location, setLocation] = useState<MapLocation>({ lat: 41.3111, lng: 69.2797 });
   const [allowedSellers, setAllowedSellers] = useState<string[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<string>('');
+  const [selectedDistrict, setSelectedDistrict] = useState<string>('');
 
   // Fetch complex for editing
   const { data: complexData, isLoading } = useQuery({
@@ -120,8 +125,69 @@ export function ComplexFormNew() {
       setNearbyPlaces(nearby);
       setAmenities(amenitiesData);
       setAllowedSellers(allowedSellersData);
+
+      // Try to parse existing city value to extract region and district
+      if (complexData.city) {
+        const cityValue = complexData.city;
+        let foundRegion = '';
+        let foundDistrict = '';
+        
+        // Try to find matching region and district
+        for (const region of regions) {
+          // Check if city contains region name
+          const regionMatches = 
+            cityValue.includes(region.nameUz) || 
+            cityValue.includes(region.nameRu) || 
+            cityValue.includes(region.nameEn);
+          
+          if (regionMatches) {
+            foundRegion = region.id;
+            // Try to find district within this region
+            for (const district of region.districts) {
+              if (cityValue.includes(district.nameUz) || 
+                  cityValue.includes(district.nameRu) || 
+                  cityValue.includes(district.nameEn)) {
+                foundDistrict = district.id;
+                break;
+              }
+            }
+            break;
+          }
+        }
+        
+        if (foundRegion) {
+          setSelectedRegion(foundRegion);
+          if (foundDistrict) {
+            setSelectedDistrict(foundDistrict);
+          }
+        }
+      }
     }
   }, [complexData, isEdit, reset]);
+
+  const { language } = useLanguageStore();
+
+  // Update city field when region or district changes
+  useEffect(() => {
+    if (selectedRegion && selectedDistrict) {
+      const region = getRegionById(selectedRegion);
+      const district = getDistrictById(selectedRegion, selectedDistrict);
+      if (region && district) {
+        const regionName = language === 'uz' ? region.nameUz : language === 'ru' ? region.nameRu : region.nameEn;
+        const districtName = language === 'uz' ? district.nameUz : language === 'ru' ? district.nameRu : district.nameEn;
+        setValue('city', `${regionName}, ${districtName}`, { shouldValidate: true });
+      }
+    } else if (selectedRegion) {
+      const region = getRegionById(selectedRegion);
+      if (region) {
+        const regionName = language === 'uz' ? region.nameUz : language === 'ru' ? region.nameRu : region.nameEn;
+        setValue('city', regionName, { shouldValidate: true });
+      }
+    }
+  }, [selectedRegion, selectedDistrict, language, setValue]);
+
+  // Get available districts based on selected region
+  const availableDistricts = selectedRegion ? getDistrictsByRegionId(selectedRegion) : [];
 
   const createMutation = useMutation({
     mutationFn: async (data: ComplexFormData) => {
@@ -236,10 +302,21 @@ export function ComplexFormNew() {
       return;
     }
 
-    // Validate city
-    if (!formData.city.trim()) {
+    // Validate region and district
+    if (!selectedRegion || !selectedDistrict) {
       toast.error(t('messages.cityRequired'));
       return;
+    }
+    
+    // Ensure city field is set
+    if (!formData.city.trim()) {
+      const region = getRegionById(selectedRegion);
+      const district = getDistrictById(selectedRegion, selectedDistrict);
+      if (region && district) {
+        const regionName = language === 'uz' ? region.nameUz : language === 'ru' ? region.nameRu : region.nameEn;
+        const districtName = language === 'uz' ? district.nameUz : language === 'ru' ? district.nameRu : district.nameEn;
+        formData.city = `${regionName}, ${districtName}`;
+      }
     }
 
     // Validate developer
@@ -346,12 +423,6 @@ export function ComplexFormNew() {
                 required
               />
               <Input
-                label={t('complex.city')}
-                {...register('city')}
-                error={errors.city?.message}
-                required
-              />
-              <Input
                 label={t('complex.blockCount')}
                 type="number"
                 {...register('blockCount', { valueAsNumber: true })}
@@ -360,6 +431,44 @@ export function ComplexFormNew() {
                 min={1}
               />
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <Select
+                label={language === 'uz' ? 'Viloyat' : language === 'ru' ? 'Область' : 'Region'}
+                value={selectedRegion}
+                onChange={(value) => {
+                  setSelectedRegion(value);
+                  setSelectedDistrict(''); // Reset district when region changes
+                }}
+                error={!selectedRegion && errors.city?.message ? t('messages.cityRequired') : undefined}
+                required
+              >
+                <option value="">{language === 'uz' ? 'Viloyatni tanlang' : language === 'ru' ? 'Выберите область' : 'Select region'}</option>
+                {regions.map((region) => (
+                  <option key={region.id} value={region.id}>
+                    {language === 'uz' ? region.nameUz : language === 'ru' ? region.nameRu : region.nameEn}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                label={language === 'uz' ? 'Tuman' : language === 'ru' ? 'Район' : 'District'}
+                value={selectedDistrict}
+                onChange={(value) => {
+                  setSelectedDistrict(value);
+                }}
+                error={!selectedDistrict && errors.city?.message ? t('messages.cityRequired') : undefined}
+                required
+                disabled={!selectedRegion}
+              >
+                <option value="">{language === 'uz' ? 'Tumanni tanlang' : language === 'ru' ? 'Выберите район' : 'Select district'}</option>
+                {availableDistricts.map((district) => (
+                  <option key={district.id} value={district.id}>
+                    {language === 'uz' ? district.nameUz : language === 'ru' ? district.nameRu : district.nameEn}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            {/* Hidden input to store the city value for form validation */}
+            <input type="hidden" {...register('city')} />
           </div>
         </Card>
 

@@ -8,7 +8,8 @@ const {
   validateList,
 } = require('./complexes.validators');
 const { authMiddleware } = require('../../middleware/auth');
-const { requireManagerAdmin, requireOwnerAdmin } = require('../../middleware/roles');
+const { requireManagerAdmin, requireOwnerAdmin, requireRoles } = require('../../middleware/roles');
+const { ROLES } = require('../../utils/roles');
 const { complexUpload } = require('../../middleware/upload');
 
 const router = express.Router();
@@ -20,15 +21,6 @@ function assignComplexId(req, res, next) {
 
 // Public read endpoints
 router.get('/', validateList, complexesController.list);
-
-// Get complexes for seller (must be before /:id route)
-router.get(
-  '/for-seller',
-  authMiddleware,
-  validateList,
-  complexesController.getForSeller
-);
-
 router.get('/:id', validateGetById, complexesController.getById);
 
 // Multer error handler middleware

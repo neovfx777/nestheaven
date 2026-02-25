@@ -2,8 +2,18 @@ import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
 // Create axios instance
+<<<<<<< HEAD
 // Default: local backend for development. Set VITE_API_URL for production (e.g. http://45.92.173.175:3000/api).
 const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+=======
+// In production, always use same-origin '/api' (served via Nginx proxy).
+// In local dev, allow VITE_API_URL override.
+const envApiBaseUrl = (import.meta.env.VITE_API_URL || '').trim();
+const isLocalhost =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const apiBaseUrl = isLocalhost ? envApiBaseUrl || '/api' : '/api';
+>>>>>>> 0abd38e674230bb7faff8463c1a7d98e727441ff
 const apiClient = axios.create({
   baseURL: apiBaseUrl,
   headers: {
@@ -44,8 +54,14 @@ apiClient.interceptors.response.use(
     // Don't auto-logout on auth endpoints themselves
     const isAuthEndpoint =
       url?.includes('/auth/login') || url?.includes('/auth/register');
+    const isAuthFlowEndpoint =
+      isAuthEndpoint ||
+      url?.includes('/auth/verify-email') ||
+      url?.includes('/auth/resend-verification') ||
+      url?.includes('/auth/forgot-password') ||
+      url?.includes('/auth/reset-password');
 
-    if ((status === 401 || (status === 403 && message.toLowerCase().includes('deactivated'))) && !isAuthEndpoint) {
+    if ((status === 401 || (status === 403 && message.toLowerCase().includes('deactivated'))) && !isAuthFlowEndpoint) {
       // Token expired or invalid on protected route
       useAuthStore.getState().logout();
       window.location.href = '/login';

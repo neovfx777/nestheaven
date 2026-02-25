@@ -60,8 +60,13 @@ npm run dev
 
 ## Test Login
 
-Use these credentials to test:
-- Email: `admin@nestheaven.uz`
-- Password: `Admin123!`
+Create credentials through seed with an explicit secret:
+- Set account env values in backend `.env`:
+  - `OWNER_ADMIN_EMAIL`, `OWNER_ADMIN_PASSWORD`
+  - `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+  - `MANAGER_ADMIN_EMAIL`, `MANAGER_ADMIN_PASSWORD`
+  - `SELLER_EMAIL`, `SELLER_PASSWORD`
+- Run `npx prisma db seed`
+- Login with configured emails/passwords from env
 
 The server will run on http://localhost:3000
