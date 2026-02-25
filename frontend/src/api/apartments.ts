@@ -348,6 +348,7 @@ export const apartmentsApi = {
     return response.data.data;
   },
 
+  
   // Search apartments
   searchApartments: async (query: string, params: FilterParams = {}): Promise<PaginatedResponse<Apartment>> => {
     try {
