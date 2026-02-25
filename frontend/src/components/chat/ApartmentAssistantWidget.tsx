@@ -1,5 +1,6 @@
 import { FormEvent, useMemo, useRef, useState } from 'react';
 import { Bot, Loader2, MessageCircle, Send, Sparkles, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 import { AssistantFilterPatch, ChatApartmentMatch, chatApi } from '../../api/chat';
 import { getAssetUrl } from '../../api/client';
@@ -25,6 +26,7 @@ const initialMessage: ChatUiMessage = {
 };
 
 const ApartmentAssistantWidget = ({ onApplyFilters }: ApartmentAssistantWidgetProps) => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [input, setInput] = useState('');
@@ -52,6 +54,15 @@ const ApartmentAssistantWidget = ({ onApplyFilters }: ApartmentAssistantWidgetPr
       setTimeout(scrollToBottom, 0);
       return next;
     });
+  };
+
+  const openMatch = (url: string) => {
+    if (!url) return;
+    if (url.startsWith('/')) {
+      navigate(url);
+      return;
+    }
+    window.open(url, '_self');
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -142,7 +153,19 @@ const ApartmentAssistantWidget = ({ onApplyFilters }: ApartmentAssistantWidgetPr
                   {message.matches && message.matches.length > 0 && (
                     <div className="mt-2 space-y-2 text-left">
                       {message.matches.map((match) => (
-                        <div key={match.id} className="rounded-xl border border-slate-200 bg-white p-2.5">
+                        <div
+                          key={match.id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => openMatch(match.url)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              openMatch(match.url);
+                            }
+                          }}
+                          className="cursor-pointer rounded-xl border border-slate-200 bg-white p-2.5 hover:border-blue-200 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
                           <div className="flex gap-2.5">
                             <div className="h-14 w-16 overflow-hidden rounded-md bg-slate-100">
                               {match.coverImage ? (
@@ -167,12 +190,16 @@ const ApartmentAssistantWidget = ({ onApplyFilters }: ApartmentAssistantWidgetPr
                             </div>
                           </div>
                           <div className="mt-2 flex items-center justify-between">
-                            <a
-                              href={match.url}
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                openMatch(match.url);
+                              }}
                               className="text-xs font-semibold text-blue-700 hover:text-blue-800"
                             >
                               E&apos;lonni ochish
-                            </a>
+                            </button>
                           </div>
                         </div>
                       ))}
