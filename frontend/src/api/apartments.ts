@@ -376,7 +376,6 @@ export const apartmentsApi = {
     }
   },
 
-<<<<<<< HEAD
   getById: async (id: string): Promise<ApartmentDetail> => apartmentsApi.getApartmentById(id),
 
   create: async (data: Record<string, unknown>): Promise<ApartmentDetail> => {
@@ -407,12 +406,6 @@ export const apartmentsApi = {
       },
     });
     return response.data.data;
-=======
-  // Create apartment (seller/owner admin)
-  createApartment: async (data: CreateApartmentData): Promise<ApartmentDetail> => {
-    const response = await apiClient.post<ApartmentDetail>('/apartments', data);
-    return response.data;
->>>>>>> 0abd38e674230bb7faff8463c1a7d98e727441ff
   },
 
   // Update apartment
