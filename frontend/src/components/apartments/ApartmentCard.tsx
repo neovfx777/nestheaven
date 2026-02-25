@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Bed, Square, Layers, MapPin, Building2 } from 'lucide-react';
 import { Apartment } from '../../api/apartments';
 import { FavoriteButton } from './FavoriteButton';
@@ -12,6 +12,7 @@ interface ApartmentCardProps {
 
 const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
   const { isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
   const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
@@ -73,6 +74,17 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
     setIsFavorite(newIsFavorite);
   };
 
+  const openDetails = () => {
+    navigate(`/apartments/${apartment.id}`);
+  };
+
+  const handleCardKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openDetails();
+    }
+  };
+
   const pickLocalized = (value: any) => {
     if (!value) return undefined;
     if (typeof value === 'string') {
@@ -93,7 +105,13 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
   };
 
   return (
-    <div className="group bg-white rounded-3xl shadow-md border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={openDetails}
+      onKeyDown={handleCardKeyDown}
+      className="group cursor-pointer bg-white rounded-3xl shadow-md border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
       <div className="relative h-48 sm:h-56 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
         {apartment.coverImage ? (
           <img
@@ -120,7 +138,11 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
           <div className="text-sm sm:text-lg font-bold">{formatPrice(apartment.price)}</div>
         </div>
 
-        <div className="absolute top-3 sm:top-4 right-3 sm:right-4">
+        <div
+          className="absolute top-3 sm:top-4 right-3 sm:right-4"
+          onClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+        >
           <FavoriteButton
             apartmentId={apartment.id}
             size="sm"
@@ -132,9 +154,7 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
 
       <div className="p-4 sm:p-6">
         <h3 className="font-bold text-lg sm:text-xl text-gray-900 mb-2 sm:mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
-          <Link to={`/apartments/${apartment.id}`} className="hover:underline">
-            {pickLocalized(apartment.title) || apartment.titleUz || apartment.titleEn || 'Uy'}
-          </Link>
+          {pickLocalized(apartment.title) || apartment.titleUz || apartment.titleEn || 'Uy'}
         </h3>
 
         <div className="flex items-center text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4">
