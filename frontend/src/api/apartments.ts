@@ -12,6 +12,9 @@ export interface Apartment {
   status: 'ACTIVE' | 'HIDDEN' | 'SOLD' | 'active' | 'hidden' | 'sold';
   complexId: string;
   sellerId: string;
+  constructionStatus?: 'available' | 'built' | null;
+  readyByYear?: number | null;
+  readyByMonth?: number | null;
   complex?: {
     id: string;
     name: { uz: string; ru: string; en: string };
@@ -66,6 +69,9 @@ export interface ApartmentDetail {
   sellerId: string;
   materials?: { uz: string; ru: string; en: string };
   infrastructureNote?: { uz: string; ru: string; en: string };
+  constructionStatus?: 'available' | 'built' | null;
+  readyByYear?: number | null;
+  readyByMonth?: number | null;
   isFeatured?: boolean;
   isRecommended?: boolean;
   complex?: {
@@ -148,6 +154,8 @@ export interface Complex {
     lng: number;
     address: { uz: string; ru: string; en: string };
   };
+  /** Banner image URL – returned by API as bannerImage */
+  bannerImage?: string | null;
   bannerImageUrl?: string | null;
   permission1Url?: string | null;
   permission2Url?: string | null;
@@ -190,14 +198,20 @@ export interface CreateApartmentData {
   rooms: number;
   area: number;
   floor: number;
+  totalFloors?: number;
   address: string;
-  developerName: string;
+  developerName?: string;
+  developer?: string;
   contactPhone: string;
   contactTelegram?: string;
   contactWhatsapp?: string;
   contactEmail?: string;
   materials?: { uz: string; ru: string; en: string };
+  infrastructureNote?: { uz: string; ru: string; en: string };
   complexId?: string;
+  constructionStatus?: 'available' | 'built';
+  readyByYear?: number | null;
+  readyByMonth?: number | null;
 }
 
 export interface UpdateApartmentData extends Partial<CreateApartmentData> { }
@@ -361,10 +375,43 @@ export const apartmentsApi = {
     }
   },
 
+<<<<<<< HEAD
+  getById: async (id: string): Promise<ApartmentDetail> => apartmentsApi.getApartmentById(id),
+
+  create: async (data: Record<string, unknown>): Promise<ApartmentDetail> => {
+    const response = await apiClient.post<{ success: boolean; data: ApartmentDetail }>('/apartments', data);
+    return response.data.data;
+  },
+
+  update: async (id: string, data: Record<string, unknown>): Promise<ApartmentDetail> => {
+    const response = await apiClient.patch<{ success: boolean; data: ApartmentDetail }>(`/apartments/${id}`, data);
+    return response.data.data;
+  },
+
+  // Create apartment (seller only)
+  createApartment: async (data: CreateApartmentData, images: File[] = []): Promise<ApartmentDetail> => {
+    const formData = new FormData();
+
+    // Append apartment data as JSON
+    formData.append('apartment', JSON.stringify(data));
+
+    // Append images
+    images.forEach(image => {
+      formData.append('images', image);
+    });
+
+    const response = await apiClient.post<{ success: boolean; data: ApartmentDetail }>('/apartments', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.data;
+=======
   // Create apartment (seller/owner admin)
   createApartment: async (data: CreateApartmentData): Promise<ApartmentDetail> => {
     const response = await apiClient.post<ApartmentDetail>('/apartments', data);
     return response.data;
+>>>>>>> 0abd38e674230bb7faff8463c1a7d98e727441ff
   },
 
   // Update apartment

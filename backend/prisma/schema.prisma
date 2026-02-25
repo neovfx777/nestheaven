@@ -101,6 +101,10 @@ model Apartment {
   description        String?        // JSON: { uz, ru, en }
   materials          String?        // JSON: { uz, ru, en }, optional
   infrastructureNote String?        @map("infrastructure_note") // JSON, optional
+  // Construction: "available" = ready now, "built" = ready by date
+  constructionStatus String?        @map("construction_status")
+  readyByYear        Int?           @map("ready_by_year")
+  readyByMonth       Int?           @map("ready_by_month")
   createdAt          DateTime       @default(now()) @map("created_at")
   updatedAt          DateTime       @updatedAt @map("updated_at")
 

@@ -21,20 +21,6 @@ function assignComplexId(req, res, next) {
 
 // Public read endpoints
 router.get('/', validateList, complexesController.list);
-// Get complexes for listing creators (must be before '/:id' route)
-router.get(
-  '/for-seller',
-  authMiddleware,
-  requireRoles(ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN),
-  validateList,
-  (req, res, next) => {
-    // If controller method doesn't exist yet, return empty array
-    if (!complexesController.getForSeller) {
-      return res.json({ success: true, data: [] });
-    }
-    complexesController.getForSeller(req, res, next);
-  }
-);
 router.get('/:id', validateGetById, complexesController.getById);
 
 // Multer error handler middleware

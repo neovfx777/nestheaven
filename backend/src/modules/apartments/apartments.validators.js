@@ -18,7 +18,13 @@ const createApartmentSchema = z.object({
     description: z.union([i18nSchema, z.string()]).optional(),
     materials: z.union([i18nSchema, z.string()]).optional(),
     infrastructureNote: z.union([i18nSchema, z.string()]).optional(),
-  }),
+    constructionStatus: z.enum(['available', 'built']).optional(),
+    readyByYear: z.number().int().min(2000).max(2100).optional().nullable(),
+    readyByMonth: z.number().int().min(1).max(12).optional().nullable(),
+  }).refine(
+    (b) => b.constructionStatus !== 'built' || (b.readyByYear != null && b.readyByMonth != null),
+    { message: 'When status is "built", ready-by year and month are required', path: ['readyByYear'] }
+  ),
 });
 
 const updateApartmentSchema = z.object({
@@ -34,7 +40,14 @@ const updateApartmentSchema = z.object({
     description: z.union([i18nSchema, z.string()]).optional().nullable(),
     materials: z.union([i18nSchema, z.string()]).optional().nullable(),
     infrastructureNote: z.union([i18nSchema, z.string()]).optional().nullable(),
-  }).refine((b) => Object.keys(b).length > 0, { message: 'At least one field to update' }),
+    constructionStatus: z.enum(['available', 'built']).optional().nullable(),
+    readyByYear: z.number().int().min(2000).max(2100).optional().nullable(),
+    readyByMonth: z.number().int().min(1).max(12).optional().nullable(),
+  }).refine((b) => Object.keys(b).length > 0, { message: 'At least one field to update' })
+    .refine(
+      (b) => b.constructionStatus !== 'built' || (b.readyByYear != null && b.readyByMonth != null),
+      { message: 'When status is "built", ready-by year and month are required', path: ['readyByYear'] }
+    ),
 });
 
 // ADMIN DASHBOARD UCHUN MAX LIMIT QO'SHDIK
