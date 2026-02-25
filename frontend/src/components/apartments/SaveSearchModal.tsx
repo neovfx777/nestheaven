@@ -149,7 +149,7 @@ export const SaveSearchModal: React.FC<SaveSearchModalProps> = ({
             <Button
               onClick={handleSubmit}
               disabled={!name.trim() || isSaving}
-              loading={isSaving}
+              isLoading={isSaving}
               className="flex items-center gap-2"
             >
               <Save className="h-4 w-4" />

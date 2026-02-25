@@ -64,7 +64,7 @@ export interface ApartmentDetail {
   area: number;
   floor: number;
   totalFloors?: number;
-  status: 'active' | 'hidden' | 'sold';
+  status: 'ACTIVE' | 'HIDDEN' | 'SOLD' | 'active' | 'hidden' | 'sold';
   complexId: string;
   sellerId: string;
   materials?: { uz: string; ru: string; en: string };
@@ -72,6 +72,12 @@ export interface ApartmentDetail {
   constructionStatus?: 'available' | 'built' | null;
   readyByYear?: number | null;
   readyByMonth?: number | null;
+  address?: string;
+  developer?: string;
+  developerName?: string;
+  contactPhone?: string;
+  contactTelegram?: string;
+  contactEmail?: string;
   isFeatured?: boolean;
   isRecommended?: boolean;
   complex?: {
@@ -244,9 +250,6 @@ export const apartmentsApi = {
   // Get apartments with filtering - MUHIM O'ZGARTIRISH
   getApartments: async (params: FilterParams = {}): Promise<PaginatedResponse<Apartment>> => {
     try {
-      // ADMIN uchun max limit 1000, oddiy foydalanuvchilar uchun 100
-      const isAdminRequest = params.limit && params.limit > 100;
-
       // Limitni string bo'lsa numberga aylantiramiz
       const processedParams = {
         ...params,
@@ -438,12 +441,6 @@ export const apartmentsApi = {
     }
   },
 
-  // Backward-compatible aliases used by dashboard forms
-  getById: async (id: string): Promise<ApartmentDetail> => apartmentsApi.getApartmentById(id),
-  create: async (data: CreateApartmentData): Promise<ApartmentDetail> => apartmentsApi.createApartment(data),
-  update: async (id: string, data: UpdateApartmentData): Promise<ApartmentDetail> =>
-    apartmentsApi.updateApartment(id, data),
-
   // Upload images for apartment
   uploadImages: async (apartmentId: string, images: File[]): Promise<ApartmentDetail> => {
     const formData = new FormData();
@@ -481,7 +478,10 @@ export const apartmentsApi = {
   // === ADMIN METHODS ===
 
   // Get apartments by status for admin
-  getApartmentsByStatus: async (status: string, params: FilterParams = {}): Promise<PaginatedResponse<Apartment>> => {
+  getApartmentsByStatus: async (
+    status: FilterParams['status'],
+    params: FilterParams = {}
+  ): Promise<PaginatedResponse<Apartment>> => {
     return apartmentsApi.getAllApartments({ ...params, status });
   },
 
@@ -506,7 +506,7 @@ export const apartmentsApi = {
   },
 
   // Export apartments data (admin) - TODO: Implement this endpoint in backend
-  exportApartments: async (format: 'csv' | 'json' = 'csv'): Promise<Blob> => {
+  exportApartments: async (): Promise<Blob> => {
     // This endpoint doesn't exist yet in the backend
     throw new Error('Export endpoint not implemented yet');
     // const response = await apiClient.get(`/admin/export/apartments`, {

@@ -96,7 +96,7 @@ const SellerDashboard = () => {
           id: apartment.complex.id,
           name: typeof apartment.complex.name === 'string' 
             ? apartment.complex.name 
-            : apartment.complex.name?.uz || apartment.complex.nameString || 'Unknown'
+            : apartment.complex.name?.uz || apartment.complex.name?.en || apartment.complex.name?.ru || 'Unknown'
         } : undefined,
         title: apartment.title,
         images: apartment.images,
@@ -162,15 +162,7 @@ const SellerDashboard = () => {
   };
 
   const getTitle = (listing: Listing) => {
-    const lang = 'en';
-    switch (lang) {
-      case 'uz':
-        return listing.titleUz;
-      case 'ru':
-        return listing.titleRu;
-      default:
-        return listing.titleEn;
-    }
+    return listing.titleEn || listing.titleUz || listing.titleRu || 'Untitled';
   };
 
   const filteredListings = listings.filter(listing => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apartmentsApi } from '../../../api/apartments';
+import { apartmentsApi, type Complex as ApiComplex } from '../../../api/apartments';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
 import { Input } from '../../../components/ui/Input';
@@ -52,15 +52,10 @@ interface ApartmentFormData {
   readyByMonth?: number | null;
 }
 
-interface Complex {
-  id: string;
-  name: string;
-}
-
 interface ImageType {
   id: string;
   url: string;
-  order?: number;
+  order: number;
 }
 
 // Basic validation function
@@ -138,7 +133,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
       ? '/dashboard/seller/listings'
       : '/dashboard/admin';
   
-  const { data: complexes = [] } = useQuery<Complex[]>({
+  const { data: complexes = [] } = useQuery<ApiComplex[]>({
     queryKey: ['complexes-for-seller'],
     queryFn: () => apartmentsApi.getComplexesForSeller(),
   });
@@ -161,7 +156,6 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
       complexId: '',
       address: '',
       developer: '',
-<<<<<<< HEAD
       contactPhone: '',
       contactTelegram: '',
       contactEmail: '',
@@ -169,12 +163,6 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
       constructionStatus: 'available',
       readyByYear: null,
       readyByMonth: null,
-=======
-      contactPhone: userPhone || envDefaultContactPhone,
-      contactTelegram: envDefaultContactTelegram,
-      contactEmail: userEmail || envDefaultContactEmail,
-      status: 'active'
->>>>>>> 0abd38e674230bb7faff8463c1a7d98e727441ff
     }
   });
 
@@ -463,12 +451,12 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
                     onTitleChange={(value) => form.setValue('title', value)}
                     descriptionPlaceholder={{
                       uz: 'Uy haqida batafsil ma\'lumot...',
-                      ru: 'Подробная информация о квартире...',
+                      ru: 'Detailed information about the apartment...',
                       en: 'Detailed information about the apartment...'
                     }}
                     titlePlaceholder={{
                       uz: 'Misol: Yangi uy, Chilonzor tumani',
-                      ru: 'Пример: Новая квартира, район Чиланзар',
+                      ru: 'Example: New apartment, Chilanzar district',
                       en: 'Example: New apartment, Chilanzar district'
                     }}
                     required={true}
@@ -507,12 +495,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <div>
                       <Input
-                        label={
-                          <div className="flex items-center space-x-2">
-                            <DollarSign className="h-4 w-4 text-gray-500" />
-                            <span>Price ($) *</span>
-                          </div>
-                        }
+                        label="Price ($) *"
                         type="number"
                         {...form.register('price', { valueAsNumber: true })}
                         min="0"
@@ -523,12 +506,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
 
                     <div>
                       <Input
-                        label={
-                          <div className="flex items-center space-x-2">
-                            <Home className="h-4 w-4 text-gray-500" />
-                            <span>Rooms *</span>
-                          </div>
-                        }
+                        label="Rooms *"
                         type="number"
                         {...form.register('rooms', { valueAsNumber: true })}
                         min="1"
@@ -539,12 +517,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
 
                     <div>
                       <Input
-                        label={
-                          <div className="flex items-center space-x-2">
-                            <Ruler className="h-4 w-4 text-gray-500" />
-                            <span>Area (m²) *</span>
-                          </div>
-                        }
+                        label="Area (m2) *"
                         type="number"
                         {...form.register('area', { valueAsNumber: true })}
                         min="0"
@@ -556,12 +529,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
 
                     <div>
                       <Input
-                        label={
-                          <div className="flex items-center space-x-2">
-                            <Hash className="h-4 w-4 text-gray-500" />
-                            <span>Floor *</span>
-                          </div>
-                        }
+                        label="Floor *"
                         type="number"
                         {...form.register('floor', { valueAsNumber: true })}
                         min="1"
@@ -600,15 +568,10 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
                     />
 
                     <Select
-                      label={
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-gray-500" />
-                          <span>Construction status</span>
-                        </div>
-                      }
+                      label="Construction status"
                       options={[
                         { value: 'available', label: 'Available now' },
-                        { value: 'built', label: 'Built – ready by date' },
+                        { value: 'built', label: 'Built - ready by date' },
                       ]}
                       value={form.watch('constructionStatus') || 'available'}
                       onChange={(value) => {
@@ -782,47 +745,27 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Input
-                      label={
-                        <div className="flex items-center space-x-2">
-                          <Phone className="h-4 w-4 text-gray-500" />
-                          <span>Phone Number *</span>
-                        </div>
-                      }
+                      label="Phone Number *"
                       {...form.register('contactPhone')}
                       required
                       placeholder="+998 90 123 45 67"
                     />
 
                     <Input
-                      label={
-                        <div className="flex items-center space-x-2">
-                          <Send className="h-4 w-4 text-gray-500" />
-                          <span>Telegram Username</span>
-                        </div>
-                      }
+                      label="Telegram Username"
                       {...form.register('contactTelegram')}
                       placeholder="@username"
                     />
 
                     <Input
-                      label={
-                        <div className="flex items-center space-x-2">
-                          <Mail className="h-4 w-4 text-gray-500" />
-                          <span>Email Address</span>
-                        </div>
-                      }
+                      label="Email Address"
                       type="email"
                       {...form.register('contactEmail')}
                       placeholder="email@example.com"
                     />
 
                     <Input
-                      label={
-                        <div className="flex items-center space-x-2">
-                          <MapPin className="h-4 w-4 text-gray-500" />
-                          <span>Location Reference</span>
-                        </div>
-                      }
+                      label="Location Reference"
                       value={form.watch('address')}
                       onChange={(e) => form.setValue('address', e.target.value)}
                       placeholder={t('form.nearbyLandmark')}
