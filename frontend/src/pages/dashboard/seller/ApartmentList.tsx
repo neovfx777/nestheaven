@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { apartmentsApi } from '../../../api/apartments'; // FIXED: apartmentsApi
+import { apartmentsApi, type Apartment as ApiApartment } from '../../../api/apartments'; // FIXED: apartmentsApi
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
 import { Badge } from '../../../components/ui/Badge';
@@ -18,33 +18,14 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '../../../hooks/useTranslation';
 
-interface Apartment {
-  id: string;
-  title?: {
-    uz?: string;
-    ru?: string;
-    en?: string;
-  };
-  price: number;
-  rooms: number;
-  area: number;
-  status: string;
-  images?: Array<{ url: string }>;
-  complex?: {
-    id: string;
-    name: string | { uz?: string; ru?: string; en?: string };
-  };
-  createdAt: string;
-}
-
 export const SellerApartmentList: React.FC = () => {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const { data: apartments, isLoading, refetch } = useQuery({
+  const { data: apartments = [], isLoading, refetch } = useQuery<ApiApartment[]>({
     queryKey: ['seller-apartments'],
-    queryFn: () => apartmentsApi.getMyListings?.() || [] // FIXED: apartmentsApi
+    queryFn: apartmentsApi.getMyListings,
   });
 
   const getStatusBadge = (status: string) => {
@@ -64,18 +45,18 @@ export const SellerApartmentList: React.FC = () => {
     );
   };
 
-  const getTitle = (apartment: Apartment) => {
+  const getTitle = (apartment: ApiApartment) => {
     return apartment.title?.en || apartment.title?.uz || apartment.title?.ru || 'Untitled';
   };
 
-  const getComplexName = (apartment: Apartment) => {
+  const getComplexName = (apartment: ApiApartment) => {
     const value = apartment.complex?.name;
     if (!value) return '';
     if (typeof value === 'string') return value;
     return value.en || value.uz || value.ru || '';
   };
 
-  const filteredApartments = apartments?.filter((apt: Apartment) => {
+  const filteredApartments = apartments.filter((apt) => {
     const matchesSearch = searchTerm === '' || 
       getTitle(apt).toLowerCase().includes(searchTerm.toLowerCase()) ||
       getComplexName(apt).toLowerCase().includes(searchTerm.toLowerCase());
@@ -132,14 +113,15 @@ export const SellerApartmentList: React.FC = () => {
           <div className="flex gap-2">
             <Select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(value) => setStatusFilter(value)}
+              options={[
+                { value: 'all', label: 'All Status' },
+                { value: 'ACTIVE', label: 'Active' },
+                { value: 'SOLD', label: 'Sold' },
+                { value: 'HIDDEN', label: 'Hidden' },
+              ]}
               className="w-40"
-            >
-              <option value="all">All Status</option>
-              <option value="ACTIVE">Active</option>
-              <option value="SOLD">Sold</option>
-              <option value="HIDDEN">Hidden</option>
-            </Select>
+            />
             <Button variant="outline" className="flex items-center gap-2">
               <Filter className="h-4 w-4" />
               More Filters
@@ -154,11 +136,11 @@ export const SellerApartmentList: React.FC = () => {
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            Active: {apartments?.filter((a: Apartment) => a.status === 'ACTIVE').length || 0}
+            Active: {apartments.filter((a) => a.status === 'ACTIVE' || a.status === 'active').length}
           </span>
           <span className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            Sold: {apartments?.filter((a: Apartment) => a.status === 'SOLD').length || 0}
+            Sold: {apartments.filter((a) => a.status === 'SOLD' || a.status === 'sold').length}
           </span>
         </div>
       </div>
@@ -179,7 +161,7 @@ export const SellerApartmentList: React.FC = () => {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredApartments.map((apt: Apartment) => (
+          {filteredApartments.map((apt) => (
             <Card key={apt.id} className="overflow-hidden hover:shadow-lg transition-shadow">
               {/* Image Section */}
               <div className="relative h-48 bg-gray-200">

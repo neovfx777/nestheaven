@@ -53,8 +53,17 @@ export const AdminApartments: React.FC = () => {
     queryKey: ['admin-apartments', filters, searchTerm],
     queryFn: () => apartmentsApi.getApartments({
       ...filters,
+      sortBy: filters.sortBy as 'price' | 'area' | 'rooms' | 'createdAt' | 'updatedAt',
+      sortOrder: filters.sortOrder as 'asc' | 'desc',
       search: searchTerm || undefined,
-      status: filters.status || undefined,
+      status: (filters.status || undefined) as
+        | 'active'
+        | 'hidden'
+        | 'sold'
+        | 'ACTIVE'
+        | 'HIDDEN'
+        | 'SOLD'
+        | undefined,
       minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
       maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
       minRooms: filters.minRooms ? Number(filters.minRooms) : undefined,

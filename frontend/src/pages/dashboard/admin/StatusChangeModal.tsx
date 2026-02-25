@@ -182,7 +182,7 @@ export const StatusChangeModal: React.FC<StatusChangeModalProps> = ({
             <Button
               onClick={handleSubmit}
               disabled={!status || isSubmitting}
-              loading={isSubmitting}
+              isLoading={isSubmitting}
             >
               Change Status
             </Button>

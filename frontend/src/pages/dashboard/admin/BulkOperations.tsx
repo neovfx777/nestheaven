@@ -153,8 +153,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
             <Button
               onClick={handleBulkOperation}
               disabled={!operation || isSubmitting}
-              loading={isSubmitting}
-              variant="primary"
+              isLoading={isSubmitting}
             >
               Confirm Bulk Operation
             </Button>

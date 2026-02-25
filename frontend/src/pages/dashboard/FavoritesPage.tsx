@@ -31,7 +31,7 @@ const FavoritesPage = () => {
     queryKey: ['favorites'],
     queryFn: async () => {
       try {
-        const response = await usersApi.getFavorites();
+        const response: any = await usersApi.getFavorites();
         
         // Agar response array bo'lsa
         if (Array.isArray(response)) {
@@ -159,6 +159,17 @@ const FavoritesPage = () => {
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  const getApartmentAddress = (apartment: Apartment) => {
+    const address = apartment.complex?.address;
+    if (!address) {
+      return 'Location not specified';
+    }
+    if (typeof address === 'string') {
+      return address;
+    }
+    return address.en || address.uz || address.ru || 'Location not specified';
   };
 
   if (!user) {
@@ -399,7 +410,7 @@ const FavoritesPage = () => {
                       <div className="flex items-center text-gray-600 text-sm mb-3">
                         <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
                         <span className="truncate">
-                          {apartment.complex?.address?.en || apartment.complex?.address || 'Location not specified'}
+                          {getApartmentAddress(apartment)}
                         </span>
                       </div>
                       

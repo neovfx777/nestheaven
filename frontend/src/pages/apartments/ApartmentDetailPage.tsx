@@ -148,7 +148,10 @@ const ApartmentDetailPage = () => {
     if (apartment.description && typeof apartment.description === 'object') {
       return (apartment.description as any)[lang] || '';
     }
-    return apartment.description as string || '';
+    if (typeof apartment.description === 'string') {
+      return apartment.description;
+    }
+    return '';
   };
 
   // Helper function to get location
@@ -157,7 +160,10 @@ const ApartmentDetailPage = () => {
       return (apartment.complex.address as any).en || (apartment.complex.address as any).uz ||
         (apartment.complex.address as any).ru || t('messages.locationNotSpecified');
     }
-    return apartment.complex?.address as string || t('messages.locationNotSpecified');
+    if (typeof apartment.complex?.address === 'string') {
+      return apartment.complex.address;
+    }
+    return t('messages.locationNotSpecified');
   };
 
   return (
@@ -205,7 +211,17 @@ const ApartmentDetailPage = () => {
 
                 {/* Images */}
                 {apartment.images && apartment.images.length > 0 ? (
-                  <ApartmentGallery images={apartment.images} title={getTitle(apartment)} />
+                  <ApartmentGallery
+                    images={apartment.images.map((image, index) => ({
+                      id: image.id,
+                      url: image.url,
+                      orderIndex: image.order ?? index,
+                      captionUz: null,
+                      captionRu: null,
+                      captionEn: null,
+                    }))}
+                    title={getTitle(apartment)}
+                  />
                 ) : (
                   <div className="h-64 bg-gradient-to-r from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center">
                     <div className="text-center">
