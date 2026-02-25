@@ -106,7 +106,7 @@ const ComplexDetailPage = () => {
     (typeof complex.address === 'string' ? complex.address : '');
 
   const bannerUrl = getAssetUrl(
-    complex.bannerImageUrl || complex.coverImage || null
+    complex.bannerImage || complex.bannerImageUrl || complex.coverImage || null
   );
   const permissionLinks = [
     { label: t('complexDetail.permission1'), url: complex.permission1Url },
@@ -164,23 +164,29 @@ const ComplexDetailPage = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {bannerUrl && (
-          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+        {/* Banner photo at top of complex page */}
+        {bannerUrl ? (
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
             <img
               src={bannerUrl}
               alt={complexTitle}
-              className="w-full h-64 md:h-80 object-cover"
+              className="w-full h-56 sm:h-64 md:h-80 lg:h-96 object-cover"
             />
           </div>
+        ) : (
+          <div className="w-full h-56 sm:h-64 md:h-80 lg:h-96 rounded-2xl border border-gray-200 bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+            <Building2 className="h-20 w-20 text-blue-300" />
+          </div>
         )}
-        {/* Header / Hero */}
+
+        {/* Title and info card */}
         <Card>
-          <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <CardHeader className="flex flex-col gap-4">
             <div className="flex items-start gap-3">
-              <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
                 <Building2 className="h-7 w-7 text-blue-600" />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <CardTitle className="text-2xl md:text-3xl">
                   {complexTitle}
                 </CardTitle>
@@ -195,16 +201,12 @@ const ComplexDetailPage = () => {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm text-gray-700">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm text-gray-700">
               <div className="bg-gray-50 rounded-lg px-4 py-3">
                 <div className="text-xs text-gray-500 mb-1">{t('complexDetail.apartmentCount')}</div>
                 <div className="text-lg font-semibold">
                   {totalApartments}
                 </div>
-              </div>
-              <div className="bg-gray-50 rounded-lg px-4 py-3">
-                <div className="text-xs text-gray-500 mb-1">{t('complexDetail.status')}</div>
-                <div className="text-lg font-semibold">{t('complexDetail.activeProject')}</div>
               </div>
               <div className="bg-gray-50 rounded-lg px-4 py-3">
                 <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">

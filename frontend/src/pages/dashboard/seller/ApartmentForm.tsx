@@ -26,7 +26,8 @@ import {
   Mail,
   ChevronRight,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Calendar
 } from 'lucide-react';
 import { useTranslation } from '../../../hooks/useTranslation';
 
@@ -45,6 +46,9 @@ interface ApartmentFormData {
   contactTelegram: string;
   contactEmail: string;
   status?: string;
+  constructionStatus?: 'available' | 'built';
+  readyByYear?: number | null;
+  readyByMonth?: number | null;
 }
 
 interface Complex {
@@ -88,6 +92,15 @@ const validateApartment = (data: ApartmentFormData) => {
   
   if (data.floor > data.totalFloors) {
     errors.floor = 'Floor cannot be greater than total floors';
+  }
+
+  if (data.constructionStatus === 'built') {
+    if (data.readyByYear == null || data.readyByYear < 2000) {
+      errors.readyByYear = 'Please select the year when construction will be ready';
+    }
+    if (data.readyByMonth == null || data.readyByMonth < 1 || data.readyByMonth > 12) {
+      errors.readyByMonth = 'Please select the month when construction will be ready';
+    }
   }
   
   if (!data.address?.trim()) {
@@ -140,7 +153,10 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
       contactPhone: '',
       contactTelegram: '',
       contactEmail: '',
-      status: 'active'
+      status: 'active',
+      constructionStatus: 'available',
+      readyByYear: null,
+      readyByMonth: null,
     }
   });
 
@@ -160,7 +176,10 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
         contactPhone: apartment.contactPhone || '',
         contactTelegram: apartment.contactTelegram || '',
         contactEmail: apartment.contactEmail || '',
-        status: apartment.status || 'active'
+        status: apartment.status || 'active',
+        constructionStatus: apartment.constructionStatus === 'built' ? 'built' : 'available',
+        readyByYear: apartment.readyByYear ?? null,
+        readyByMonth: apartment.readyByMonth ?? null,
       });
       
       // Set existing images if available
@@ -532,6 +551,60 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
                       onChange={(value) => form.setValue('complexId', value)}
                       required
                     />
+
+                    <Select
+                      label={
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-gray-500" />
+                          <span>Construction status</span>
+                        </div>
+                      }
+                      options={[
+                        { value: 'available', label: 'Available now' },
+                        { value: 'built', label: 'Built – ready by date' },
+                      ]}
+                      value={form.watch('constructionStatus') || 'available'}
+                      onChange={(value) => {
+                        form.setValue('constructionStatus', value as 'available' | 'built');
+                        if (value !== 'built') {
+                          form.setValue('readyByYear', null);
+                          form.setValue('readyByMonth', null);
+                        }
+                      }}
+                    />
+
+                    {form.watch('constructionStatus') === 'built' && (
+                      <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="text-sm font-medium text-gray-700 mb-2 col-span-2">
+                          Ready by (year and month)
+                        </div>
+                        <Select
+                          label="Year"
+                          options={(() => {
+                            const currentYear = new Date().getFullYear();
+                            return Array.from({ length: 8 }, (_, i) => currentYear + i).map((y) => ({
+                              value: String(y),
+                              label: String(y),
+                            }));
+                          })()}
+                          value={form.watch('readyByYear') != null ? String(form.watch('readyByYear')) : ''}
+                          onChange={(value) => form.setValue('readyByYear', value ? parseInt(value, 10) : null)}
+                        />
+                        <Select
+                          label="Month"
+                          options={[
+                            { value: '1', label: 'January' }, { value: '2', label: 'February' },
+                            { value: '3', label: 'March' }, { value: '4', label: 'April' },
+                            { value: '5', label: 'May' }, { value: '6', label: 'June' },
+                            { value: '7', label: 'July' }, { value: '8', label: 'August' },
+                            { value: '9', label: 'September' }, { value: '10', label: 'October' },
+                            { value: '11', label: 'November' }, { value: '12', label: 'December' },
+                          ]}
+                          value={form.watch('readyByMonth') != null ? String(form.watch('readyByMonth')) : ''}
+                          onChange={(value) => form.setValue('readyByMonth', value ? parseInt(value, 10) : null)}
+                        />
+                      </div>
+                    )}
                     
                     {/* Show inherited data when complex is selected */}
                     {form.watch('complexId') && (

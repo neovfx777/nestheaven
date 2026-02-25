@@ -424,6 +424,10 @@ async function create(data, reqUser) {
     const materials = data.body.materials ? ensureI18n(data.body.materials) : null;
     const infrastructureNote = data.body.infrastructureNote ? ensureI18n(data.body.infrastructureNote) : null;
 
+    const constructionStatus = data.body.constructionStatus || 'available';
+    const readyByYear = data.body.readyByYear != null ? parseInt(data.body.readyByYear) : null;
+    const readyByMonth = data.body.readyByMonth != null ? parseInt(data.body.readyByMonth) : null;
+
     const apartment = await prisma.apartment.create({
       data: {
         complexId,
@@ -437,7 +441,10 @@ async function create(data, reqUser) {
         description: description ? JSON.stringify(description) : null,
         materials: materials ? JSON.stringify(materials) : null,
         infrastructureNote: infrastructureNote ? JSON.stringify(infrastructureNote) : null,
-        status: 'active'
+        status: 'active',
+        constructionStatus: constructionStatus === 'built' ? 'built' : 'available',
+        readyByYear: constructionStatus === 'built' ? readyByYear : null,
+        readyByMonth: constructionStatus === 'built' ? readyByMonth : null,
       },
       include: {
         complex: {
@@ -535,6 +542,15 @@ async function update(id, data, reqUser) {
 
     if (data.body.infrastructureNote !== undefined) {
       updates.infrastructureNote = data.body.infrastructureNote ? JSON.stringify(ensureI18n(data.body.infrastructureNote)) : null;
+    }
+
+    if (data.body.constructionStatus !== undefined) {
+      updates.constructionStatus = data.body.constructionStatus || null;
+      updates.readyByYear = data.body.constructionStatus === 'built' && data.body.readyByYear != null ? parseInt(data.body.readyByYear) : null;
+      updates.readyByMonth = data.body.constructionStatus === 'built' && data.body.readyByMonth != null ? parseInt(data.body.readyByMonth) : null;
+    } else if (data.body.readyByYear !== undefined || data.body.readyByMonth !== undefined) {
+      if (data.body.readyByYear !== undefined) updates.readyByYear = data.body.readyByYear != null ? parseInt(data.body.readyByYear) : null;
+      if (data.body.readyByMonth !== undefined) updates.readyByMonth = data.body.readyByMonth != null ? parseInt(data.body.readyByMonth) : null;
     }
 
     const updated = await prisma.apartment.update({
