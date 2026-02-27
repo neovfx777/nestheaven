@@ -2,19 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowUpDown,
   Bed,
-  Building2,
   DollarSign,
   Filter,
-  Home,
-  Landmark,
   Layers,
-  Sparkles,
   Square,
-  Star,
   X,
 } from 'lucide-react';
 
-import { Complex } from '../../api/apartments';
 import { interpretVoiceQuery, isVoiceAiConfigured } from '../../utils/voiceSearchAi';
 import VoiceSearch from '../ui/VoiceSearch';
 
@@ -27,11 +21,6 @@ export interface ApartmentFilterState {
   maxArea: string;
   minFloor: string;
   maxFloor: string;
-  complexId: string;
-  developerName: string;
-  status: '' | 'active' | 'sold' | 'hidden';
-  paymentPlan: 'any' | 'mortgage' | 'installments';
-  badge: 'all' | 'featured' | 'recommended';
   sortBy: 'createdAt' | 'updatedAt' | 'price' | 'area' | 'rooms';
   sortOrder: 'asc' | 'desc';
   search: string;
@@ -46,11 +35,6 @@ export const DEFAULT_APARTMENT_FILTERS: ApartmentFilterState = {
   maxArea: '',
   minFloor: '',
   maxFloor: '',
-  complexId: '',
-  developerName: '',
-  status: '',
-  paymentPlan: 'any',
-  badge: 'all',
   sortBy: 'createdAt',
   sortOrder: 'desc',
   search: '',
@@ -59,24 +43,10 @@ export const DEFAULT_APARTMENT_FILTERS: ApartmentFilterState = {
 const filterKeys = Object.keys(DEFAULT_APARTMENT_FILTERS) as Array<keyof ApartmentFilterState>;
 
 interface ApartmentFiltersProps {
-  complexes: Complex[];
   filters: ApartmentFilterState;
   onFilterChange: (filters: ApartmentFilterState) => void;
   onSearch: (search: string) => void;
   onReset: () => void;
-}
-
-interface PaymentOption {
-  key: ApartmentFilterState['paymentPlan'];
-  label: string;
-  helper: string;
-  icon: typeof Home;
-}
-
-interface BadgeOption {
-  key: ApartmentFilterState['badge'];
-  label: string;
-  icon: typeof Star;
 }
 
 const roomShortcutButtons = [
@@ -87,39 +57,11 @@ const roomShortcutButtons = [
   { label: '5+ xona', value: '5+' },
 ];
 
-const paymentOptions: PaymentOption[] = [
-  {
-    key: 'any',
-    label: "Barchasi",
-    helper: "To'lov turi bo'yicha cheklanmasin",
-    icon: Home,
-  },
-  {
-    key: 'mortgage',
-    label: 'Ipoteka',
-    helper: 'Ipoteka uchun mos variantlar',
-    icon: Landmark,
-  },
-  {
-    key: 'installments',
-    label: "Bo'lib to'lash",
-    helper: "Muddatli to'lov imkoniyati bor",
-    icon: Sparkles,
-  },
-];
-
-const badgeOptions: BadgeOption[] = [
-  { key: 'all', label: "Barcha e'lonlar", icon: Star },
-  { key: 'featured', label: "Top e'lonlar", icon: Sparkles },
-  { key: 'recommended', label: 'Tavsiya etilgan', icon: Star },
-];
-
 const PRICE_RANGE_MIN = 10000;
 const PRICE_RANGE_MAX = 500000;
 const PRICE_RANGE_STEP = 1000;
 
 const ApartmentFilters = ({
-  complexes,
   filters,
   onFilterChange,
   onSearch,
@@ -148,25 +90,6 @@ const ApartmentFilters = ({
   const priceRangeMinValue = Math.min(minPriceValue, maxPriceValue);
   const priceRangeMaxValue = Math.max(minPriceValue, maxPriceValue);
 
-  const pickName = (name: unknown) => {
-    if (!name) return '';
-    if (typeof name === 'string') return name;
-    if (typeof name === 'object') {
-      const localized = name as Record<string, string | undefined>;
-      return localized.uz || localized.ru || localized.en || '';
-    }
-    return '';
-  };
-
-  const findComplexIdByName = (spoken: string) => {
-    const lowerQuery = spoken.toLowerCase();
-    const match = complexes.find((complex) => {
-      const candidate = pickName(complex.name).toLowerCase();
-      return candidate && (lowerQuery.includes(candidate) || candidate.includes(lowerQuery));
-    });
-    return match?.id;
-  };
-
   const extractRooms = (text: string) => {
     const match = text.match(/(\d+)\s*xona[a-z]*/i);
     return match ? Number.parseInt(match[1], 10) : undefined;
@@ -177,13 +100,6 @@ const ApartmentFilters = ({
     if (!match) return undefined;
     const parsed = Number(match[1].replace(',', '.'));
     return Number.isNaN(parsed) ? undefined : parsed;
-  };
-
-  const detectPaymentPlan = (text: string): ApartmentFilterState['paymentPlan'] | undefined => {
-    const lower = text.toLowerCase();
-    if (/ipoteka|mortgage|kredit|credit/.test(lower)) return 'mortgage';
-    if (/bo'lib|installment|rassroch|muddatli/.test(lower)) return 'installments';
-    return undefined;
   };
 
   const applyPatch = (patch: Partial<ApartmentFilterState>) => {
@@ -244,8 +160,6 @@ const ApartmentFilters = ({
     if (!voiceAiEnabled) {
       const rooms = extractRooms(spoken);
       const area = extractArea(spoken);
-      const complexId = findComplexIdByName(spoken) || filters.complexId;
-      const paymentPlan = detectPaymentPlan(spoken) || filters.paymentPlan;
 
       onFilterChange({
         ...filters,
@@ -254,8 +168,6 @@ const ApartmentFilters = ({
         maxRooms: rooms ? rooms.toString() : '',
         minArea: area ? area.toString() : '',
         maxArea: area ? area.toString() : '',
-        complexId,
-        paymentPlan,
         sortBy: rooms ? 'rooms' : filters.sortBy,
         sortOrder: rooms ? 'asc' : filters.sortOrder,
       });
@@ -281,20 +193,6 @@ const ApartmentFilters = ({
         }
       }
 
-      if (!aiFilters.complexName) {
-        const complexId = findComplexIdByName(spoken);
-        if (complexId) {
-          aiFilters.complexName = pickName(complexes.find((complex) => complex.id === complexId)?.name);
-        }
-      }
-
-      const matchedComplexId =
-        aiFilters.complexName
-          ? findComplexIdByName(aiFilters.complexName)
-          : findComplexIdByName(spoken) || filters.complexId;
-
-      const paymentPlan = detectPaymentPlan(spoken) || filters.paymentPlan;
-
       const nextFilters: ApartmentFilterState = {
         ...filters,
         search: resolvedSearch,
@@ -304,9 +202,6 @@ const ApartmentFilters = ({
         maxRooms: aiFilters.maxRooms !== undefined ? aiFilters.maxRooms.toString() : '',
         minArea: aiFilters.minArea !== undefined ? aiFilters.minArea.toString() : '',
         maxArea: aiFilters.maxArea !== undefined ? aiFilters.maxArea.toString() : '',
-        developerName: aiFilters.developerName ?? '',
-        complexId: matchedComplexId ?? '',
-        paymentPlan,
         sortBy: aiFilters.sortBy ?? filters.sortBy,
         sortOrder: aiFilters.sortOrder ?? filters.sortOrder,
       };
@@ -524,99 +419,6 @@ const ApartmentFilters = ({
               onChange={(event) => handleInputChange('maxFloor', event.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
             />
-          </div>
-        </div>
-
-        <div className="space-y-3 pb-5 border-b border-gray-100">
-          <p className="text-xs uppercase tracking-wide font-semibold text-gray-500 flex items-center gap-2">
-            <Building2 className="h-3.5 w-3.5" />
-            Kompleks va holat
-          </p>
-          <select
-            value={filters.complexId}
-            onChange={(event) => handleInputChange('complexId', event.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
-          >
-            <option value="">Barcha komplekslar</option>
-            {complexes.map((complex) => (
-              <option key={complex.id} value={complex.id}>
-                {pickName(complex.name) || 'Kompleks'}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filters.status}
-            onChange={(event) => handleInputChange('status', event.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
-          >
-            <option value="">Barcha holatlar</option>
-            <option value="active">Faol</option>
-            <option value="sold">Sotilgan</option>
-            <option value="hidden">Yashirilgan</option>
-          </select>
-          <input
-            type="text"
-            placeholder="Developer nomi"
-            value={filters.developerName}
-            onChange={(event) => handleInputChange('developerName', event.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
-          />
-        </div>
-
-        <div className="space-y-3 pb-5 border-b border-gray-100">
-          <p className="text-xs uppercase tracking-wide font-semibold text-gray-500">
-            To'lov turi
-          </p>
-          <div className="space-y-2">
-            {paymentOptions.map((option) => {
-              const Icon = option.icon;
-              const isActive = filters.paymentPlan === option.key;
-              return (
-                <button
-                  key={option.key}
-                  onClick={() => handleInputChange('paymentPlan', option.key)}
-                  className={`w-full text-left px-3 py-2.5 rounded-lg border transition-colors ${
-                    isActive
-                      ? 'border-primary-500 bg-primary-50 text-primary-700'
-                      : 'border-gray-300 text-gray-700 hover:border-primary-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <Icon className="h-4 w-4" />
-                    <span>{option.label}</span>
-                  </div>
-                  <p className={`text-xs mt-1 ${isActive ? 'text-primary-600' : 'text-gray-500'}`}>
-                    {option.helper}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="space-y-3 pb-5 border-b border-gray-100">
-          <p className="text-xs uppercase tracking-wide font-semibold text-gray-500">
-            E'lon turi
-          </p>
-          <div className="space-y-2">
-            {badgeOptions.map((option) => {
-              const Icon = option.icon;
-              const isActive = filters.badge === option.key;
-              return (
-                <button
-                  key={option.key}
-                  onClick={() => handleInputChange('badge', option.key)}
-                  className={`w-full px-3 py-2 rounded-lg border text-sm flex items-center gap-2 transition-colors ${
-                    isActive
-                      ? 'border-primary-500 bg-primary-50 text-primary-700'
-                      : 'border-gray-300 text-gray-700 hover:border-primary-300'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{option.label}</span>
-                </button>
-              );
-            })}
           </div>
         </div>
 

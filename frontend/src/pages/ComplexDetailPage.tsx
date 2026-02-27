@@ -10,6 +10,8 @@ import {
   Calendar,
   Wind,
   Footprints,
+  FileText,
+  ExternalLink,
 } from 'lucide-react';
 import { apartmentsApi, Apartment, Complex } from '../api/apartments';
 import { getAssetUrl } from '../api/client';
@@ -83,35 +85,43 @@ const ComplexDetailPage = () => {
   }
 
   const complexName =
-    (complex.name as any)?.en ||
-    (complex.name as any)?.uz ||
-    (complex.name as any)?.ru ||
-    (typeof complex.name === 'string' ? complex.name : t('complex.title'));
+    getLocalizedContent(complex.name as any) || t('complex.title');
 
   const complexTitle =
-    (typeof complex.title === 'string' && complex.title) ||
-    (complex.title as any)?.en ||
-    (complex.title as any)?.uz ||
-    (complex.title as any)?.ru ||
-    complexName;
+    getLocalizedContent(complex.title as any) || complexName;
 
   const complexAddress =
-    (typeof complex.locationText === 'string' && complex.locationText) ||
-    (complex.locationText as any)?.en ||
-    (complex.locationText as any)?.uz ||
-    (complex.locationText as any)?.ru ||
-    (complex.address as any)?.en ||
-    (complex.address as any)?.uz ||
-    (complex.address as any)?.ru ||
-    (typeof complex.address === 'string' ? complex.address : '');
+    getLocalizedContent(complex.locationText as any) ||
+    getLocalizedContent(complex.location?.address as any) ||
+    getLocalizedContent(complex.address as any) ||
+    '';
 
   const bannerUrl = getAssetUrl(
     complex.bannerImage || complex.bannerImageUrl || complex.coverImage || null
   );
+  const parsedPermissions =
+    typeof complex.permissions === 'string'
+      ? (() => {
+          try {
+            return JSON.parse(complex.permissions);
+          } catch {
+            return null;
+          }
+        })()
+      : complex.permissions;
   const permissionLinks = [
-    { label: t('complexDetail.permission1'), url: complex.permission1Url },
-    { label: t('complexDetail.permission2'), url: complex.permission2Url },
-    { label: t('complexDetail.permission3'), url: complex.permission3Url },
+    {
+      label: t('complexDetail.permission1'),
+      url: complex.permission1Url || parsedPermissions?.permission1,
+    },
+    {
+      label: t('complexDetail.permission2'),
+      url: complex.permission2Url || parsedPermissions?.permission2,
+    },
+    {
+      label: t('complexDetail.permission3'),
+      url: complex.permission3Url || parsedPermissions?.permission3,
+    },
   ]
     .map((item) => ({ ...item, url: getAssetUrl(item.url || null) }))
     .filter((item) => item.url);
@@ -122,16 +132,7 @@ const ComplexDetailPage = () => {
   const totalApartments =
     complex._count?.apartments ?? apartments.length ?? 0;
 
-  // Get description in current language
-  const complexDescription = complex.description
-    ? typeof complex.description === 'string'
-      ? JSON.parse(complex.description)
-      : complex.description
-    : null;
-  
-  const descriptionText = complexDescription
-    ? getLocalizedContent(complexDescription)
-    : null;
+  const descriptionText = getLocalizedContent(complex.description as any);
 
   // Get walkability and airQuality (backend returns as walkability/airQuality, not walkabilityRating/airQualityRating)
   const walkability = complex.walkability ?? complex.walkabilityRating ?? null;
@@ -214,7 +215,7 @@ const ComplexDetailPage = () => {
                   {t('complexDetail.walkability')}
                 </div>
                 <div className="text-lg font-semibold">
-                  {walkability != null ? `${walkability}/10` : '—'}
+                  {walkability != null ? `${walkability}/10` : '-'}
                 </div>
               </div>
               <div className="bg-gray-50 rounded-lg px-4 py-3">
@@ -223,7 +224,7 @@ const ComplexDetailPage = () => {
                   {t('complexDetail.airQuality')}
                 </div>
                 <div className="text-lg font-semibold">
-                  {airQuality != null ? `${airQuality}/10` : '—'}
+                  {airQuality != null ? `${airQuality}/10` : '-'}
                 </div>
               </div>
             </div>
@@ -255,7 +256,7 @@ const ComplexDetailPage = () => {
             </CardHeader>
             <CardContent>
               <div className="mb-4">
-                <p className="text-sm text-gray-700 mb-2">{complexAddress || '—'}</p>
+                <p className="text-sm text-gray-700 mb-2">{complexAddress || '-'}</p>
                 {complex.developer && (
                   <p className="text-sm text-gray-600">
                     <span className="font-medium">{t('complexDetail.developer')}:</span> {complex.developer}
@@ -366,17 +367,23 @@ const ComplexDetailPage = () => {
 
             {permissionLinks.length > 0 && (
               <div>
-                <div className="text-xs text-gray-500 mb-2">{t('complexDetail.permissionsLabel')}</div>
-                <div className="flex flex-wrap gap-3">
+                <div className="text-xs text-gray-500 mb-3 font-medium">
+                  {t('complexDetail.permissionsLabel')}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {permissionLinks.map((item) => (
                     <a
                       key={item.label}
                       href={item.url as string}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-blue-700 hover:text-blue-800 hover:border-blue-200"
                     >
-                      {item.label}
+                      <span className="inline-flex items-center gap-2 font-medium">
+                        <FileText className="h-4 w-4" />
+                        {item.label}
+                      </span>
+                      <ExternalLink className="h-4 w-4 flex-shrink-0" />
                     </a>
                   ))}
                 </div>
@@ -401,11 +408,7 @@ const ComplexDetailPage = () => {
             ) : (
               <div className="space-y-4">
                 {apartments.map((apt) => {
-                  const title =
-                    (apt.title as any)?.en ||
-                    (apt.title as any)?.uz ||
-                    (apt.title as any)?.ru ||
-                    'Apartment';
+                  const title = getLocalizedContent(apt.title) || 'Apartment';
 
                   return (
                     <Link
@@ -425,11 +428,11 @@ const ComplexDetailPage = () => {
                             </span>
                             <span className="inline-flex items-center gap-1">
                               <Square className="h-4 w-4" />
-                              {apt.area} m²
+                              {apt.area} m2
                             </span>
                             <span className="inline-flex items-center gap-1">
                               <Layers className="h-4 w-4" />
-                              {apt.floor}/{apt.totalFloors || '—'} qavat
+                              {apt.floor}/{apt.totalFloors || '-'} qavat
                             </span>
                             <span className="inline-flex items-center gap-1">
                               <Calendar className="h-4 w-4" />

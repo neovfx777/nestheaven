@@ -56,6 +56,20 @@ export const SellerApartmentList: React.FC = () => {
     return value.en || value.uz || value.ru || '';
   };
 
+  const formatRenovationStatus = (status?: string | null) => {
+    if (!status) return 'N/A';
+    switch (status) {
+      case 'qora_suvoq':
+        return 'Qora suvoq';
+      case 'oq_suvoq':
+        return 'Oq suvoq';
+      case 'toliq_remont_qilingan':
+        return "To'liq remont";
+      default:
+        return status;
+    }
+  };
+
   const filteredApartments = apartments.filter((apt) => {
     const matchesSearch = searchTerm === '' || 
       getTitle(apt).toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -211,6 +225,10 @@ export const SellerApartmentList: React.FC = () => {
                   <div className="flex justify-between">
                     <span>Listed:</span>
                     <span>{new Date(apt.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Remont:</span>
+                    <span>{formatRenovationStatus(apt.renovationStatus)}</span>
                   </div>
                 </div>
 

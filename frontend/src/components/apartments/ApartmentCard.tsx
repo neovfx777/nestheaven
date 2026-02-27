@@ -70,6 +70,20 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
     }).format(price);
   };
 
+  const formatRenovationStatus = (status?: string | null) => {
+    if (!status) return null;
+    switch (status) {
+      case 'qora_suvoq':
+        return 'Qora suvoq';
+      case 'oq_suvoq':
+        return 'Oq suvoq';
+      case 'toliq_remont_qilingan':
+        return "To'liq remont";
+      default:
+        return status;
+    }
+  };
+
   const handleFavoriteToggle = (newIsFavorite: boolean) => {
     setIsFavorite(newIsFavorite);
   };
@@ -168,6 +182,12 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
           <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-xs sm:text-sm font-semibold mb-3 sm:mb-4 border border-blue-100">
             <Building2 className="h-3 w-3 mr-1.5" />
             {pickLocalized(apartment.complex.name) || 'Kompleks'}
+          </div>
+        )}
+
+        {formatRenovationStatus(apartment.renovationStatus) && (
+          <div className="mb-3 sm:mb-4 text-xs sm:text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-1.5">
+            Remont: {formatRenovationStatus(apartment.renovationStatus)}
           </div>
         )}
 

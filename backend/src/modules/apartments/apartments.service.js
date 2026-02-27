@@ -1,16 +1,12 @@
 const { prisma } = require('../../config/db');
 const { ROLES } = require('../../utils/roles');
+const { completeI18n, hasAnyContent } = require('../../utils/autoTranslateI18n');
 const isDev = process.env.NODE_ENV !== 'production';
 
 function debugLog(...args) {
   if (isDev) {
     console.log(...args);
   }
-}
-
-function ensureI18n(val) {
-  if (typeof val === 'string') return { uz: val, ru: val, en: val };
-  return val;
 }
 
 function getVisibleStatusesForRole(role) {
@@ -90,10 +86,28 @@ function getAddressText(complexSummary) {
 // LIST funksiyasini soddalashtiramiz (500 xatosini bartaraf qilish uchun)
 async function list(data, reqUser) {
   try {
-    const { page = 1, limit = 20, complexId, minPrice, maxPrice, rooms, status } = data.query;
+    const {
+      page = 1,
+      limit = 20,
+      complexId,
+      minPrice,
+      maxPrice,
+      rooms,
+      minRooms,
+      maxRooms,
+      minArea,
+      maxArea,
+      minFloor,
+      maxFloor,
+      status,
+      sortBy,
+      sortOrder,
+      search,
+    } = data.query;
     const pageNum = Math.max(parseInt(page, 10) || 1, 1);
-    const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+    const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 1000);
     const skip = (pageNum - 1) * limitNum;
+    const normalizedStatus = typeof status === 'string' ? status.toLowerCase() : status;
 
     debugLog('Apartments list called:', {
       page: pageNum,
@@ -102,29 +116,102 @@ async function list(data, reqUser) {
       minPrice,
       maxPrice,
       rooms,
-      status,
+      minRooms,
+      maxRooms,
+      minArea,
+      maxArea,
+      minFloor,
+      maxFloor,
+      status: normalizedStatus,
+      sortBy,
+      sortOrder,
+      search,
       userRole: reqUser?.role || 'anonymous'
     });
 
     const where = {};
 
     if (complexId) where.complexId = complexId;
-    if (minPrice != null || maxPrice != null) {
+
+    const minPriceNum = minPrice != null && minPrice !== '' ? Number(minPrice) : undefined;
+    const maxPriceNum = maxPrice != null && maxPrice !== '' ? Number(maxPrice) : undefined;
+    if (minPriceNum != null || maxPriceNum != null) {
+      const low = minPriceNum != null && maxPriceNum != null ? Math.min(minPriceNum, maxPriceNum) : minPriceNum;
+      const high = minPriceNum != null && maxPriceNum != null ? Math.max(minPriceNum, maxPriceNum) : maxPriceNum;
       where.price = {};
-      if (minPrice != null && minPrice !== '') where.price.gte = parseFloat(minPrice);
-      if (maxPrice != null && maxPrice !== '') where.price.lte = parseFloat(maxPrice);
-    }
-    if (rooms != null && rooms !== '') {
-      where.rooms = parseInt(rooms, 10);
+      if (low != null) where.price.gte = low;
+      if (high != null) where.price.lte = high;
     }
 
-    if (status) {
-      where.status = status;
+    const exactRooms = rooms != null && rooms !== '' ? Number.parseInt(rooms, 10) : undefined;
+    const minRoomsNum = minRooms != null && minRooms !== '' ? Number.parseInt(minRooms, 10) : undefined;
+    const maxRoomsNum = maxRooms != null && maxRooms !== '' ? Number.parseInt(maxRooms, 10) : undefined;
+    if (exactRooms != null && !Number.isNaN(exactRooms)) {
+      where.rooms = exactRooms;
+    } else if (minRoomsNum != null || maxRoomsNum != null) {
+      const low = minRoomsNum != null && maxRoomsNum != null ? Math.min(minRoomsNum, maxRoomsNum) : minRoomsNum;
+      const high = minRoomsNum != null && maxRoomsNum != null ? Math.max(minRoomsNum, maxRoomsNum) : maxRoomsNum;
+      where.rooms = {};
+      if (low != null) where.rooms.gte = low;
+      if (high != null) where.rooms.lte = high;
+    }
+
+    const minAreaNum = minArea != null && minArea !== '' ? Number(minArea) : undefined;
+    const maxAreaNum = maxArea != null && maxArea !== '' ? Number(maxArea) : undefined;
+    if (minAreaNum != null || maxAreaNum != null) {
+      const low = minAreaNum != null && maxAreaNum != null ? Math.min(minAreaNum, maxAreaNum) : minAreaNum;
+      const high = minAreaNum != null && maxAreaNum != null ? Math.max(minAreaNum, maxAreaNum) : maxAreaNum;
+      where.area = {};
+      if (low != null) where.area.gte = low;
+      if (high != null) where.area.lte = high;
+    }
+
+    const minFloorNum = minFloor != null && minFloor !== '' ? Number.parseInt(minFloor, 10) : undefined;
+    const maxFloorNum = maxFloor != null && maxFloor !== '' ? Number.parseInt(maxFloor, 10) : undefined;
+    if (minFloorNum != null || maxFloorNum != null) {
+      const low = minFloorNum != null && maxFloorNum != null ? Math.min(minFloorNum, maxFloorNum) : minFloorNum;
+      const high = minFloorNum != null && maxFloorNum != null ? Math.max(minFloorNum, maxFloorNum) : maxFloorNum;
+      where.floor = {};
+      if (low != null) where.floor.gte = low;
+      if (high != null) where.floor.lte = high;
+    }
+
+    const canManageAllStatuses =
+      reqUser &&
+      [ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN].includes(reqUser.role);
+
+    if (normalizedStatus) {
+      if (canManageAllStatuses) {
+        where.status = normalizedStatus;
+      } else if (normalizedStatus === 'active' || normalizedStatus === 'sold') {
+        where.status = normalizedStatus;
+      } else {
+        where.status = { in: ['active', 'sold'] };
+      }
     } else if (reqUser) {
       where.status = { in: getVisibleStatusesForRole(reqUser.role) };
     } else {
       where.status = { in: ['active', 'sold'] };
     }
+
+    const searchText = typeof search === 'string' ? search.trim() : '';
+    if (searchText) {
+      where.OR = [
+        { title: { contains: searchText } },
+        { description: { contains: searchText } },
+        { materials: { contains: searchText } },
+        { infrastructureNote: { contains: searchText } },
+        { complex: { is: { name: { contains: searchText } } } },
+        { complex: { is: { title: { contains: searchText } } } },
+        { complex: { is: { city: { contains: searchText } } } },
+        { complex: { is: { address: { contains: searchText } } } },
+        { complex: { is: { locationText: { contains: searchText } } } },
+      ];
+    }
+
+    const allowedSortFields = new Set(['price', 'area', 'rooms', 'createdAt', 'updatedAt']);
+    const safeSortBy = allowedSortFields.has(sortBy) ? sortBy : 'createdAt';
+    const safeSortOrder = sortOrder === 'asc' ? 'asc' : 'desc';
 
     debugLog('Where clause:', JSON.stringify(where, null, 2));
 
@@ -135,7 +222,7 @@ async function list(data, reqUser) {
       where,
       skip,
       take: limitNum,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { [safeSortBy]: safeSortOrder },
       include: {
         complex: {
           select: {
@@ -440,14 +527,29 @@ async function create(data, reqUser) {
       }
     }
 
-    const title = ensureI18n(data.body.title);
-    const description = data.body.description ? ensureI18n(data.body.description) : null;
-    const materials = data.body.materials ? ensureI18n(data.body.materials) : null;
-    const infrastructureNote = data.body.infrastructureNote ? ensureI18n(data.body.infrastructureNote) : null;
+    const title = await completeI18n(data.body.title, { fieldName: 'apartment.title' });
+    if (!title || !hasAnyContent(title)) {
+      const err = new Error('Title is required in at least one language');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const description = data.body.description
+      ? await completeI18n(data.body.description, { fieldName: 'apartment.description' })
+      : null;
+    const materials = data.body.materials
+      ? await completeI18n(data.body.materials, { fieldName: 'apartment.materials' })
+      : null;
+    const infrastructureNote = data.body.infrastructureNote
+      ? await completeI18n(data.body.infrastructureNote, {
+          fieldName: 'apartment.infrastructureNote',
+        })
+      : null;
 
     const constructionStatus = data.body.constructionStatus || 'available';
     const readyByYear = data.body.readyByYear != null ? parseInt(data.body.readyByYear) : null;
     const readyByMonth = data.body.readyByMonth != null ? parseInt(data.body.readyByMonth) : null;
+    const renovationStatus = data.body.renovationStatus || null;
 
     const apartment = await prisma.apartment.create({
       data: {
@@ -466,6 +568,7 @@ async function create(data, reqUser) {
         constructionStatus: constructionStatus === 'built' ? 'built' : 'available',
         readyByYear: constructionStatus === 'built' ? readyByYear : null,
         readyByMonth: constructionStatus === 'built' ? readyByMonth : null,
+        renovationStatus,
       },
       include: {
         complex: {
@@ -550,19 +653,43 @@ async function update(id, data, reqUser) {
     if (data.body.totalFloors !== undefined) updates.totalFloors = data.body.totalFloors !== null ? parseInt(data.body.totalFloors) : null;
 
     if (data.body.title !== undefined) {
-      updates.title = JSON.stringify(ensureI18n(data.body.title));
+      const localizedTitle = await completeI18n(data.body.title, { fieldName: 'apartment.title' });
+      if (!localizedTitle || !hasAnyContent(localizedTitle)) {
+        const err = new Error('Title is required in at least one language');
+        err.statusCode = 400;
+        throw err;
+      }
+      updates.title = JSON.stringify(localizedTitle);
     }
 
     if (data.body.description !== undefined) {
-      updates.description = data.body.description ? JSON.stringify(ensureI18n(data.body.description)) : null;
+      updates.description = data.body.description
+        ? JSON.stringify(
+            await completeI18n(data.body.description, {
+              fieldName: 'apartment.description',
+            })
+          )
+        : null;
     }
 
     if (data.body.materials !== undefined) {
-      updates.materials = data.body.materials ? JSON.stringify(ensureI18n(data.body.materials)) : null;
+      updates.materials = data.body.materials
+        ? JSON.stringify(
+            await completeI18n(data.body.materials, {
+              fieldName: 'apartment.materials',
+            })
+          )
+        : null;
     }
 
     if (data.body.infrastructureNote !== undefined) {
-      updates.infrastructureNote = data.body.infrastructureNote ? JSON.stringify(ensureI18n(data.body.infrastructureNote)) : null;
+      updates.infrastructureNote = data.body.infrastructureNote
+        ? JSON.stringify(
+            await completeI18n(data.body.infrastructureNote, {
+              fieldName: 'apartment.infrastructureNote',
+            })
+          )
+        : null;
     }
 
     if (data.body.constructionStatus !== undefined) {
@@ -572,6 +699,10 @@ async function update(id, data, reqUser) {
     } else if (data.body.readyByYear !== undefined || data.body.readyByMonth !== undefined) {
       if (data.body.readyByYear !== undefined) updates.readyByYear = data.body.readyByYear != null ? parseInt(data.body.readyByYear) : null;
       if (data.body.readyByMonth !== undefined) updates.readyByMonth = data.body.readyByMonth != null ? parseInt(data.body.readyByMonth) : null;
+    }
+
+    if (data.body.renovationStatus !== undefined) {
+      updates.renovationStatus = data.body.renovationStatus || null;
     }
 
     const updated = await prisma.apartment.update({
