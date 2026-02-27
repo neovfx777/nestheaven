@@ -24,7 +24,27 @@ import { AMENITY_CATEGORIES } from '../constants/amenities';
 const ComplexDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t, getLocalizedContent } = useTranslation();
+  const { t, getLocalizedContent, language } = useTranslation();
+
+  const getStrictLocalizedContent = (
+    content: { uz?: string; ru?: string; en?: string } | string | null | undefined
+  ): string => {
+    if (!content) return '';
+
+    if (typeof content === 'string') {
+      try {
+        const parsed = JSON.parse(content);
+        if (parsed && typeof parsed === 'object') {
+          return parsed[language] || '';
+        }
+      } catch {
+        return content;
+      }
+      return '';
+    }
+
+    return content[language] || '';
+  };
 
   // Fetch complex by ID
   const {
@@ -95,7 +115,12 @@ const ComplexDetailPage = () => {
     '';
 
   const bannerUrl = getAssetUrl(
-    complex.bannerImage || complex.bannerImageUrl || complex.coverImage || null
+    complex.teaserImage ||
+      complex.teaserImageUrl ||
+      complex.bannerImage ||
+      complex.bannerImageUrl ||
+      complex.coverImage ||
+      null
   );
   const parsedPermissions =
     typeof complex.permissions === 'string'
@@ -130,7 +155,7 @@ const ComplexDetailPage = () => {
   const totalApartments =
     complex._count?.apartments ?? apartments.length ?? 0;
 
-  const descriptionText = getLocalizedContent(complex.description as any);
+  const descriptionText = getStrictLocalizedContent(complex.description as any);
 
   // Get walkability and airQuality (backend returns as walkability/airQuality, not walkabilityRating/airQualityRating)
   const walkability = complex.walkability ?? complex.walkabilityRating ?? null;

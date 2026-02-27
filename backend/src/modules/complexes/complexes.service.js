@@ -83,6 +83,8 @@ function formatComplex(complex) {
     location,
     walkability: complex.walkabilityRating || complex.walkabilityScore || null,
     airQuality: complex.airQualityRating || complex.airQualityScore || null,
+    teaserImage: complex.bannerImageUrl || null,
+    teaserImageUrl: complex.bannerImageUrl || null,
     bannerImage: complex.bannerImageUrl || null,
     permissions,
     allowedSellers,
@@ -181,12 +183,14 @@ async function create(data, reqUser, baseUrl) {
       body.city = 'Unknown';
     }
 
+    const teaserFile = getFile(files, 'teaser', 'teaserImage');
     const bannerFile = getFile(files, 'banner');
+    const heroFile = teaserFile || bannerFile;
     const permission1File = getFile(files, 'permission1', 'permission_1');
     const permission2File = getFile(files, 'permission2', 'permission_2');
     const permission3File = getFile(files, 'permission3', 'permission_3');
 
-    const bannerImageUrl = bannerFile ? buildUrl(complexId, bannerFile, baseUrl) : null;
+    const bannerImageUrl = heroFile ? buildUrl(complexId, heroFile, baseUrl) : null;
     const permission1Url = permission1File ? buildUrl(complexId, permission1File, baseUrl) : null;
     const permission2Url = permission2File ? buildUrl(complexId, permission2File, baseUrl) : null;
     const permission3Url = permission3File ? buildUrl(complexId, permission3File, baseUrl) : null;
@@ -620,16 +624,18 @@ async function update(id, data, reqUser, baseUrl) {
     }
 
     // Handle file uploads
+    const teaserFile = getFile(files, 'teaser', 'teaserImage');
     const bannerFile = getFile(files, 'banner');
+    const heroFile = teaserFile || bannerFile;
     const permission1File = getFile(files, 'permission1', 'permission_1');
     const permission2File = getFile(files, 'permission2', 'permission_2');
     const permission3File = getFile(files, 'permission3', 'permission_3');
 
-    if (bannerFile) {
+    if (heroFile) {
       if (existing.bannerImageUrl) {
         deleteFileByUrl(existing.bannerImageUrl);
       }
-      updates.bannerImageUrl = buildUrl(id, bannerFile, baseUrl);
+      updates.bannerImageUrl = buildUrl(id, heroFile, baseUrl);
     }
 
     // Handle permissions
@@ -712,8 +718,8 @@ async function remove(id, reqUser) {
     }
 
     // Delete files
-    if (existing.bannerImage) {
-      deleteFileByUrl(existing.bannerImage);
+    if (existing.bannerImageUrl) {
+      deleteFileByUrl(existing.bannerImageUrl);
     }
     
     const permissions = parseJsonMaybe(existing.permissions, {});

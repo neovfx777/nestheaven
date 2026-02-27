@@ -13,8 +13,24 @@ const apiClient = axios.create({
 
 export function getAssetUrl(url?: string | null) {
   if (!url) return null;
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
   const base = apiBaseUrl.replace(/\/api\/?$/, '');
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    // Normalize local absolute URLs (localhost/127.0.0.1) to current API origin.
+    // This avoids broken images when stored host differs from current runtime host.
+    try {
+      const incoming = new URL(url);
+      const current = new URL(base);
+      const localHosts = new Set(['localhost', '127.0.0.1', '0.0.0.0']);
+      const sameHost = incoming.hostname === current.hostname;
+      const bothLocal = localHosts.has(incoming.hostname) && localHosts.has(current.hostname);
+      if (sameHost || bothLocal) {
+        return `${current.origin}${incoming.pathname}${incoming.search}${incoming.hash}`;
+      }
+    } catch {
+      // Keep original URL if parsing fails.
+    }
+    return url;
+  }
   if (url.startsWith('/')) return `${base}${url}`;
   return `${base}/${url}`;
 }

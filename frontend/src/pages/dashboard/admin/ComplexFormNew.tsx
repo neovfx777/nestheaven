@@ -226,7 +226,7 @@ export function ComplexFormNew() {
       }
 
       // Append files
-      if (bannerImage) formData.append('banner', bannerImage);
+      if (bannerImage) formData.append('teaser', bannerImage);
       if (permission1) formData.append('permission1', permission1);
       if (permission2) formData.append('permission2', permission2);
       if (permission3) formData.append('permission3', permission3);
@@ -245,7 +245,8 @@ export function ComplexFormNew() {
     },
     onError: (error: any) => {
       console.error('Complex save error:', error);
-      const errorMessage = error.response?.data?.error 
+      const errorMessage = error.response?.data?.message
+        || error.response?.data?.error 
         || error.response?.data?.details?.[0]?.message
         || error.message 
         || t('messages.saveComplexFailed');
@@ -578,15 +579,35 @@ export function ComplexFormNew() {
           </div>
         </Card>
 
-        {/* Banner Image */}
+        {/* Teaser Image */}
         <Card>
           <div className="p-6">
-            <h2 className="text-xl font-semibold mb-4">{t('complex.bannerImage')}</h2>
+            <h2 className="text-xl font-semibold mb-4">Teaser image</h2>
             <div className="flex items-center space-x-4">
               <input
                 type="file"
-                accept="image/*"
-                onChange={(e) => setBannerImage(e.target.files?.[0] || null)}
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  if (!file) {
+                    setBannerImage(null);
+                    return;
+                  }
+                  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                  if (!allowedTypes.includes(file.type)) {
+                    toast.error('Teaser image format must be JPEG, PNG, or WebP');
+                    e.currentTarget.value = '';
+                    setBannerImage(null);
+                    return;
+                  }
+                  if (file.size > 10 * 1024 * 1024) {
+                    toast.error('Teaser image is too large (max 10MB)');
+                    e.currentTarget.value = '';
+                    setBannerImage(null);
+                    return;
+                  }
+                  setBannerImage(file);
+                }}
                 className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
               />
               {bannerImage && (

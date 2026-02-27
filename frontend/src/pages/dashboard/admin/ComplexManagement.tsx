@@ -20,6 +20,7 @@ interface Complex {
   blockCount: number;
   amenities: string[];
   nearbyPlaces: any[];
+  teaserImage?: string;
   bannerImage?: string;
   _count?: {
     apartments: number;
@@ -148,10 +149,10 @@ export function ComplexManagement() {
             return (
               <Card key={complex.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 {/* Banner Image */}
-                {complex.bannerImage && (
+                {(complex.teaserImage || complex.bannerImage) && (
                   <div className="h-48 overflow-hidden bg-gray-200">
                     <img
-                      src={complex.bannerImage}
+                      src={complex.teaserImage || complex.bannerImage}
                       alt={title}
                       className="w-full h-full object-cover"
                     />

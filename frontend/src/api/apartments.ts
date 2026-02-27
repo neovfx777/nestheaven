@@ -167,6 +167,8 @@ export interface Complex {
     address: { uz: string; ru: string; en: string };
   };
   /** Banner image URL – returned by API as bannerImage */
+  teaserImage?: string | null;
+  teaserImageUrl?: string | null;
   bannerImage?: string | null;
   bannerImageUrl?: string | null;
   permission1Url?: string | null;
