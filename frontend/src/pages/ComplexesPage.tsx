@@ -51,14 +51,11 @@ const ComplexesPage = () => {
                 (typeof complex.address === 'string'
                   ? complex.address
                   : '');
-              const cover = getAssetUrl(
-                complex.teaserImage ||
-                  complex.teaserImageUrl ||
-                  complex.bannerImage ||
-                  complex.coverImage ||
-                  complex.bannerImageUrl ||
-                  null
-              );
+              const cover = complex.coverImage
+                ? getAssetUrl(complex.coverImage)
+                : complex.images?.[0]?.url
+                  ? getAssetUrl(complex.images[0].url)
+                  : null;
 
               return (
                 <Link

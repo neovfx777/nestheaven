@@ -1,4 +1,4 @@
-﻿import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Building2, MapPin } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -20,10 +20,8 @@ interface ComplexCardProps {
       distanceMeters: number;
       note?: string;
     }>;
-    teaserImage?: string;
-    teaserImageUrl?: string;
-    bannerImage?: string;
-    bannerImageUrl?: string;
+    coverImage?: string | null;
+    images?: Array<{ id: string; url: string; order: number }>;
     location?: {
       address: { uz: string; ru: string; en: string };
     };
@@ -48,21 +46,20 @@ export function ComplexCard({ complex }: ComplexCardProps) {
     .filter(Boolean)
     .slice(0, 5);
 
-  const coverImage = getAssetUrl(
-    complex.teaserImage ||
-      complex.teaserImageUrl ||
-      complex.bannerImage ||
-      complex.bannerImageUrl ||
-      null
-  );
+  const coverUrl =
+    complex.coverImage != null
+      ? getAssetUrl(complex.coverImage)
+      : complex.images?.[0]?.url
+        ? getAssetUrl(complex.images[0].url)
+        : null;
 
   return (
     <Link to={`/complexes/${complex.id}`}>
       <Card className="overflow-hidden rounded-3xl border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-        {coverImage ? (
+        {coverUrl ? (
           <div className="h-40 sm:h-48 overflow-hidden bg-gray-200">
             <img
-              src={coverImage}
+              src={coverUrl}
               alt={title}
               className="w-full h-full object-cover"
             />

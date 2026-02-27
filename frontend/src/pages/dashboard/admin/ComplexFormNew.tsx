@@ -34,7 +34,7 @@ export function ComplexFormNew() {
   const isEdit = !!id;
   const { t } = useTranslation();
 
-  const [bannerImage, setBannerImage] = useState<File | null>(null);
+  const [complexImages, setComplexImages] = useState<File[]>([]);
   const [permission1, setPermission1] = useState<File | null>(null);
   const [permission2, setPermission2] = useState<File | null>(null);
   const [permission3, setPermission3] = useState<File | null>(null);
@@ -226,7 +226,9 @@ export function ComplexFormNew() {
       }
 
       // Append files
-      if (bannerImage) formData.append('teaser', bannerImage);
+      complexImages.forEach((file, i) => {
+        formData.append('images', file);
+      });
       if (permission1) formData.append('permission1', permission1);
       if (permission2) formData.append('permission2', permission2);
       if (permission3) formData.append('permission3', permission3);
@@ -234,7 +236,7 @@ export function ComplexFormNew() {
       const url = isEdit ? `/complexes/${id}` : '/complexes';
       const method = isEdit ? 'patch' : 'post';
       
-      // Don't set Content-Type manually - axios will set it with boundary for FormData
+      // Let axios set multipart boundary automatically for FormData.
       const response = await apiClient[method](url, formData);
 
       return response.data;
@@ -245,6 +247,17 @@ export function ComplexFormNew() {
     },
     onError: (error: any) => {
       console.error('Complex save error:', error);
+      const isNetworkError = !error.response && (
+        error.code === 'ERR_NETWORK'
+        || /network error/i.test(error.message || '')
+      );
+
+      if (isNetworkError) {
+        const apiUrl = apiClient.defaults.baseURL || 'http://localhost:3000/api';
+        toast.error(`Backend connection failed: ${apiUrl}`);
+        return;
+      }
+
       const errorMessage = error.response?.data?.message
         || error.response?.data?.error 
         || error.response?.data?.details?.[0]?.message
@@ -412,6 +425,60 @@ export function ComplexFormNew() {
           </div>
         </Card>
 
+        {/* Complex images (gallery) - right under title */}
+        <Card>
+          <div className="p-6">
+            <h2 className="text-xl font-semibold mb-4">{t('complex.complexImages') || 'Kompleks rasmlari'}</h2>
+            <p className="text-sm text-gray-600 mb-3">
+              {t('complex.complexImagesHint') || 'Bir nechta rasm qo‘shishingiz mumkin (JPEG, PNG, WebP).'}
+            </p>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                const valid: File[] = [];
+                for (const file of files) {
+                  if (!allowedTypes.includes(file.type)) {
+                    toast.error(`${file.name}: format JPEG, PNG yoki WebP bo‘lishi kerak`);
+                    continue;
+                  }
+                  if (file.size > 10 * 1024 * 1024) {
+                    toast.error(`${file.name}: max 10MB`);
+                    continue;
+                  }
+                  valid.push(file);
+                }
+                setComplexImages((prev) => [...prev, ...valid].slice(0, 20));
+                e.currentTarget.value = '';
+              }}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+            />
+            {complexImages.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {complexImages.map((file, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 text-sm text-gray-700"
+                  >
+                    {file.name}
+                    <button
+                      type="button"
+                      onClick={() => setComplexImages((prev) => prev.filter((_, j) => j !== i))}
+                      className="text-red-600 hover:text-red-800 ml-1"
+                      aria-label="Remove"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </Card>
+
         {/* Basic Information */}
         <Card>
           <div className="p-6">
@@ -575,46 +642,6 @@ export function ComplexFormNew() {
                 min={0}
                 max={10}
               />
-            </div>
-          </div>
-        </Card>
-
-        {/* Teaser Image */}
-        <Card>
-          <div className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Teaser image</h2>
-            <div className="flex items-center space-x-4">
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null;
-                  if (!file) {
-                    setBannerImage(null);
-                    return;
-                  }
-                  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-                  if (!allowedTypes.includes(file.type)) {
-                    toast.error('Teaser image format must be JPEG, PNG, or WebP');
-                    e.currentTarget.value = '';
-                    setBannerImage(null);
-                    return;
-                  }
-                  if (file.size > 10 * 1024 * 1024) {
-                    toast.error('Teaser image is too large (max 10MB)');
-                    e.currentTarget.value = '';
-                    setBannerImage(null);
-                    return;
-                  }
-                  setBannerImage(file);
-                }}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
-              />
-              {bannerImage && (
-                <span className="text-sm text-gray-600">
-                  Selected: {bannerImage.name}
-                </span>
-              )}
             </div>
           </div>
         </Card>

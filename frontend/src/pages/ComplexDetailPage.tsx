@@ -114,14 +114,10 @@ const ComplexDetailPage = () => {
     getLocalizedContent(complex.address as any) ||
     '';
 
-  const bannerUrl = getAssetUrl(
-    complex.teaserImage ||
-      complex.teaserImageUrl ||
-      complex.bannerImage ||
-      complex.bannerImageUrl ||
-      complex.coverImage ||
-      null
-  );
+  const complexImages = (complex.images || [])
+    .map((img) => ({ ...img, url: getAssetUrl(img.url) }))
+    .filter((img) => img.url);
+  const coverImageUrl = complexImages.length > 0 ? complexImages[0].url : null;
   const parsedPermissions =
     typeof complex.permissions === 'string'
       ? (() => {
@@ -188,11 +184,11 @@ const ComplexDetailPage = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Banner photo at top of complex page */}
-        {bannerUrl ? (
+        {/* Cover and gallery: first complex image or placeholder */}
+        {coverImageUrl ? (
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
             <img
-              src={bannerUrl}
+              src={coverImageUrl}
               alt={complexTitle}
               className="w-full h-56 sm:h-64 md:h-80 lg:h-96 object-cover"
             />
@@ -200,6 +196,20 @@ const ComplexDetailPage = () => {
         ) : (
           <div className="w-full h-56 sm:h-64 md:h-80 lg:h-96 rounded-2xl border border-gray-200 bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
             <Building2 className="h-20 w-20 text-blue-300" />
+          </div>
+        )}
+
+        {/* Complex images gallery */}
+        {complexImages.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-2 rounded-xl border border-gray-200 bg-white p-2">
+            {complexImages.map((img) => (
+              <img
+                key={img.id}
+                src={img.url}
+                alt=""
+                className="h-24 w-32 flex-shrink-0 rounded-lg object-cover"
+              />
+            ))}
           </div>
         )}
 
@@ -398,8 +408,8 @@ const ComplexDetailPage = () => {
                     <a
                       key={item.label}
                       href={item.url as string}
-                      target="_blank"
-                      rel="noreferrer"
+                      target="_self"
+                      rel="noopener"
                       className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-blue-700 hover:text-blue-800 hover:border-blue-200"
                     >
                       <span className="inline-flex items-center gap-2 font-medium">

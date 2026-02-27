@@ -40,7 +40,7 @@ const upload = multer({
   limits: { fileSize: maxSize },
 });
 
-const bannerMime = ['image/jpeg', 'image/png', 'image/webp'];
+const imageMime = ['image/jpeg', 'image/png', 'image/webp'];
 const permissionMime = ['application/pdf', 'image/jpeg', 'image/png'];
 
 const complexStorage = multer.diskStorage({
@@ -61,11 +61,11 @@ const complexStorage = multer.diskStorage({
 
 const complexFileFilter = (req, file, cb) => {
   const field = file.fieldname;
-  if (field === 'banner' || field === 'teaser' || field === 'teaserImage') {
-    if (bannerMime.includes(file.mimetype)) {
+  if (field === 'images') {
+    if (imageMime.includes(file.mimetype)) {
       return cb(null, true);
     }
-    return cb(new Error('Invalid teaser/banner type. Allowed: JPEG, PNG, WebP'), false);
+    return cb(new Error('Invalid image type. Allowed: JPEG, PNG, WebP'), false);
   }
 
   const permissionFields = [

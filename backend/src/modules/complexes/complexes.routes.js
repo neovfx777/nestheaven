@@ -54,9 +54,7 @@ router.post(
   requireManagerAdmin,
   assignComplexId,
   complexUpload.fields([
-    { name: 'banner', maxCount: 1 },
-    { name: 'teaser', maxCount: 1 },
-    { name: 'teaserImage', maxCount: 1 },
+    { name: 'images', maxCount: 20 },
     { name: 'permission1', maxCount: 1 },
     { name: 'permission2', maxCount: 1 },
     { name: 'permission3', maxCount: 1 },
@@ -74,9 +72,7 @@ router.patch(
   authMiddleware,
   requireManagerAdmin,
   complexUpload.fields([
-    { name: 'banner', maxCount: 1 },
-    { name: 'teaser', maxCount: 1 },
-    { name: 'teaserImage', maxCount: 1 },
+    { name: 'images', maxCount: 20 },
     { name: 'permission1', maxCount: 1 },
     { name: 'permission2', maxCount: 1 },
     { name: 'permission3', maxCount: 1 },

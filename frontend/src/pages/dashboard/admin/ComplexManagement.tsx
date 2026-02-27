@@ -7,6 +7,7 @@ import { Card } from '../../../components/ui/Card';
 import { Input } from '../../../components/ui/Input';
 import { Badge } from '../../../components/ui/Badge';
 import apiClient from '../../../api/client';
+import { getAssetUrl } from '../../../api/client';
 import { toast } from 'react-hot-toast';
 import { useLanguageStore } from '../../../stores/languageStore';
 import { getLocalizedContent } from '../../../utils/translations';
@@ -20,8 +21,8 @@ interface Complex {
   blockCount: number;
   amenities: string[];
   nearbyPlaces: any[];
-  teaserImage?: string;
-  bannerImage?: string;
+  coverImage?: string | null;
+  images?: Array<{ id: string; url: string; order: number }>;
   _count?: {
     apartments: number;
   };
@@ -148,11 +149,11 @@ export function ComplexManagement() {
 
             return (
               <Card key={complex.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                {/* Banner Image */}
-                {(complex.teaserImage || complex.bannerImage) && (
+                {/* Cover image (first complex image) */}
+                {(complex.coverImage || complex.images?.[0]?.url) && (
                   <div className="h-48 overflow-hidden bg-gray-200">
                     <img
-                      src={complex.teaserImage || complex.bannerImage}
+                      src={getAssetUrl(complex.coverImage || complex.images?.[0]?.url)}
                       alt={title}
                       className="w-full h-full object-cover"
                     />
