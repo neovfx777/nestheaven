@@ -236,7 +236,7 @@ export function ComplexFormNew() {
       const url = isEdit ? `/complexes/${id}` : '/complexes';
       const method = isEdit ? 'patch' : 'post';
       
-      // Don't set Content-Type manually - axios will set it with boundary for FormData
+      // Let axios set multipart boundary automatically for FormData.
       const response = await apiClient[method](url, formData);
 
       return response.data;
@@ -247,6 +247,17 @@ export function ComplexFormNew() {
     },
     onError: (error: any) => {
       console.error('Complex save error:', error);
+      const isNetworkError = !error.response && (
+        error.code === 'ERR_NETWORK'
+        || /network error/i.test(error.message || '')
+      );
+
+      if (isNetworkError) {
+        const apiUrl = apiClient.defaults.baseURL || 'http://localhost:3000/api';
+        toast.error(`Backend connection failed: ${apiUrl}`);
+        return;
+      }
+
       const errorMessage = error.response?.data?.message
         || error.response?.data?.error 
         || error.response?.data?.details?.[0]?.message

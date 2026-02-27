@@ -27,6 +27,19 @@ function parseJsonMaybe(value, fallback) {
   return value;
 }
 
+function resolvePermissionSet(complexLike) {
+  const parsed = parseJsonMaybe(complexLike?.permissions, {}) || {};
+  const permission1 = parsed.permission1 || complexLike?.permission1Url || null;
+  const permission2 = parsed.permission2 || complexLike?.permission2Url || null;
+  const permission3 = parsed.permission3 || complexLike?.permission3Url || null;
+
+  if (!permission1 && !permission2 && !permission3) {
+    return null;
+  }
+
+  return { permission1, permission2, permission3 };
+}
+
 function normalizeNearbyPlaces(places) {
   if (!Array.isArray(places)) return [];
   return places
@@ -68,7 +81,7 @@ function formatComplex(complex) {
     lng: complex.longitude || 69.2797,
     address: parseJsonMaybe(complex.address, { uz: '', ru: '', en: '' }),
   });
-  const permissions = parseJsonMaybe(complex.permissions, null);
+  const permissions = resolvePermissionSet(complex);
   const allowedSellers = parseJsonMaybe(complex.allowedSellers, []);
 
   const images = (complex.images || [])
@@ -659,7 +672,11 @@ async function update(id, data, reqUser, baseUrl) {
     }
 
     // Handle permissions
-    const existingPermissions = parseJsonMaybe(existing.permissions, {});
+    const existingPermissions = resolvePermissionSet(existing) || {
+      permission1: null,
+      permission2: null,
+      permission3: null,
+    };
     
     if (permission1File || permission2File || permission3File) {
       const nextPermission1 = permission1File 
@@ -672,27 +689,34 @@ async function update(id, data, reqUser, baseUrl) {
         ? buildUrl(id, permission3File, baseUrl) 
         : (existingPermissions.permission3 || null);
 
-      if (nextPermission1 && nextPermission2 && nextPermission3) {
-        // Delete old files if replaced
-        if (permission1File && existingPermissions.permission1) {
-          deleteFileByUrl(existingPermissions.permission1);
-        }
-        if (permission2File && existingPermissions.permission2) {
-          deleteFileByUrl(existingPermissions.permission2);
-        }
-        if (permission3File && existingPermissions.permission3) {
-          deleteFileByUrl(existingPermissions.permission3);
-        }
-
-        updates.permissions = JSON.stringify({
-          permission1: nextPermission1,
-          permission2: nextPermission2,
-          permission3: nextPermission3,
-        });
-        updates.permission1Url = nextPermission1;
-        updates.permission2Url = nextPermission2;
-        updates.permission3Url = nextPermission3;
+      // Keep invariant: all three permission files must exist together.
+      if (!nextPermission1 || !nextPermission2 || !nextPermission3) {
+        const err = new Error(
+          'Provide all three permission files (permission1, permission2, permission3) or keep existing complete set'
+        );
+        err.statusCode = 400;
+        throw err;
       }
+
+      // Delete old files if replaced
+      if (permission1File && existingPermissions.permission1) {
+        deleteFileByUrl(existingPermissions.permission1);
+      }
+      if (permission2File && existingPermissions.permission2) {
+        deleteFileByUrl(existingPermissions.permission2);
+      }
+      if (permission3File && existingPermissions.permission3) {
+        deleteFileByUrl(existingPermissions.permission3);
+      }
+
+      updates.permissions = JSON.stringify({
+        permission1: nextPermission1,
+        permission2: nextPermission2,
+        permission3: nextPermission3,
+      });
+      updates.permission1Url = nextPermission1;
+      updates.permission2Url = nextPermission2;
+      updates.permission3Url = nextPermission3;
     }
 
     const updated = await prisma.complex.update({
@@ -744,7 +768,7 @@ async function remove(id, reqUser) {
       deleteFileByUrl(img.url);
     }
 
-    const permissions = parseJsonMaybe(existing.permissions, {});
+    const permissions = resolvePermissionSet(existing) || {};
     if (permissions.permission1) deleteFileByUrl(permissions.permission1);
     if (permissions.permission2) deleteFileByUrl(permissions.permission2);
     if (permissions.permission3) deleteFileByUrl(permissions.permission3);
