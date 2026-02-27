@@ -52,7 +52,12 @@ const ComplexesPage = () => {
                   ? complex.address
                   : '');
               const cover = getAssetUrl(
-                complex.bannerImage || complex.coverImage || complex.bannerImageUrl || null
+                complex.teaserImage ||
+                  complex.teaserImageUrl ||
+                  complex.bannerImage ||
+                  complex.coverImage ||
+                  complex.bannerImageUrl ||
+                  null
               );
 
               return (

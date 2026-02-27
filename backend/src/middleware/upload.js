@@ -61,11 +61,11 @@ const complexStorage = multer.diskStorage({
 
 const complexFileFilter = (req, file, cb) => {
   const field = file.fieldname;
-  if (field === 'banner') {
+  if (field === 'banner' || field === 'teaser' || field === 'teaserImage') {
     if (bannerMime.includes(file.mimetype)) {
       return cb(null, true);
     }
-    return cb(new Error('Invalid banner type. Allowed: JPEG, PNG, WebP'), false);
+    return cb(new Error('Invalid teaser/banner type. Allowed: JPEG, PNG, WebP'), false);
   }
 
   const permissionFields = [
