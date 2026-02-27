@@ -114,6 +114,20 @@ const ApartmentDetailPage = () => {
     });
   };
 
+  const formatRenovationStatus = (status?: string | null) => {
+    if (!status) return 'N/A';
+    switch (status) {
+      case 'qora_suvoq':
+        return 'Qora suvoq';
+      case 'oq_suvoq':
+        return 'Oq suvoq';
+      case 'toliq_remont_qilingan':
+        return "To'liq remont qilingan";
+      default:
+        return status;
+    }
+  };
+
   const handleShare = async () => {
     try {
       const url = window.location.href;
@@ -431,7 +445,7 @@ const ApartmentDetailPage = () => {
                         </div>
                         <div className="bg-gray-50 rounded-lg p-4">
                           <div className="text-sm text-gray-500">Condition</div>
-                          <div className="font-semibold">New</div>
+                          <div className="font-semibold">{formatRenovationStatus(apartment.renovationStatus)}</div>
                         </div>
                       </div>
                     </div>

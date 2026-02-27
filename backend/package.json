@@ -14,6 +14,7 @@
     "db:migrate": "npx prisma migrate deploy",
     "db:push": "npx prisma db push",
     "db:seed": "node prisma/seed.js",
+    "db:backfill-i18n": "node scripts/backfill-apartment-i18n.js",
     "db:clear": "node scripts/clear-database.js",
     "db:seed-accounts": "node scripts/seed-accounts.js",
     "db:reset": "node scripts/clear-database.js && node scripts/seed-accounts.js",

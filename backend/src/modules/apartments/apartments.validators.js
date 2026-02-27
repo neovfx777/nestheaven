@@ -19,6 +19,7 @@ const createApartmentSchema = z.object({
     materials: z.union([i18nSchema, z.string()]).optional(),
     infrastructureNote: z.union([i18nSchema, z.string()]).optional(),
     constructionStatus: z.enum(['available', 'built']).optional(),
+    renovationStatus: z.enum(['qora_suvoq', 'oq_suvoq', 'toliq_remont_qilingan']).optional(),
     readyByYear: z.number().int().min(2000).max(2100).optional().nullable(),
     readyByMonth: z.number().int().min(1).max(12).optional().nullable(),
   }).refine(
@@ -41,6 +42,7 @@ const updateApartmentSchema = z.object({
     materials: z.union([i18nSchema, z.string()]).optional().nullable(),
     infrastructureNote: z.union([i18nSchema, z.string()]).optional().nullable(),
     constructionStatus: z.enum(['available', 'built']).optional().nullable(),
+    renovationStatus: z.enum(['qora_suvoq', 'oq_suvoq', 'toliq_remont_qilingan']).optional().nullable(),
     readyByYear: z.number().int().min(2000).max(2100).optional().nullable(),
     readyByMonth: z.number().int().min(1).max(12).optional().nullable(),
   }).refine((b) => Object.keys(b).length > 0, { message: 'At least one field to update' })
@@ -59,6 +61,12 @@ const listSchema = z.object({
     minPrice: z.coerce.number().optional(),
     maxPrice: z.coerce.number().optional(),
     rooms: z.coerce.number().int().optional(),
+    minRooms: z.coerce.number().int().optional(),
+    maxRooms: z.coerce.number().int().optional(),
+    minArea: z.coerce.number().optional(),
+    maxArea: z.coerce.number().optional(),
+    minFloor: z.coerce.number().int().optional(),
+    maxFloor: z.coerce.number().int().optional(),
     status: z.enum(['active', 'hidden', 'sold', 'ACTIVE', 'HIDDEN', 'SOLD']).optional(), // Ikkala formatni qabul qilish
     lang: z.enum(['uz', 'ru', 'en']).optional(),
     search: z.string().optional(),

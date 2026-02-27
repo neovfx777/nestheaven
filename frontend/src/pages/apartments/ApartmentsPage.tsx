@@ -89,29 +89,9 @@ const parseSortOrder = (value: string | null): ApartmentFilterState['sortOrder']
   return DEFAULT_APARTMENT_FILTERS.sortOrder;
 };
 
-const parseStatus = (value: string | null): ApartmentFilterState['status'] => {
-  if (value === 'active' || value === 'sold' || value === 'hidden') {
-    return value;
-  }
-  return '';
-};
-
-const parsePaymentPlan = (value: string | null): ApartmentFilterState['paymentPlan'] => {
-  if (value === 'mortgage' || value === 'installments') {
-    return value;
-  }
-  return 'any';
-};
-
-const parseBadge = (value: string | null): ApartmentFilterState['badge'] => {
-  if (value === 'featured' || value === 'recommended') {
-    return value;
-  }
-  return 'all';
-};
-
 const ApartmentsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isAuthenticated } = useAuthStore();
 
   const [filters, setFilters] = useState<ApartmentFilterState>(() => ({
     ...DEFAULT_APARTMENT_FILTERS,
@@ -123,11 +103,6 @@ const ApartmentsPage = () => {
     maxArea: searchParams.get('maxArea') || '',
     minFloor: searchParams.get('minFloor') || '',
     maxFloor: searchParams.get('maxFloor') || '',
-    complexId: searchParams.get('complexId') || '',
-    developerName: searchParams.get('developerName') || '',
-    status: parseStatus(searchParams.get('status')),
-    paymentPlan: parsePaymentPlan(searchParams.get('paymentPlan')),
-    badge: parseBadge(searchParams.get('badge')),
     sortBy: parseSortBy(searchParams.get('sortBy')),
     sortOrder: parseSortOrder(searchParams.get('sortOrder')),
     search: searchParams.get('search') || '',
@@ -136,29 +111,47 @@ const ApartmentsPage = () => {
   const [showSaveSearchModal, setShowSaveSearchModal] = useState(false);
   const [showFoundModal, setShowFoundModal] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const { isAuthenticated } = useAuthStore();
 
   const currentPage = parsePage(searchParams.get('page'));
 
   const serverFilters = useMemo<ApiFilterParams>(() => {
     const minPrice = parseNumberFilter(filters.minPrice);
     const maxPrice = parseNumberFilter(filters.maxPrice);
+    const minRooms = parseNumberFilter(filters.minRooms);
+    const maxRooms = parseNumberFilter(filters.maxRooms);
+    const minArea = parseNumberFilter(filters.minArea);
+    const maxArea = parseNumberFilter(filters.maxArea);
+    const minFloor = parseNumberFilter(filters.minFloor);
+    const maxFloor = parseNumberFilter(filters.maxFloor);
 
     return {
       page: 1,
-      limit: 200,
+      limit: 1000,
       ...(minPrice !== undefined && { minPrice }),
       ...(maxPrice !== undefined && { maxPrice }),
-      ...(filters.complexId && { complexId: filters.complexId }),
-      ...(filters.status && { status: filters.status }),
+      ...(minRooms !== undefined && { minRooms }),
+      ...(maxRooms !== undefined && { maxRooms }),
+      ...(minArea !== undefined && { minArea }),
+      ...(maxArea !== undefined && { maxArea }),
+      ...(minFloor !== undefined && { minFloor }),
+      ...(maxFloor !== undefined && { maxFloor }),
+      sortBy: filters.sortBy,
+      sortOrder: filters.sortOrder,
       ...(filters.search && { search: filters.search }),
     };
-  }, [filters.minPrice, filters.maxPrice, filters.complexId, filters.status, filters.search]);
-
-  const { data: complexes = [] } = useQuery({
-    queryKey: ['complexes'],
-    queryFn: apartmentsApi.getComplexes,
-  });
+  }, [
+    filters.minPrice,
+    filters.maxPrice,
+    filters.minRooms,
+    filters.maxRooms,
+    filters.minArea,
+    filters.maxArea,
+    filters.minFloor,
+    filters.maxFloor,
+    filters.sortBy,
+    filters.sortOrder,
+    filters.search,
+  ]);
 
   const {
     data: apartmentsData,
@@ -186,7 +179,6 @@ const ApartmentsPage = () => {
     const minFloor = parseNumberFilter(filters.minFloor);
     const maxFloor = parseNumberFilter(filters.maxFloor);
 
-    const developerFilter = filters.developerName.trim().toLowerCase();
     const searchFilter = filters.search.trim().toLowerCase();
 
     const filtered = apartments.filter((apartment) => {
@@ -200,49 +192,17 @@ const ApartmentsPage = () => {
       if (minFloor !== undefined && floor < minFloor) return false;
       if (maxFloor !== undefined && floor > maxFloor) return false;
 
-      if (filters.complexId && apartment.complexId !== filters.complexId) return false;
-
-      if (filters.status) {
-        const apartmentStatus = apartment.status.toString().toLowerCase();
-        if (apartmentStatus !== filters.status) return false;
-      }
-
-      if (developerFilter && !String(apartment.developerName || '').toLowerCase().includes(developerFilter)) {
-        return false;
-      }
-
       const searchableBlob = [
         readLocalizedText(apartment.title),
         readLocalizedText(apartment.description),
         readLocalizedText(apartment.complex?.name),
         readLocalizedText(apartment.complex?.address),
         apartment.address || '',
-        apartment.developerName || '',
       ]
         .join(' ')
         .toLowerCase();
 
       if (searchFilter && !searchableBlob.includes(searchFilter)) {
-        return false;
-      }
-
-      if (filters.paymentPlan === 'mortgage') {
-        if (!/ipoteka|mortgage|kredit|credit/.test(searchableBlob)) {
-          return false;
-        }
-      }
-
-      if (filters.paymentPlan === 'installments') {
-        if (!/bo'lib|installment|rassroch|muddatli/.test(searchableBlob)) {
-          return false;
-        }
-      }
-
-      if (filters.badge === 'featured' && !apartment.isFeatured) {
-        return false;
-      }
-
-      if (filters.badge === 'recommended' && !apartment.isRecommended) {
         return false;
       }
 
@@ -395,7 +355,6 @@ const ApartmentsPage = () => {
       <div className="grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)] gap-6">
         <aside className={`${showMobileFilters ? 'block' : 'hidden'} xl:block`}>
           <ApartmentFilters
-            complexes={complexes}
             filters={filters}
             onFilterChange={handleFilterChange}
             onSearch={handleSearch}

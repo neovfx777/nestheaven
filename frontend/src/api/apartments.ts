@@ -1,5 +1,7 @@
 import apiClient from './client';
 
+export type RenovationStatus = 'qora_suvoq' | 'oq_suvoq' | 'toliq_remont_qilingan';
+
 export interface Apartment {
   id: string;
   title: { uz: string; ru: string; en: string };
@@ -15,6 +17,7 @@ export interface Apartment {
   constructionStatus?: 'available' | 'built' | null;
   readyByYear?: number | null;
   readyByMonth?: number | null;
+  renovationStatus?: RenovationStatus | null;
   complex?: {
     id: string;
     name: { uz: string; ru: string; en: string };
@@ -72,6 +75,7 @@ export interface ApartmentDetail {
   constructionStatus?: 'available' | 'built' | null;
   readyByYear?: number | null;
   readyByMonth?: number | null;
+  renovationStatus?: RenovationStatus | null;
   address?: string;
   developer?: string;
   developerName?: string;
@@ -134,6 +138,8 @@ export interface FilterParams {
   maxRooms?: number;
   minArea?: number;
   maxArea?: number;
+  minFloor?: number;
+  maxFloor?: number;
   status?: 'active' | 'hidden' | 'sold' | 'ACTIVE' | 'HIDDEN' | 'SOLD';
   complexId?: string;
   developerName?: string;
@@ -166,11 +172,14 @@ export interface Complex {
   permission1Url?: string | null;
   permission2Url?: string | null;
   permission3Url?: string | null;
-  permissions?: {
-    permission1: string;
-    permission2: string;
-    permission3: string;
-  } | null;
+  permissions?:
+    | {
+        permission1?: string | null;
+        permission2?: string | null;
+        permission3?: string | null;
+      }
+    | string
+    | null;
   walkability?: number | null;
   airQuality?: number | null;
   walkabilityRating?: number | null; // Legacy field
@@ -218,6 +227,7 @@ export interface CreateApartmentData {
   constructionStatus?: 'available' | 'built';
   readyByYear?: number | null;
   readyByMonth?: number | null;
+  renovationStatus?: RenovationStatus | null;
 }
 
 export interface UpdateApartmentData extends Partial<CreateApartmentData> { }
