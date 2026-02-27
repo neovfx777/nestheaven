@@ -26,7 +26,6 @@ export interface Apartment {
     coverImage: string | null;
     title?: string;
     locationText?: string;
-    bannerImageUrl?: string | null;
     walkabilityRating?: number | null;
     airQualityRating?: number | null;
   } | null;
@@ -100,7 +99,6 @@ export interface ApartmentDetail {
       note?: string | null;
     }> | null;
     nearbyNote?: string | null;
-    bannerImageUrl?: string | null;
     walkabilityRating?: number | null;
     airQualityRating?: number | null;
   } | null;
@@ -166,11 +164,8 @@ export interface Complex {
     lng: number;
     address: { uz: string; ru: string; en: string };
   };
-  /** Banner image URL – returned by API as bannerImage */
-  teaserImage?: string | null;
-  teaserImageUrl?: string | null;
-  bannerImage?: string | null;
-  bannerImageUrl?: string | null;
+  coverImage?: string | null;
+  images?: Array<{ id: string; url: string; order: number }>;
   permission1Url?: string | null;
   permission2Url?: string | null;
   permission3Url?: string | null;

@@ -71,6 +71,11 @@ function formatComplex(complex) {
   const permissions = parseJsonMaybe(complex.permissions, null);
   const allowedSellers = parseJsonMaybe(complex.allowedSellers, []);
 
+  const images = (complex.images || [])
+    .map((img) => ({ id: img.id, url: img.url, order: img.order }))
+    .sort((a, b) => a.order - b.order);
+  const coverImage = images.length > 0 ? images[0].url : null;
+
   return {
     id: complex.id,
     title,
@@ -83,9 +88,8 @@ function formatComplex(complex) {
     location,
     walkability: complex.walkabilityRating || complex.walkabilityScore || null,
     airQuality: complex.airQualityRating || complex.airQualityScore || null,
-    teaserImage: complex.bannerImageUrl || null,
-    teaserImageUrl: complex.bannerImageUrl || null,
-    bannerImage: complex.bannerImageUrl || null,
+    images,
+    coverImage,
     permissions,
     allowedSellers,
     createdAt: complex.createdAt,
@@ -120,6 +124,7 @@ async function list(data) {
       skip,
       take: limit,
       include: {
+        images: { orderBy: { order: 'asc' } },
         _count: { select: { apartments: true } },
       },
     });
@@ -145,6 +150,7 @@ async function getById(id) {
       where: { id },
       include: {
         apartments: { select: { id: true, status: true } },
+        images: { orderBy: { order: 'asc' } },
         _count: { select: { apartments: true } },
       },
     });
@@ -183,14 +189,11 @@ async function create(data, reqUser, baseUrl) {
       body.city = 'Unknown';
     }
 
-    const teaserFile = getFile(files, 'teaser', 'teaserImage');
-    const bannerFile = getFile(files, 'banner');
-    const heroFile = teaserFile || bannerFile;
+    const imageFiles = files?.images || [];
     const permission1File = getFile(files, 'permission1', 'permission_1');
     const permission2File = getFile(files, 'permission2', 'permission_2');
     const permission3File = getFile(files, 'permission3', 'permission_3');
 
-    const bannerImageUrl = heroFile ? buildUrl(complexId, heroFile, baseUrl) : null;
     const permission1Url = permission1File ? buildUrl(complexId, permission1File, baseUrl) : null;
     const permission2Url = permission2File ? buildUrl(complexId, permission2File, baseUrl) : null;
     const permission3Url = permission3File ? buildUrl(complexId, permission3File, baseUrl) : null;
@@ -411,7 +414,6 @@ async function create(data, reqUser, baseUrl) {
         : (body.airQualityRating !== undefined && body.airQualityRating !== null && body.airQualityRating !== '')
           ? parseInt(body.airQualityRating)
           : null, // Legacy field
-      bannerImageUrl: bannerImageUrl,
       permission1Url: permission1Url,
       permission2Url: permission2Url,
       permission3Url: permission3Url,
@@ -460,9 +462,24 @@ async function create(data, reqUser, baseUrl) {
       created = await prisma.complex.create({
         data: cleanedData,
         include: {
+          images: true,
           _count: { select: { apartments: true } },
         },
       });
+      const imageFilesList = Array.isArray(imageFiles) ? imageFiles : (imageFiles ? [imageFiles] : []);
+      for (let i = 0; i < imageFilesList.length; i++) {
+        const file = imageFilesList[i];
+        const url = buildUrl(complexId, file, baseUrl);
+        await prisma.complexImage.create({
+          data: { complexId, url, order: i },
+        });
+      }
+      if (imageFilesList.length > 0) {
+        created = await prisma.complex.findUnique({
+          where: { id: created.id },
+          include: { images: { orderBy: { order: 'asc' } }, _count: { select: { apartments: true } } },
+        });
+      }
       console.log('✅ Complex created successfully:', created.id);
     } catch (prismaError) {
       console.error('❌ Prisma create error:', {
@@ -624,18 +641,21 @@ async function update(id, data, reqUser, baseUrl) {
     }
 
     // Handle file uploads
-    const teaserFile = getFile(files, 'teaser', 'teaserImage');
-    const bannerFile = getFile(files, 'banner');
-    const heroFile = teaserFile || bannerFile;
+    const imageFilesList = Array.isArray(files?.images) ? files.images : (files?.images ? [files.images] : []);
     const permission1File = getFile(files, 'permission1', 'permission_1');
     const permission2File = getFile(files, 'permission2', 'permission_2');
     const permission3File = getFile(files, 'permission3', 'permission_3');
 
-    if (heroFile) {
-      if (existing.bannerImageUrl) {
-        deleteFileByUrl(existing.bannerImageUrl);
+    if (imageFilesList.length > 0) {
+      const existingImages = await prisma.complexImage.findMany({ where: { complexId: id }, orderBy: { order: 'asc' } });
+      const nextOrder = existingImages.length;
+      for (let i = 0; i < imageFilesList.length; i++) {
+        const file = imageFilesList[i];
+        const url = buildUrl(id, file, baseUrl);
+        await prisma.complexImage.create({
+          data: { complexId: id, url, order: nextOrder + i },
+        });
       }
-      updates.bannerImageUrl = buildUrl(id, heroFile, baseUrl);
     }
 
     // Handle permissions
@@ -679,6 +699,7 @@ async function update(id, data, reqUser, baseUrl) {
       where: { id },
       data: updates,
       include: {
+        images: { orderBy: { order: 'asc' } },
         _count: { select: { apartments: true } },
       },
     });
@@ -717,11 +738,12 @@ async function remove(id, reqUser) {
       throw err;
     }
 
-    // Delete files
-    if (existing.bannerImageUrl) {
-      deleteFileByUrl(existing.bannerImageUrl);
+    // Delete complex images (files on disk)
+    const existingImages = await prisma.complexImage.findMany({ where: { complexId: id } });
+    for (const img of existingImages) {
+      deleteFileByUrl(img.url);
     }
-    
+
     const permissions = parseJsonMaybe(existing.permissions, {});
     if (permissions.permission1) deleteFileByUrl(permissions.permission1);
     if (permissions.permission2) deleteFileByUrl(permissions.permission2);

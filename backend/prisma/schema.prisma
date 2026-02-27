@@ -68,7 +68,6 @@ model Complex {
   locationText      String?   @map("location_text")
   locationLat       Float?    @map("location_lat")
   locationLng       Float?    @map("location_lng")
-  bannerImageUrl    String?   @map("banner_image_url")
   permission1Url    String?   @map("permission1_url")
   permission2Url    String?   @map("permission2_url")
   permission3Url    String?   @map("permission3_url")
@@ -85,6 +84,20 @@ model Complex {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   apartments  Apartment[]
+  images      ComplexImage[]
+}
+
+model ComplexImage {
+  id         String   @id @default(cuid())
+  complexId  String   @map("complex_id")
+  url        String
+  order      Int      @default(0)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  complex Complex @relation(fields: [complexId], references: [id], onDelete: Cascade)
+
+  @@index([complexId])
+  @@map("complex_images")
 }
 
 model Apartment {

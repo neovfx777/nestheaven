@@ -44,14 +44,14 @@ function formatComplexSummary(complex) {
       ? address
       : address?.en || address?.uz || address?.ru || '');
 
-  const bannerImageUrl = complex.bannerImageUrl || null;
-  
+  const firstImageUrl = complex.images?.[0]?.url || null;
+
   // Parse nearbyPlaces if it's a JSON string
   let nearbyPlaces = null;
   if (complex.nearbyPlaces) {
     try {
-      nearbyPlaces = typeof complex.nearbyPlaces === 'string' 
-        ? JSON.parse(complex.nearbyPlaces) 
+      nearbyPlaces = typeof complex.nearbyPlaces === 'string'
+        ? JSON.parse(complex.nearbyPlaces)
         : complex.nearbyPlaces;
     } catch (e) {
       nearbyPlaces = null;
@@ -68,10 +68,7 @@ function formatComplexSummary(complex) {
     locationLng: complex.locationLng ?? null,
     nearbyPlaces,
     nearbyNote: complex.nearbyNote ?? null,
-    bannerImageUrl,
-    walkabilityRating: complex.walkabilityRating ?? complex.walkabilityScore ?? null,
-    airQualityRating: complex.airQualityRating ?? complex.airQualityScore ?? null,
-    coverImage: bannerImageUrl,
+    coverImage: firstImageUrl,
   };
 }
 
@@ -225,22 +222,8 @@ async function list(data, reqUser) {
       orderBy: { [safeSortBy]: safeSortOrder },
       include: {
         complex: {
-          select: {
-            id: true,
-            name: true,
-            city: true,
-            address: true,
-            title: true,
-            locationText: true,
-            locationLat: true,
-            locationLng: true,
-            nearbyPlaces: true,
-            nearbyNote: true,
-            bannerImageUrl: true,
-            walkabilityRating: true,
-            airQualityRating: true,
-            walkabilityScore: true,
-            airQualityScore: true,
+          include: {
+            images: { orderBy: { order: 'asc' }, take: 1 },
           }
         },
         images: {
@@ -319,22 +302,8 @@ async function getById(id, reqUser) {
       where: { id },
       include: {
         complex: {
-          select: {
-            id: true,
-            name: true,
-            city: true,
-            address: true,
-            title: true,
-            locationText: true,
-            locationLat: true,
-            locationLng: true,
-            nearbyPlaces: true,
-            nearbyNote: true,
-            bannerImageUrl: true,
-            walkabilityRating: true,
-            airQualityRating: true,
-            walkabilityScore: true,
-            airQualityScore: true,
+          include: {
+            images: { orderBy: { order: 'asc' }, take: 1 },
           }
         },
         images: {
@@ -440,22 +409,8 @@ async function getMyListings(options) {
       orderBy: { [sortBy]: sortOrder },
       include: {
         complex: {
-          select: {
-            id: true,
-            name: true,
-            city: true,
-            address: true,
-            title: true,
-            locationText: true,
-            locationLat: true,
-            locationLng: true,
-            nearbyPlaces: true,
-            nearbyNote: true,
-            bannerImageUrl: true,
-            walkabilityRating: true,
-            airQualityRating: true,
-            walkabilityScore: true,
-            airQualityScore: true,
+          include: {
+            images: { orderBy: { order: 'asc' }, take: 1 },
           }
         },
         images: {
@@ -572,22 +527,8 @@ async function create(data, reqUser) {
       },
       include: {
         complex: {
-          select: {
-            id: true,
-            name: true,
-            city: true,
-            address: true,
-            title: true,
-            locationText: true,
-            locationLat: true,
-            locationLng: true,
-            nearbyPlaces: true,
-            nearbyNote: true,
-            bannerImageUrl: true,
-            walkabilityRating: true,
-            airQualityRating: true,
-            walkabilityScore: true,
-            airQualityScore: true,
+          include: {
+            images: { orderBy: { order: 'asc' }, take: 1 },
           }
         },
         images: true,
@@ -710,22 +651,8 @@ async function update(id, data, reqUser) {
       data: updates,
       include: {
         complex: {
-          select: {
-            id: true,
-            name: true,
-            city: true,
-            address: true,
-            title: true,
-            locationText: true,
-            locationLat: true,
-            locationLng: true,
-            nearbyPlaces: true,
-            nearbyNote: true,
-            bannerImageUrl: true,
-            walkabilityRating: true,
-            airQualityRating: true,
-            walkabilityScore: true,
-            airQualityScore: true,
+          include: {
+            images: { orderBy: { order: 'asc' }, take: 1 },
           }
         },
         images: true,
@@ -819,22 +746,8 @@ async function markSold(id, reqUser) {
       data: { status: 'sold' },
       include: {
         complex: {
-          select: {
-            id: true,
-            name: true,
-            city: true,
-            address: true,
-            title: true,
-            locationText: true,
-            locationLat: true,
-            locationLng: true,
-            nearbyPlaces: true,
-            nearbyNote: true,
-            bannerImageUrl: true,
-            walkabilityRating: true,
-            airQualityRating: true,
-            walkabilityScore: true,
-            airQualityScore: true,
+          include: {
+            images: { orderBy: { order: 'asc' }, take: 1 },
           }
         },
         images: true,
@@ -869,22 +782,8 @@ async function hideUnhide(id, data, reqUser) {
       data: { status: data.body.status },
       include: {
         complex: {
-          select: {
-            id: true,
-            name: true,
-            city: true,
-            address: true,
-            title: true,
-            locationText: true,
-            locationLat: true,
-            locationLng: true,
-            nearbyPlaces: true,
-            nearbyNote: true,
-            bannerImageUrl: true,
-            walkabilityRating: true,
-            airQualityRating: true,
-            walkabilityScore: true,
-            airQualityScore: true,
+          include: {
+            images: { orderBy: { order: 'asc' }, take: 1 },
           }
         },
         images: true,
