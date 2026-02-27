@@ -355,6 +355,17 @@ export const apartmentsApi = {
     }
   },
 
+  // Get single complex by ID
+  getComplexById: async (id: string): Promise<Complex | null> => {
+    try {
+      const response = await apiClient.get<{ success: boolean; data: Complex }>(`/complexes/${id}`);
+      return response.data.data || null;
+    } catch (error) {
+      console.error('Failed to fetch complex by ID:', error);
+      return null;
+    }
+  },
+
   // Get complexes for seller (only complexes where seller is in allowedSellers)
   getComplexesForSeller: async (): Promise<Complex[]> => {
     try {

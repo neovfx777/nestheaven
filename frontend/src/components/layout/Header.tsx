@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Building2, User, LogIn, MapPin, TrendingUp, Calendar } from 'lucide-react';
+import { Building2, User, LogIn } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { broadcastsApi } from '../../api/broadcasts';
 import { LanguageSelector } from '../ui/LanguageSelector';
@@ -9,8 +9,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 const Header = () => {
   const { isAuthenticated, user } = useAuthStore();
   const location = useLocation();
-  const isHomePage = location.pathname === '/';
-  const { t, getLocalizedContent } = useTranslation();
+  const { t } = useTranslation();
 
   const { data: broadcasts } = useQuery({
     queryKey: ['broadcasts', 'latest'],
@@ -124,38 +123,6 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Complex Info Banner (only on home page) */}
-      {isHomePage && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
-          <div className="container mx-auto px-4 py-3">
-            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-sm text-gray-700">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-blue-600" />
-                <span className="font-medium">
-                  NestHeaven
-                </span>
-              </div>
-              <div className="hidden md:flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-blue-600" />
-                <span>
-                  Tashkent, Uzbekistan
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-blue-600" />
-                <span>{t('header.completion')}: 2025</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-blue-600" />
-                <span className="font-semibold text-green-600">15% {t('header.investmentGrowth')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">0 {t('header.apartmentsAvailable')}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 };
