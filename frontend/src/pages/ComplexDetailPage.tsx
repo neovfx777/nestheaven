@@ -26,18 +26,16 @@ const ComplexDetailPage = () => {
   const navigate = useNavigate();
   const { t, getLocalizedContent } = useTranslation();
 
-  // Fetch all complexes and find current one
+  // Fetch complex by ID
   const {
-    data: complexes,
-    isLoading: complexesLoading,
-  } = useQuery({
-    queryKey: ['complexes'],
-    queryFn: apartmentsApi.getComplexes,
+    data: complex,
+    isLoading: complexLoading,
+  } = useQuery<Complex | null>({
+    queryKey: ['complex', id],
+    queryFn: () => (id ? apartmentsApi.getComplexById(id) : Promise.resolve(null)),
+    enabled: !!id,
     retry: 1,
   });
-
-  const complex: Complex | undefined =
-    complexes?.find((c) => c.id === id) || undefined;
 
   // Fetch apartments in this complex
   const {
@@ -57,7 +55,7 @@ const ComplexDetailPage = () => {
 
   const apartments: Apartment[] = apartmentsData?.apartments || [];
 
-  if (complexesLoading || apartmentsLoading) {
+  if (complexLoading || apartmentsLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
