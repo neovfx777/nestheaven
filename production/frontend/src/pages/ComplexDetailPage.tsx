@@ -106,12 +106,31 @@ const ComplexDetailPage = () => {
     (typeof complex.address === 'string' ? complex.address : '');
 
   const bannerUrl = getAssetUrl(
-    complex.bannerImageUrl || complex.coverImage || null
+    complex.bannerImageUrl || complex.bannerImage || complex.coverImage || null
   );
+  const parsedPermissions =
+    typeof complex.permissions === 'string'
+      ? (() => {
+          try {
+            return JSON.parse(complex.permissions);
+          } catch {
+            return null;
+          }
+        })()
+      : complex.permissions;
   const permissionLinks = [
-    { label: t('complexDetail.permission1'), url: complex.permission1Url },
-    { label: t('complexDetail.permission2'), url: complex.permission2Url },
-    { label: t('complexDetail.permission3'), url: complex.permission3Url },
+    {
+      label: t('complexDetail.permission1'),
+      url: complex.permission1Url || parsedPermissions?.permission1,
+    },
+    {
+      label: t('complexDetail.permission2'),
+      url: complex.permission2Url || parsedPermissions?.permission2,
+    },
+    {
+      label: t('complexDetail.permission3'),
+      url: complex.permission3Url || parsedPermissions?.permission3,
+    },
   ]
     .map((item) => ({ ...item, url: getAssetUrl(item.url || null) }))
     .filter((item) => item.url);

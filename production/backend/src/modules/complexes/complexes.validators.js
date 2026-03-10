@@ -193,19 +193,43 @@ function validateCreate(req, res, next) {
     }
 
     const files = req.files || {};
+    const imageCount = Array.isArray(files.images)
+      ? files.images.length
+      : files.images
+      ? 1
+      : 0;
+    const bannerCount = Array.isArray(files.banner)
+      ? files.banner.length
+      : files.banner
+      ? 1
+      : 0;
+    const totalImageCount = imageCount + bannerCount;
+
+    if (totalImageCount === 0) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: [
+          {
+            path: ['images'],
+            message: 'At least one complex image is required',
+          },
+        ],
+      });
+    }
+
     const permission1 = files.permission1?.[0] || files.permission_1?.[0] || null;
     const permission2 = files.permission2?.[0] || files.permission_2?.[0] || null;
     const permission3 = files.permission3?.[0] || files.permission_3?.[0] || null;
     const provided = [permission1, permission2, permission3].filter(Boolean).length;
 
-    if (provided > 0 && provided < 3) {
+    if (provided !== 3) {
       return res.status(400).json({
         error: 'Validation failed',
         details: [
           {
             path: ['permissions'],
             message:
-              'Provide all three permission files (permission1, permission2, permission3) or none',
+              'All three permission files are required (permission1, permission2, permission3)',
           },
         ],
       });

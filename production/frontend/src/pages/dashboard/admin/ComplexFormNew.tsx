@@ -14,7 +14,7 @@ import { NearbyPlacesManager, NearbyPlace } from '../../../components/complexes/
 import { LocationPicker, MapLocation } from '../../../components/maps/LocationPicker';
 import { SellerMultiSelect } from '../../../components/complexes/SellerMultiSelect';
 import { toast } from 'react-hot-toast';
-import apiClient from '../../../api/client';
+import apiClient, { getAssetUrl } from '../../../api/client';
 import {
   Building2,
   MapPin,
@@ -55,6 +55,42 @@ export function ComplexFormNew() {
     },
     enabled: isEdit,
   });
+
+  const existingBannerUrl = getAssetUrl(
+    (complexData as any)?.bannerImageUrl ||
+      (complexData as any)?.bannerImage ||
+      (complexData as any)?.coverImage ||
+      null
+  );
+
+  const parsedPermissions =
+    typeof (complexData as any)?.permissions === 'string'
+      ? (() => {
+          try {
+            return JSON.parse((complexData as any).permissions);
+          } catch {
+            return null;
+          }
+        })()
+      : (complexData as any)?.permissions || null;
+
+  const existingPermissions = [
+    {
+      key: 'permission1',
+      label: t('complex.permission1'),
+      url: getAssetUrl((complexData as any)?.permission1Url || parsedPermissions?.permission1 || null),
+    },
+    {
+      key: 'permission2',
+      label: t('complex.permission2'),
+      url: getAssetUrl((complexData as any)?.permission2Url || parsedPermissions?.permission2 || null),
+    },
+    {
+      key: 'permission3',
+      label: t('complex.permission3'),
+      url: getAssetUrl((complexData as any)?.permission3Url || parsedPermissions?.permission3 || null),
+    },
+  ].filter((item) => !!item.url);
 
   const {
     register,
@@ -595,6 +631,20 @@ export function ComplexFormNew() {
                 </span>
               )}
             </div>
+            {isEdit && existingBannerUrl && (
+              <div className="mt-4">
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  {t('complex.bannerImage') || 'Current banner'}
+                </p>
+                <a href={existingBannerUrl} target="_blank" rel="noreferrer" className="inline-block">
+                  <img
+                    src={existingBannerUrl}
+                    alt="Current banner"
+                    className="h-28 w-48 object-cover rounded-lg border border-gray-200"
+                  />
+                </a>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -608,6 +658,26 @@ export function ComplexFormNew() {
                 <p className="text-sm text-yellow-800">
                   {t('complex.allPermissionsRequired') || 'All three permission files are required for new complexes.'}
                 </p>
+              </div>
+            )}
+            {isEdit && existingPermissions.length > 0 && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-900 font-medium mb-2">
+                  {t('complex.permissions') || 'Current permission files'}
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {existingPermissions.map((item) => (
+                    <a
+                      key={item.key}
+                      href={item.url as string}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm text-blue-700 underline"
+                    >
+                      {item.label}
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -27,6 +27,19 @@ function parseJsonMaybe(value, fallback) {
   return value;
 }
 
+function resolvePermissionSet(complexLike) {
+  const parsed = parseJsonMaybe(complexLike?.permissions, {}) || {};
+  const permission1 = parsed.permission1 || complexLike?.permission1Url || null;
+  const permission2 = parsed.permission2 || complexLike?.permission2Url || null;
+  const permission3 = parsed.permission3 || complexLike?.permission3Url || null;
+
+  if (!permission1 && !permission2 && !permission3) {
+    return null;
+  }
+
+  return { permission1, permission2, permission3 };
+}
+
 function normalizeNearbyPlaces(places) {
   if (!Array.isArray(places)) return [];
   return places
@@ -56,34 +69,55 @@ function normalizeAmenities(amenities) {
 
 function formatComplex(complex) {
   const title = parseJsonMaybe(complex.title, { uz: '', ru: '', en: '' });
+  const name = parseJsonMaybe(complex.name, title);
   const description = parseJsonMaybe(complex.description, null);
+  const address = parseJsonMaybe(complex.address, null);
   const amenities = parseJsonMaybe(complex.amenities, []);
-  const nearby = parseJsonMaybe(complex.nearbyPlaces || complex.nearby, []); // Use nearbyPlaces from schema
-  const location = complex.locationLat && complex.locationLng ? {
-    lat: complex.locationLat,
-    lng: complex.locationLng,
-    address: parseJsonMaybe(complex.address || complex.locationText, { uz: '', ru: '', en: '' }),
-  } : parseJsonMaybe(complex.location, {
-    lat: complex.latitude || 41.3111,
-    lng: complex.longitude || 69.2797,
-    address: parseJsonMaybe(complex.address, { uz: '', ru: '', en: '' }),
-  });
-  const permissions = parseJsonMaybe(complex.permissions, null);
+  const nearby = parseJsonMaybe(complex.nearbyPlaces || complex.nearby, []);
+  const location = complex.locationLat && complex.locationLng
+    ? {
+        lat: complex.locationLat,
+        lng: complex.locationLng,
+        address: parseJsonMaybe(complex.address || complex.locationText, { uz: '', ru: '', en: '' }),
+      }
+    : parseJsonMaybe(complex.location, {
+        lat: complex.latitude || 41.3111,
+        lng: complex.longitude || 69.2797,
+        address: parseJsonMaybe(complex.address, { uz: '', ru: '', en: '' }),
+      });
+  const locationText =
+    complex.locationText ||
+    (typeof address === 'string'
+      ? address
+      : address?.en || address?.uz || address?.ru || null);
+  const permissions = resolvePermissionSet(complex);
+  const bannerImageUrl = complex.bannerImageUrl || null;
   const allowedSellers = parseJsonMaybe(complex.allowedSellers, []);
 
   return {
     id: complex.id,
     title,
+    name,
     description,
+    address,
     developer: complex.developer || null,
     city: complex.city,
     blockCount: complex.blockCount || 1,
     amenities,
     nearby,
+    nearbyPlaces: nearby,
     location,
+    locationText,
+    locationLat: complex.locationLat ?? location?.lat ?? null,
+    locationLng: complex.locationLng ?? location?.lng ?? null,
     walkability: complex.walkabilityRating || complex.walkabilityScore || null,
     airQuality: complex.airQualityRating || complex.airQualityScore || null,
-    bannerImage: complex.bannerImageUrl || null,
+    bannerImage: bannerImageUrl,
+    bannerImageUrl,
+    coverImage: bannerImageUrl,
+    permission1Url: permissions?.permission1 || null,
+    permission2Url: permissions?.permission2 || null,
+    permission3Url: permissions?.permission3 || null,
     permissions,
     allowedSellers,
     createdAt: complex.createdAt,

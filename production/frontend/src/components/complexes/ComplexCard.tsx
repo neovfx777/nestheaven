@@ -4,6 +4,7 @@ import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { useTranslation } from '../../hooks/useTranslation';
 import { AMENITY_CATEGORIES } from '../../constants/amenities';
+import { getAssetUrl } from '../../api/client';
 
 interface ComplexCardProps {
   complex: {
@@ -35,6 +36,7 @@ export function ComplexCard({ complex }: ComplexCardProps) {
   const title = getLocalizedContent(complex.title);
   const amenities = Array.isArray(complex.amenities) ? complex.amenities : [];
   const nearbyPlaces = Array.isArray(complex.nearbyPlaces) ? complex.nearbyPlaces : [];
+  const bannerSrc = getAssetUrl(complex.bannerImage || null);
 
   const amenityLabels = amenities
     .map((id) => {
@@ -47,10 +49,10 @@ export function ComplexCard({ complex }: ComplexCardProps) {
   return (
     <Link to={`/complexes/${complex.id}`}>
       <Card className="overflow-hidden rounded-3xl border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-        {complex.bannerImage ? (
+        {bannerSrc ? (
           <div className="h-40 sm:h-48 overflow-hidden bg-gray-200">
             <img
-              src={complex.bannerImage}
+              src={bannerSrc}
               alt={title}
               className="w-full h-full object-cover"
             />
