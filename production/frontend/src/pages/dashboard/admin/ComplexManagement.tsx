@@ -6,7 +6,7 @@ import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
 import { Input } from '../../../components/ui/Input';
 import { Badge } from '../../../components/ui/Badge';
-import apiClient from '../../../api/client';
+import apiClient, { getAssetUrl } from '../../../api/client';
 import { toast } from 'react-hot-toast';
 import { useLanguageStore } from '../../../stores/languageStore';
 import { getLocalizedContent } from '../../../utils/translations';
@@ -21,6 +21,8 @@ interface Complex {
   amenities: string[];
   nearbyPlaces: any[];
   bannerImage?: string;
+  bannerImageUrl?: string;
+  coverImage?: string | null;
   _count?: {
     apartments: number;
   };
@@ -144,14 +146,17 @@ export function ComplexManagement() {
             const title = getLocalizedContent(complex.title, language);
             const amenities = Array.isArray(complex.amenities) ? complex.amenities : [];
             const nearbyPlaces = Array.isArray(complex.nearbyPlaces) ? complex.nearbyPlaces : [];
+            const bannerSrc = getAssetUrl(
+              complex.bannerImage || complex.bannerImageUrl || complex.coverImage || null
+            );
 
             return (
               <Card key={complex.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 {/* Banner Image */}
-                {complex.bannerImage && (
+                {bannerSrc && (
                   <div className="h-48 overflow-hidden bg-gray-200">
                     <img
-                      src={complex.bannerImage}
+                      src={bannerSrc}
                       alt={title}
                       className="w-full h-full object-cover"
                     />

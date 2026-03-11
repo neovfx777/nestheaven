@@ -38,6 +38,20 @@ export function getAssetUrl(url?: string | null) {
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
+    // Let browser set multipart boundary for FormData requests.
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+      const headers = config.headers;
+      if (headers) {
+        if (typeof headers.delete === 'function') {
+          headers.delete('Content-Type');
+          headers.delete('content-type');
+        } else {
+          delete headers['Content-Type'];
+          delete headers['content-type'];
+        }
+      }
+    }
+
     const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

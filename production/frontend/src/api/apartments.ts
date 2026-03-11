@@ -148,15 +148,19 @@ export interface Complex {
     lng: number;
     address: { uz: string; ru: string; en: string };
   };
+  bannerImage?: string | null;
   bannerImageUrl?: string | null;
   permission1Url?: string | null;
   permission2Url?: string | null;
   permission3Url?: string | null;
-  permissions?: {
-    permission1: string;
-    permission2: string;
-    permission3: string;
-  } | null;
+  permissions?:
+    | {
+        permission1?: string | null;
+        permission2?: string | null;
+        permission3?: string | null;
+      }
+    | string
+    | null;
   walkability?: number | null;
   airQuality?: number | null;
   walkabilityRating?: number | null; // Legacy field

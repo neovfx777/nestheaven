@@ -24,7 +24,7 @@ const env = {
   JWT_SECRET: process.env.JWT_SECRET || 'default-secret-change-me',
   UPLOAD_DIR: process.env.UPLOAD_DIR || 'uploads',
   MAX_FILE_SIZE_MB: parseIntEnv('MAX_FILE_SIZE_MB', 10),
-  CORS_ORIGINS: process.env.CORS_ORIGINS || 'http://localhost:5173',
+  CORS_ORIGINS: process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173',
   ALLOWED_HOSTS: process.env.ALLOWED_HOSTS || '',
   TRUST_PROXY: parseBoolEnv('TRUST_PROXY', false),
   BODY_LIMIT: process.env.BODY_LIMIT || '1mb',

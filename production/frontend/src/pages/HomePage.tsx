@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Building2, Loader2, MapPin, Calendar, TrendingUp } from 'lucide-react';
 import { ApartmentCarousel } from '../components/apartments/ApartmentCarousel';
 import { apartmentsApi, Apartment, Complex } from '../api/apartments';
+import { getAssetUrl } from '../api/client';
 import { useAuthStore } from '../stores/authStore';
 import { useTranslation } from '../hooks/useTranslation';
 
@@ -99,6 +100,9 @@ const HomePage = () => {
                 (typeof complex.address === 'string'
                   ? complex.address
                   : '');
+              const complexCover = getAssetUrl(
+                complex.coverImage || complex.bannerImageUrl || complex.bannerImage || null
+              );
 
               return (
                 <Link
@@ -106,10 +110,10 @@ const HomePage = () => {
                   to={`/complexes/${complex.id}`}
                   className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow block"
                 >
-                  {complex.coverImage && (
+                  {complexCover && (
                     <div className="h-36 sm:h-40 w-full overflow-hidden">
                       <img
-                        src={complex.coverImage}
+                        src={complexCover}
                         alt={complexName}
                         className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
                       />
