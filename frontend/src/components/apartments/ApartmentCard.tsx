@@ -2,9 +2,11 @@
 import { useNavigate } from 'react-router-dom';
 import { Bed, Square, Layers, MapPin, Building2 } from 'lucide-react';
 import { Apartment } from '../../api/apartments';
+import { getAssetUrl } from '../../api/client';
 import { FavoriteButton } from './FavoriteButton';
 import { usersApi } from '../../api/users';
 import { useAuthStore } from '../../stores/authStore';
+import { useLanguageStore } from '../../stores/languageStore';
 
 interface ApartmentCardProps {
   apartment: Apartment;
@@ -12,6 +14,7 @@ interface ApartmentCardProps {
 
 const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
   const { isAuthenticated } = useAuthStore();
+  const { language } = useLanguageStore();
   const navigate = useNavigate();
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -99,13 +102,16 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
     }
   };
 
-  const pickLocalized = (value: any) => {
+  const pickLocalized = (value: unknown) => {
     if (!value) return undefined;
     if (typeof value === 'string') {
       if (value.trim().startsWith('{')) {
         try {
           const parsed = JSON.parse(value);
-          return parsed.uz || parsed.ru || parsed.en || parsed.default || value;
+          if (parsed && typeof parsed === 'object') {
+            return (parsed as Record<string, string | undefined>)[language] || undefined;
+          }
+          return undefined;
         } catch {
           return value;
         }
@@ -113,10 +119,23 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
       return value;
     }
     if (typeof value === 'object') {
-      return value.uz || value.ru || value.en;
+      const localized = value as Record<string, string | undefined>;
+      return localized[language] || undefined;
     }
     return undefined;
   };
+
+  const legacyTitle =
+    language === 'uz'
+      ? apartment.titleUz
+      : language === 'ru'
+        ? apartment.titleRu
+        : apartment.titleEn;
+  const title = pickLocalized(apartment.title) || legacyTitle || 'Uy';
+  const address = pickLocalized(apartment.complex?.address) || apartment.address || "Manzil ko'rsatilmagan";
+  const complexName = pickLocalized(apartment.complex?.name) || 'Kompleks';
+  const coverImageSrc =
+    getAssetUrl(apartment.coverImage || apartment.images?.[0]?.url) ?? undefined;
 
   return (
     <div
@@ -127,10 +146,10 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
       className="group cursor-pointer bg-white rounded-3xl shadow-md border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
     >
       <div className="relative h-48 sm:h-56 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-        {apartment.coverImage ? (
+        {coverImageSrc ? (
           <img
-            src={apartment.coverImage}
-            alt={apartment.title?.en || apartment.titleEn || apartment.titleUz || 'Apartment'}
+            src={coverImageSrc}
+            alt={title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
         ) : (
@@ -168,20 +187,20 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
 
       <div className="p-4 sm:p-6">
         <h3 className="font-bold text-lg sm:text-xl text-gray-900 mb-2 sm:mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
-          {pickLocalized(apartment.title) || apartment.titleUz || apartment.titleEn || 'Uy'}
+          {title}
         </h3>
 
         <div className="flex items-center text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4">
           <MapPin className="h-4 w-4 mr-2 text-red-500 flex-shrink-0" />
           <span className="line-clamp-1 font-medium">
-            {pickLocalized(apartment.complex?.address) || apartment.address || "Manzil ko'rsatilmagan"}
+            {address}
           </span>
         </div>
 
         {apartment.complex && (
           <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-xs sm:text-sm font-semibold mb-3 sm:mb-4 border border-blue-100">
             <Building2 className="h-3 w-3 mr-1.5" />
-            {pickLocalized(apartment.complex.name) || 'Kompleks'}
+            {complexName}
           </div>
         )}
 

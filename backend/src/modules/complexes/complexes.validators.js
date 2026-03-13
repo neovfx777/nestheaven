@@ -1,4 +1,8 @@
 const { z } = require('zod');
+const { getImageDimensions } = require('../../utils/imageDimensions');
+
+const MIN_COMPLEX_IMAGE_WIDTH = 320;
+const MIN_COMPLEX_IMAGE_HEIGHT = 240;
 
 const numberFromString = (schema) =>
   z.preprocess((val) => {
@@ -125,22 +129,79 @@ const createComplexSchema = z.object({
 
 const updateComplexSchema = z.object({
   params: z.object({ id: z.string().min(1) }),
-  body: z
-    .object({
-      title: z.string().min(1).max(120).optional(),
-      description: z.string().min(1).optional(),
+  body: z.object({
+      title: jsonFromString(multiLanguageSchema)
+        .or(z.string().min(1))
+        .or(
+          z
+            .object({
+              uz: z.string().optional(),
+              ru: z.string().optional(),
+              en: z.string().optional(),
+            })
+            .transform((val) => ({
+              uz: val.uz || '',
+              ru: val.ru || '',
+              en: val.en || '',
+            }))
+        )
+        .optional(),
+      description: jsonFromString(multiLanguageSchema)
+        .optional()
+        .or(z.string().optional())
+        .or(
+          z
+            .object({
+              uz: z.string().optional(),
+              ru: z.string().optional(),
+              en: z.string().optional(),
+            })
+            .optional()
+        ),
+      developer: z.string().min(1).optional(),
+      blockCount: numberFromString(z.number().int().min(1).max(100)).optional(),
+      location: jsonFromString(
+        z.object({
+          lat: z.number().min(-90).max(90),
+          lng: z.number().min(-180).max(180),
+          address: z.object({
+            uz: z.string().min(1),
+            ru: z.string().min(1),
+            en: z.string().min(1),
+          }),
+        })
+      )
+        .or(
+          z.object({
+            lat: z.number().min(-90).max(90),
+            lng: z.number().min(-180).max(180),
+            address: z
+              .object({
+                uz: z.string().min(1).optional(),
+                ru: z.string().min(1).optional(),
+                en: z.string().min(1).optional(),
+              })
+              .transform((addr) => ({
+                uz: addr.uz || '',
+                ru: addr.ru || '',
+                en: addr.en || '',
+              })),
+          })
+        )
+        .optional(),
       locationText: z.string().min(1).optional(),
       locationLat: numberFromString(z.number().min(-90).max(90)).optional(),
       locationLng: numberFromString(z.number().min(-180).max(180)).optional(),
       walkabilityRating: numberFromString(z.number().int().min(0).max(10)).optional(),
+      walkability: numberFromString(z.number().int().min(0).max(10)).optional(),
       airQualityRating: numberFromString(z.number().int().min(0).max(10)).optional(),
+      airQuality: numberFromString(z.number().int().min(0).max(10)).optional(),
       nearbyNote: z.string().max(2000).optional().nullable(),
       nearbyPlaces: nearbyPlacesSchema.optional(),
+      nearby: nearbyPlacesSchema.optional(),
       amenities: amenitiesSchema.optional(),
+      allowedSellers: jsonFromString(z.array(z.string())).optional(),
       city: z.string().min(1).optional(),
-    })
-    .refine((b) => Object.keys(b).length > 0, {
-      message: 'At least one field to update',
     }),
 });
 
@@ -157,6 +218,31 @@ const listSchema = z.object({
     city: z.string().optional(),
   }),
 });
+
+function getImageFiles(files) {
+  if (!files) return [];
+  const images = files.images;
+  if (Array.isArray(images)) return images;
+  return images ? [images] : [];
+}
+
+function validateComplexImageFiles(files) {
+  const images = getImageFiles(files);
+  for (const file of images) {
+    const dimensions = getImageDimensions(file.path);
+    if (!dimensions) {
+      return `${file.originalname}: could not read image dimensions`;
+    }
+    if (
+      dimensions.width < MIN_COMPLEX_IMAGE_WIDTH ||
+      dimensions.height < MIN_COMPLEX_IMAGE_HEIGHT
+    ) {
+      return `${file.originalname}: image is too small. Minimum size is ${MIN_COMPLEX_IMAGE_WIDTH}x${MIN_COMPLEX_IMAGE_HEIGHT}`;
+    }
+  }
+
+  return null;
+}
 
 function validateCreate(req, res, next) {
   try {
@@ -217,6 +303,19 @@ function validateCreate(req, res, next) {
       });
     }
 
+    const imageValidationError = validateComplexImageFiles(files);
+    if (imageValidationError) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: [
+          {
+            path: ['images'],
+            message: imageValidationError,
+          },
+        ],
+      });
+    }
+
     const permission1 = files.permission1?.[0] || files.permission_1?.[0] || null;
     const permission2 = files.permission2?.[0] || files.permission_2?.[0] || null;
     const permission3 = files.permission3?.[0] || files.permission_3?.[0] || null;
@@ -270,9 +369,39 @@ function validateUpdate(req, res, next) {
       .status(400)
       .json({ error: 'Validation failed', details: result.error.errors });
   }
+  const files = req.files || {};
+  const hasBodyFields = Object.keys(result.data.body || {}).length > 0;
+  const hasImageFiles = getImageFiles(files).length > 0;
+  const hasPermissionFiles =
+    !!files.permission1?.[0] ||
+    !!files.permission2?.[0] ||
+    !!files.permission3?.[0] ||
+    !!files.permission_1?.[0] ||
+    !!files.permission_2?.[0] ||
+    !!files.permission_3?.[0];
+
+  if (!hasBodyFields && !hasImageFiles && !hasPermissionFiles) {
+    return res.status(400).json({
+      error: 'Validation failed',
+      details: [{ path: ['body'], message: 'At least one field or file to update is required' }],
+    });
+  }
+
+  const imageValidationError = validateComplexImageFiles(files);
+  if (imageValidationError) {
+    return res.status(400).json({
+      error: 'Validation failed',
+      details: [
+        {
+          path: ['images'],
+          message: imageValidationError,
+        },
+      ],
+    });
+  }
   req.validated = {
     ...result.data,
-    files: req.files || {},
+    files,
   };
   next();
 }

@@ -7,10 +7,7 @@ import {
   Layers,
   MapPin,
   Building2,
-  Phone,
-  Mail,
   Share2,
-  User,
   Calendar,
   Shield,
   TrendingUp,
@@ -30,7 +27,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 const ApartmentDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [activeTab, setActiveTab] = useState('details');
 
   // Fetch apartment details
@@ -398,11 +395,6 @@ const ApartmentDetailPage = () => {
                     <Share2 className="h-5 w-5 mr-2" />
                     Share
                   </Button>
-                  <Button className="flex-1 w-full sm:w-auto">
-                    <Phone className="h-5 w-5 mr-2" />
-                    <span className="hidden sm:inline">Contact Seller</span>
-                    <span className="sm:hidden">Contact</span>
-                  </Button>
                 </div>
               </div>
             </Card>
@@ -411,7 +403,7 @@ const ApartmentDetailPage = () => {
             <Card>
               <div className="border-b border-gray-200">
                 <nav className="flex">
-                  {['details', 'description', 'contact'].map((tab) => (
+                  {['details', 'description'].map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
@@ -474,25 +466,30 @@ const ApartmentDetailPage = () => {
 
                 {activeTab === 'description' && (
                   <div className="space-y-6">
-                    {/* Description in different languages */}
-                    {['en', 'uz', 'ru'].map((lang) => {
-                      const desc = getDescription(apartment, lang as 'en' | 'uz' | 'ru');
+                    {/* Show only currently selected language description */}
+                    {(() => {
+                      const currentLang = language as 'en' | 'uz' | 'ru';
+                      const desc = getDescription(apartment, currentLang);
                       if (!desc) return null;
 
                       return (
-                        <div key={lang} className="bg-gray-50 rounded-lg p-4">
+                        <div className="bg-gray-50 rounded-lg p-4">
                           <div className="flex items-center mb-3">
                             <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-800 flex items-center justify-center text-sm font-bold mr-2">
-                              {lang.toUpperCase()}
+                              {currentLang.toUpperCase()}
                             </div>
                             <h4 className="font-medium">
-                              {lang === 'en' ? 'English' : lang === 'uz' ? 'Uzbek' : 'Russian'} Description
+                              {currentLang === 'en'
+                                ? 'English'
+                                : currentLang === 'uz'
+                                ? 'Uzbek'
+                                : 'Russian'} Description
                             </h4>
                           </div>
                           <p className="text-gray-700">{desc}</p>
                         </div>
                       );
-                    })}
+                    })()}
 
                     {/* Complex Locations */}
                     {apartment.complex && (
@@ -553,69 +550,12 @@ const ApartmentDetailPage = () => {
                   </div>
                 )}
 
-                {activeTab === 'contact' && apartment.seller && (
-                  <div className="space-y-6">
-                    {/* Seller Info */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Seller Information</h3>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center mb-4">
-                          <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
-                            <User className="h-6 w-6 text-primary-600" />
-                          </div>
-                          <div className="ml-4">
-                            <div className="font-medium">{apartment.seller.fullName}</div>
-                            <div className="text-sm text-gray-500">{apartment.seller.email}</div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          <Button className="w-full">
-                            <Phone className="h-5 w-5 mr-2" />
-                            Call Seller
-                          </Button>
-                          <Button variant="outline" className="w-full">
-                            <Mail className="h-5 w-5 mr-2" />
-                            Send Email
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </Card>
           </div>
 
           {/* Right Column - Sidebar */}
           <div className="space-y-6">
-            {/* Seller Card */}
-            <Card>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Seller</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center">
-                    <User className="h-5 w-5 text-gray-400 mr-3" />
-                    <div>
-                      <div className="font-medium">{apartment.seller.fullName}</div>
-                      <div className="text-sm text-gray-500">Verified Seller</div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Button className="w-full">
-                      <Phone className="h-5 w-5 mr-2" />
-                      Call Now
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      <Mail className="h-5 w-5 mr-2" />
-                      Send Message
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
             {/* Mortgage Calculator */}
             <Card>
               <div className="p-6">

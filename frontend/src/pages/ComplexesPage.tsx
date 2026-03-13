@@ -1,8 +1,41 @@
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Building2, MapPin } from 'lucide-react';
 import { apartmentsApi, Complex } from '../api/apartments';
 import { getAssetUrl } from '../api/client';
+
+function ComplexCover({ cover, name }: { cover: string | null; name: string }) {
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    setVisible(true);
+  }, [cover]);
+
+  if (!cover || !visible) {
+    return (
+      <div className="h-44 w-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <Building2 className="h-12 w-12 text-blue-400" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-44 w-full overflow-hidden">
+      <img
+        src={cover}
+        alt={name}
+        className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
+        onError={() => setVisible(false)}
+        onLoad={(e) => {
+          if (e.currentTarget.naturalWidth < 80 || e.currentTarget.naturalHeight < 80) {
+            setVisible(false);
+          }
+        }}
+      />
+    </div>
+  );
+}
 
 const ComplexesPage = () => {
   const { data: complexes, isLoading } = useQuery({
@@ -63,15 +96,7 @@ const ComplexesPage = () => {
                   to={`/complexes/${complex.id}`}
                   className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow"
                 >
-                  {cover && (
-                    <div className="h-44 w-full overflow-hidden">
-                      <img
-                        src={cover}
-                        alt={name}
-                        className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  )}
+                  <ComplexCover cover={cover} name={name} />
                   <div className="p-5">
                     <h2 className="text-xl font-semibold text-gray-900 mb-1">
                       {name}

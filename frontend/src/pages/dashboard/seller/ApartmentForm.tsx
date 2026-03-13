@@ -21,9 +21,6 @@ import {
   Building2, 
   Hash,
   MapPin,
-  Phone,
-  Send,
-  Mail,
   ChevronRight,
   CheckCircle,
   AlertCircle,
@@ -43,9 +40,6 @@ interface ApartmentFormData {
   complexId: string;
   address: string;
   developer: string;
-  contactPhone: string;
-  contactTelegram: string;
-  contactEmail: string;
   status?: string;
   constructionStatus?: 'available' | 'built';
   readyByYear?: number | null;
@@ -147,14 +141,6 @@ const validateApartment = (
     });
   }
   
-  if (!data.contactPhone?.trim()) {
-    errors.contactPhone = tr({
-      uz: 'Telefon raqami majburiy',
-      ru: 'Nomer telefona obyazatelen',
-      en: 'Phone number is required',
-    });
-  }
-  
   if (!data.developer?.trim()) {
     errors.developer = tr({
       uz: 'Developer nomi majburiy',
@@ -174,12 +160,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
   const { user } = useAuthStore();
   const [newImages, setNewImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<ImageType[]>([]);
-  const [activeSection, setActiveSection] = useState<'basic' | 'details' | 'media' | 'contact'>('basic');
-  const envDefaultContactPhone = (import.meta.env.VITE_DEFAULT_CONTACT_PHONE || '').trim();
-  const envDefaultContactTelegram = (import.meta.env.VITE_DEFAULT_CONTACT_TELEGRAM || '').trim();
-  const envDefaultContactEmail = (import.meta.env.VITE_DEFAULT_CONTACT_EMAIL || '').trim();
-  const userPhone = typeof (user as any)?.phone === 'string' ? (user as any).phone.trim() : '';
-  const userEmail = typeof user?.email === 'string' ? user.email.trim() : '';
+  const [activeSection, setActiveSection] = useState<'basic' | 'details' | 'media'>('basic');
   const returnPath =
     user?.role === 'SELLER' || user?.role === 'OWNER_ADMIN'
       ? '/dashboard/seller/listings'
@@ -208,9 +189,6 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
       complexId: '',
       address: '',
       developer: '',
-      contactPhone: '',
-      contactTelegram: '',
-      contactEmail: '',
       status: 'active',
       constructionStatus: 'available',
       readyByYear: null,
@@ -218,29 +196,6 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
       renovationStatus: 'qora_suvoq',
     }
   });
-
-  useEffect(() => {
-    if (mode !== 'create') return;
-
-    const currentValues = form.getValues();
-    if (!currentValues.contactPhone) {
-      form.setValue('contactPhone', userPhone || envDefaultContactPhone);
-    }
-    if (!currentValues.contactTelegram && envDefaultContactTelegram) {
-      form.setValue('contactTelegram', envDefaultContactTelegram);
-    }
-    if (!currentValues.contactEmail) {
-      form.setValue('contactEmail', userEmail || envDefaultContactEmail);
-    }
-  }, [
-    mode,
-    form,
-    userPhone,
-    userEmail,
-    envDefaultContactPhone,
-    envDefaultContactTelegram,
-    envDefaultContactEmail,
-  ]);
 
   useEffect(() => {
     if (apartment && mode === 'edit') {
@@ -255,9 +210,6 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
         complexId: apartment.complexId || '',
         address: apartment.address || '',
         developer: apartment.developer || '',
-        contactPhone: apartment.contactPhone || '',
-        contactTelegram: apartment.contactTelegram || '',
-        contactEmail: apartment.contactEmail || '',
         status: apartment.status || 'active',
         constructionStatus: apartment.constructionStatus === 'built' ? 'built' : 'available',
         readyByYear: apartment.readyByYear ?? null,
@@ -397,8 +349,6 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
     backLanguageContent: { uz: 'Orqaga: Til kontenti', ru: 'Nazad: Yazykovoy kontent', en: 'Back: Language Content' },
     nextMedia: { uz: 'Keyingi: Media va rasmlar', ru: 'Dalee: Media i foto', en: 'Next: Media & Images' },
     backTechnical: { uz: 'Orqaga: Texnik tafsilotlar', ru: 'Nazad: Tehnicheskie dannye', en: 'Back: Technical Details' },
-    nextContact: { uz: "Keyingi: Aloqa ma'lumotlari", ru: 'Dalee: Kontaktnaya informatsiya', en: 'Next: Contact Info' },
-    backMedia: { uz: 'Orqaga: Media va rasmlar', ru: 'Nazad: Media i foto', en: 'Back: Media & Images' },
     universalDetails: {
       uz: 'Barcha tillarda bir xil bo`ladigan umumiy xususiyatlar',
       ru: 'Universalnye svoystva, odinakovie vo vseh yazykah',
@@ -439,15 +389,6 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
       ru: 'Zagruzite minimum 3 kachestvennye foto. Rekomenduetsya: fasad, gostinaya, kuhnya, spalni, vannaya.',
       en: 'Upload at least 3 high-quality photos. Recommended: exterior, living room, kitchen, bedrooms, bathroom.',
     },
-    contactDescription: {
-      uz: "Xaridorlar siz bilan qanday bog'lanishi mumkin",
-      ru: 'Kak potencialnye pokupateli mogut s vami svyazatsya',
-      en: 'How potential buyers can contact you',
-    },
-    phoneNumberLabel: { uz: 'Telefon raqami *', ru: 'Nomer telefona *', en: 'Phone Number *' },
-    telegramLabel: { uz: 'Telegram username', ru: 'Telegram username', en: 'Telegram Username' },
-    emailLabel: { uz: 'Email manzil', ru: 'Email adres', en: 'Email Address' },
-    locationReferenceLabel: { uz: 'Joylashuv orientiri', ru: 'Orientir lokatsii', en: 'Location Reference' },
     autosaveNote: {
       uz: "Barcha o'zgarishlar avtomatik saqlanadi",
       ru: 'Vse izmeneniya sohranyayutsya avtomaticheski',
@@ -495,7 +436,6 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
     { id: 'basic', label: t('form.basicInfo'), icon: <Home className="h-5 w-5" /> },
     { id: 'details', label: t('form.technicalDetails'), icon: <Layers className="h-5 w-5" /> },
     { id: 'media', label: tr(uiText.mediaImages), icon: <Building2 className="h-5 w-5" /> },
-    { id: 'contact', label: t('form.contactInfo'), icon: <Phone className="h-5 w-5" /> },
   ];
 
   return (
@@ -887,71 +827,6 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
                     onClick={() => setActiveSection('details')}
                   >
                     {tr(uiText.backTechnical)}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setActiveSection('contact')}
-                    className="flex items-center space-x-2"
-                  >
-                    <span>{tr(uiText.nextContact)}</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Section 4: Contact Information */}
-              <div className={`${activeSection === 'contact' ? 'block' : 'hidden'}`}>
-                <div className="mb-8">
-                  <div className="flex items-center space-x-3 mb-6">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <Phone className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900">{t('form.contactInfo')}</h3>
-                      <p className="text-gray-600">
-                        {tr(uiText.contactDescription)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Input
-                      label={tr(uiText.phoneNumberLabel)}
-                      {...form.register('contactPhone')}
-                      required
-                      placeholder="+998 90 123 45 67"
-                    />
-
-                    <Input
-                      label={tr(uiText.telegramLabel)}
-                      {...form.register('contactTelegram')}
-                      placeholder="@username"
-                    />
-
-                    <Input
-                      label={tr(uiText.emailLabel)}
-                      type="email"
-                      {...form.register('contactEmail')}
-                      placeholder="email@example.com"
-                    />
-
-                    <Input
-                      label={tr(uiText.locationReferenceLabel)}
-                      value={form.watch('address')}
-                      onChange={(e) => form.setValue('address', e.target.value)}
-                      placeholder={t('form.nearbyLandmark')}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-between pt-6 border-t border-gray-200">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setActiveSection('media')}
-                  >
-                    {tr(uiText.backMedia)}
                   </Button>
                 </div>
               </div>

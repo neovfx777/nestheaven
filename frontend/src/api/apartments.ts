@@ -151,7 +151,7 @@ export interface Complex {
   name: { uz: string; ru: string; en: string } | string;
   address?: { uz: string; ru: string; en: string } | string;
   city: string;
-  coverImage: string | null;
+  coverImage?: string | null;
   title?: { uz: string; ru: string; en: string } | string;
   description?: { uz: string; ru: string; en: string } | string | null;
   developer?: string | null;
@@ -164,7 +164,6 @@ export interface Complex {
     lng: number;
     address: { uz: string; ru: string; en: string };
   };
-  coverImage?: string | null;
   images?: Array<{ id: string; url: string; order: number }>;
   permission1Url?: string | null;
   permission2Url?: string | null;
