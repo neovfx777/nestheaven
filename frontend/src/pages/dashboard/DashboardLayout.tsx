@@ -7,6 +7,7 @@ import {
   Settings,
   FileText,
   BarChart3,
+  Calendar,
   Shield,
   UserPlus,
   LogOut,
@@ -15,7 +16,8 @@ import {
   User,
   Heart,
   List,
-  PlusCircle
+  PlusCircle,
+  MessageSquare
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -41,6 +43,8 @@ const DashboardLayout = () => {
         return <Shield className="h-5 w-5 text-green-600" />;
       case 'SELLER':
         return <Building2 className="h-5 w-5 text-orange-600" />;
+      case 'REALTOR':
+        return <Calendar className="h-5 w-5 text-teal-600" />;
       case 'USER':
       default:
         return <User className="h-5 w-5 text-gray-600" />;
@@ -57,6 +61,8 @@ const DashboardLayout = () => {
         return 'bg-green-100 text-green-800';
       case 'SELLER':
         return 'bg-orange-100 text-orange-800';
+      case 'REALTOR':
+        return 'bg-teal-100 text-teal-800';
       case 'USER':
       default:
         return 'bg-gray-100 text-gray-800';
@@ -80,9 +86,11 @@ const DashboardLayout = () => {
   ========================= */
 
   const navigation = [
-    { nameKey: 'dashboard.overview', href: '/dashboard', icon: Home, roles: ['USER', 'SELLER', 'ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'] },
+    { nameKey: 'dashboard.overview', href: '/dashboard', icon: Home, roles: ['USER', 'SELLER', 'REALTOR', 'ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'] },
     { nameKey: 'dashboard.myFavorites', href: '/dashboard/favorites', icon: Heart, roles: ['USER'] },
     { nameKey: 'dashboard.manageListings', href: '/dashboard/seller/listings', icon: List, roles: ['SELLER', 'OWNER_ADMIN'] },
+    { nameKey: 'dashboard.myTours', href: '/dashboard/realtor', icon: Calendar, roles: ['REALTOR'] },
+    { nameKey: 'dashboard.messages', href: '/dashboard/messages', icon: MessageSquare, roles: ['USER', 'SELLER', 'REALTOR', 'ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN'] },
     { nameKey: 'dashboard.userManagement', href: '/dashboard/admin/users', icon: Users, roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'] },
     { nameKey: 'dashboard.complexes', href: '/dashboard/admin/complexes', icon: Building2, roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'] },
     { nameKey: 'dashboard.analytics', href: '/dashboard/admin/analytics', icon: BarChart3, roles: ['MANAGER_ADMIN', 'OWNER_ADMIN'] },

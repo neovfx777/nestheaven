@@ -37,9 +37,16 @@ model User {
 
   favorites        Favorite[]
   savedSearches    SavedSearch[]
-  apartments       Apartment[]
+  apartments       Apartment[] @relation("ApartmentSeller")
+  realtorApartments Apartment[] @relation("ApartmentRealtor")
   createdComplexes Complex[]
   broadcasts       Broadcast[]
+  realtorAvailability RealtorAvailability[]
+  tourBookingsAsRealtor TourBooking[] @relation("TourBookingRealtor")
+  tourBookingsAsUser TourBooking[] @relation("TourBookingUser")
+  conversationsAsUser Conversation[] @relation("ConversationUser")
+  conversationsAsRealtor Conversation[] @relation("ConversationRealtor")
+  sentConversationMessages ConversationMessage[] @relation("ConversationMessageSender")
 
   @@index([emailVerificationToken])
   @@index([passwordResetToken])
@@ -104,6 +111,7 @@ model Apartment {
   id                 String         @id @default(cuid())
   complexId          String?        @map("complex_id")
   sellerId           String         @map("seller_id")
+  realtorId          String?        @map("realtor_id")
   status             String         @default("active")
   price              Float
   area               Float
@@ -123,9 +131,12 @@ model Apartment {
   updatedAt          DateTime       @updatedAt @map("updated_at")
 
   complex    Complex?   @relation(fields: [complexId], references: [id], onDelete: SetNull)
-  seller     User       @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  seller     User       @relation("ApartmentSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  realtor    User?      @relation("ApartmentRealtor", fields: [realtorId], references: [id], onDelete: SetNull)
   images     ApartmentImage[]
   favorites  Favorite[]
+  tourBookings TourBooking[]
+  conversations Conversation[]
 }
 
 model ApartmentImage {
@@ -174,4 +185,73 @@ model Broadcast {
   createdById String?  @map("created_by_id")
 
   createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+}
+
+model RealtorAvailability {
+  id        String   @id @default(cuid())
+  realtorId String   @map("realtor_id")
+  startAt   DateTime @map("start_at")
+  endAt     DateTime @map("end_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  realtor User @relation(fields: [realtorId], references: [id], onDelete: Cascade)
+
+  @@index([realtorId, startAt])
+  @@map("realtor_availability")
+}
+
+model TourBooking {
+  id          String   @id @default(cuid())
+  apartmentId String   @map("apartment_id")
+  realtorId   String   @map("realtor_id")
+  userId      String   @map("user_id")
+  startAt     DateTime @map("start_at")
+  endAt       DateTime @map("end_at")
+  status      String   @default("BOOKED")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  apartment Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  realtor   User      @relation("TourBookingRealtor", fields: [realtorId], references: [id], onDelete: Cascade)
+  user      User      @relation("TourBookingUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([realtorId, startAt])
+  @@index([userId, startAt])
+  @@index([apartmentId, startAt])
+  @@map("tour_bookings")
+}
+
+model Conversation {
+  id         String   @id @default(cuid())
+  apartmentId String  @map("apartment_id")
+  userId     String   @map("user_id")
+  realtorId  String   @map("realtor_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  apartment Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  user      User      @relation("ConversationUser", fields: [userId], references: [id], onDelete: Cascade)
+  realtor   User      @relation("ConversationRealtor", fields: [realtorId], references: [id], onDelete: Cascade)
+  messages  ConversationMessage[]
+
+  @@unique([apartmentId, userId, realtorId])
+  @@index([userId])
+  @@index([realtorId])
+  @@map("conversations")
+}
+
+model ConversationMessage {
+  id             String   @id @default(cuid())
+  conversationId String   @map("conversation_id")
+  senderId       String   @map("sender_id")
+  body           String
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("ConversationMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@map("conversation_messages")
 }

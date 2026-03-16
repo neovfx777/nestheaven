@@ -63,6 +63,7 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
       return [
         { value: 'USER', label: 'User' },
         { value: 'SELLER', label: 'Seller' },
+        { value: 'REALTOR', label: 'Realtor' },
         { value: 'ADMIN', label: 'Admin' },
         { value: 'MANAGER_ADMIN', label: 'Manager Admin' },
       ];
@@ -71,6 +72,7 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
       return [
         { value: 'USER', label: 'User' },
         { value: 'SELLER', label: 'Seller' },
+        { value: 'REALTOR', label: 'Realtor' },
       ];
     }
     return [{ value: 'USER', label: 'User' }];
@@ -82,7 +84,7 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
     if (mode === 'admins') {
       return roleOptions.filter((opt) => ['ADMIN', 'MANAGER_ADMIN'].includes(opt.value));
     }
-    return roleOptions.filter((opt) => ['USER', 'SELLER'].includes(opt.value));
+    return roleOptions.filter((opt) => ['USER', 'SELLER', 'REALTOR'].includes(opt.value));
   }, [mode, roleOptions]);
 
   const canCreateInMode = useMemo(() => {
@@ -376,6 +378,7 @@ export function UserManagement({ mode = 'users' }: UserManagementProps) {
                         { value: 'all', label: 'All Roles' },
                         { value: 'USER', label: 'Users' },
                         { value: 'SELLER', label: 'Sellers' },
+                        { value: 'REALTOR', label: 'Realtors' },
                       ]
                 }
                 className="w-40"

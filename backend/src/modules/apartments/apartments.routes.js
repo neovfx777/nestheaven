@@ -1,5 +1,6 @@
 const express = require('express');
 const apartmentsController = require('./apartments.controller');
+const toursController = require('./tours.controller');
 const {
   validateCreate,
   validateUpdate,
@@ -8,8 +9,9 @@ const {
   validateMarkSold,
   validateHideUnhide,
 } = require('./apartments.validators');
+const { validateGetTourSlots, validateBookTour } = require('./tours.validators');
 const { authMiddleware, optionalAuth } = require('../../middleware/auth');
-const { requireRoles, requireSeller, requireAdmin } = require('../../middleware/roles');
+const { requireRoles, requireSeller, requireAdmin, requireUser } = require('../../middleware/roles');
 const { ROLES } = require('../../utils/roles');
 const { upload } = require('../../middleware/upload');
 
@@ -18,6 +20,8 @@ const router = express.Router();
 // Public endpoints
 router.get('/', optionalAuth, validateList, apartmentsController.list);
 router.get('/seller/my', authMiddleware, requireSeller, apartmentsController.getMyListings);
+router.get('/:id/tours/slots', optionalAuth, validateGetTourSlots, toursController.getSlots);
+router.post('/:id/tours/book', authMiddleware, requireUser, validateBookTour, toursController.book);
 router.get('/:id', optionalAuth, validateGetById, apartmentsController.getById);
 
 // Seller/Admin create endpoint

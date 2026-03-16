@@ -103,6 +103,20 @@ async function getSellers(req, res, next) {
   }
 }
 
+async function getRealtors(req, res, next) {
+  try {
+    // Sellers and admins can assign realtors to listings.
+    const allowed = new Set(['SELLER', 'ADMIN', 'MANAGER_ADMIN', 'OWNER_ADMIN']);
+    if (!allowed.has(req.user.role)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    const result = await usersService.getRealtors();
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -114,4 +128,5 @@ module.exports = {
   createSavedSearch,
   deleteSavedSearch,
   getSellers,
+  getRealtors,
 };

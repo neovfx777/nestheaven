@@ -69,6 +69,8 @@
     "overview": "Umumiy",
     "myFavorites": "Sevimlilarim",
     "manageListings": "E'lonlarni boshqarish",
+    "myTours": "Mening turlarim",
+    "messages": "Xabarlar",
     "userManagement": "Foydalanuvchilarni boshqarish",
     "complexes": "Komplekslar",
     "analytics": "Tahlillar",
@@ -112,6 +114,7 @@
   "roles": {
     "USER": "Foydalanuvchi",
     "SELLER": "Sotuvchi",
+    "REALTOR": "Rieltor",
     "MANAGER_ADMIN": "Menejer admin",
     "OWNER_ADMIN": "Egasi admin",
     "ADMIN": "Admin"

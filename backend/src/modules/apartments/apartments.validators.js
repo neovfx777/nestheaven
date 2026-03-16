@@ -9,6 +9,7 @@ const i18nSchema = z.object({
 const createApartmentSchema = z.object({
   body: z.object({
     complexId: z.string().min(1, 'Complex ID required').optional(),
+    realtorId: z.string().min(1, 'Realtor ID required').optional(),
     price: z.number().positive(),
     area: z.number().positive(),
     rooms: z.number().int().positive(),
@@ -32,6 +33,7 @@ const updateApartmentSchema = z.object({
   params: z.object({ id: z.string().min(1) }),
   body: z.object({
     complexId: z.string().min(1).optional().nullable(),
+    realtorId: z.string().min(1).optional().nullable(),
     price: z.number().positive().optional(),
     area: z.number().positive().optional(),
     rooms: z.number().int().positive().optional(),

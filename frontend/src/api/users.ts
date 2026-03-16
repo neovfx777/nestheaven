@@ -40,6 +40,16 @@ export interface AdminUser {
   createdAt: string;
 }
 
+export interface AssignableUser {
+  id: string;
+  email: string;
+  role: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  createdAt: string;
+}
+
 export interface AdminUsersResponse {
   users: AdminUser[];
   total: number;
@@ -187,6 +197,12 @@ export const usersApi = {
   // Delete user (admin only)
   deleteAdminUser: async (id: string): Promise<{ success: boolean }> => {
     const response = await apiClient.delete<{ success: boolean; data: { success: boolean } }>(`/admin/users/${id}`);
+    return response.data.data;
+  },
+
+  // Listing assignment helpers
+  getRealtors: async (): Promise<AssignableUser[]> => {
+    const response = await apiClient.get<{ success: boolean; data: AssignableUser[] }>('/users/realtors');
     return response.data.data;
   },
 };

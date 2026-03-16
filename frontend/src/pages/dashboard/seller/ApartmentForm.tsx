@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apartmentsApi, type Complex as ApiComplex, type RenovationStatus } from '../../../api/apartments';
+import { usersApi, type AssignableUser } from '../../../api/users';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
 import { Input } from '../../../components/ui/Input';
@@ -38,6 +39,7 @@ interface ApartmentFormData {
   floor: number;
   totalFloors: number;
   complexId: string;
+  realtorId?: string;
   address: string;
   developer: string;
   status?: string;
@@ -156,7 +158,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { t, language } = useTranslation();
+  const { t, language, getLocalizedContent } = useTranslation();
   const { user } = useAuthStore();
   const [newImages, setNewImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<ImageType[]>([]);
@@ -169,6 +171,19 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
   const { data: complexes = [] } = useQuery<ApiComplex[]>({
     queryKey: ['complexes-for-seller'],
     queryFn: () => apartmentsApi.getComplexesForSeller(),
+  });
+
+  const { data: realtors = [] } = useQuery<AssignableUser[]>({
+    queryKey: ['realtors-for-assignment'],
+    queryFn: async () => {
+      try {
+        return await usersApi.getRealtors();
+      } catch (error) {
+        console.warn('Failed to load realtors list:', error);
+        return [];
+      }
+    },
+    enabled: !!user,
   });
 
   const { data: apartment, isLoading } = useQuery({
@@ -187,6 +202,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
       floor: 1,
       totalFloors: 1,
       complexId: '',
+      realtorId: '',
       address: '',
       developer: '',
       status: 'active',
@@ -208,6 +224,7 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
         floor: apartment.floor || 1,
         totalFloors: apartment.totalFloors || 1,
         complexId: apartment.complexId || '',
+        realtorId: (apartment as any).realtor?.id || (apartment as any).realtorId || '',
         address: apartment.address || '',
         developer: apartment.developer || '',
         status: apartment.status || 'active',
@@ -315,9 +332,17 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
     }
 
     if (mode === 'create') {
-      createMutation.mutate(data);
+      const payload = {
+        ...data,
+        ...(data.realtorId ? { realtorId: data.realtorId } : {}),
+      };
+      createMutation.mutate(payload);
     } else if (mode === 'edit' && id) {
-      updateMutation.mutate({ id, data });
+      const payload = {
+        ...data,
+        realtorId: data.realtorId ? data.realtorId : null,
+      };
+      updateMutation.mutate({ id, data: payload });
     }
   };
 
@@ -361,6 +386,8 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
     totalFloorsLabel: { uz: 'Binodagi jami qavatlar *', ru: 'Vsego etazhey v zdanii *', en: 'Total Floors in Building *' },
     complexLabel: { uz: 'Kompleks *', ru: 'Kompleks *', en: 'Complex *' },
     selectComplex: { uz: 'Kompleksni tanlang', ru: 'Vyberite kompleks', en: 'Select Complex' },
+    realtorLabel: { uz: 'Rieltor (tur uchun)', ru: 'Rieltor (dlya tura)', en: 'Realtor (for tours)' },
+    noRealtor: { uz: 'Rieltorsiz', ru: 'Bez rieltora', en: 'No realtor' },
     constructionStatus: { uz: 'Qurilish holati', ru: 'Status stroitelstva', en: 'Construction status' },
     renovationStatus: { uz: 'Remont holati', ru: 'Sostoyaniye remonta', en: 'Renovation status' },
     availableNow: { uz: 'Hozir mavjud', ru: 'Dostupno seychas', en: 'Available now' },
@@ -664,15 +691,31 @@ export const ApartmentForm: React.FC<{ mode: 'create' | 'edit' }> = ({ mode }) =
                       options={[
                         { value: '', label: `${tr(uiText.selectComplex)}...` },
                         ...(complexes?.map(c => {
-                          const name = typeof c.name === 'string' 
-                            ? c.name 
-                            : c.name?.[language] || c.name?.en || c.name?.uz || c.name?.ru || 'Complex';
-                          return { value: c.id, label: name };
+                          const title = getLocalizedContent((c as any).title);
+                          const name = getLocalizedContent((c as any).name);
+                          return { value: c.id, label: title || name || t('complex.title') };
                         }) || [])
                       ]}
                       value={form.watch('complexId')}
                       onChange={(value) => form.setValue('complexId', value)}
                       required
+                    />
+
+                    <Select
+                      label={tr(uiText.realtorLabel)}
+                      name="realtorId"
+                      options={[
+                        { value: '', label: tr(uiText.noRealtor) },
+                        ...realtors.map((r) => {
+                          const fullName = [r.firstName, r.lastName].filter(Boolean).join(' ').trim();
+                          return {
+                            value: r.id,
+                            label: fullName ? `${fullName} (${r.email})` : r.email,
+                          };
+                        }),
+                      ]}
+                      value={form.watch('realtorId') || ''}
+                      onChange={(value) => form.setValue('realtorId', value)}
                     />
 
                     <Select

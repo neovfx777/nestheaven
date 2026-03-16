@@ -69,6 +69,8 @@
     "overview": "Обзор",
     "myFavorites": "Мои избранные",
     "manageListings": "Управление объявлениями",
+    "myTours": "Мои туры",
+    "messages": "Сообщения",
     "userManagement": "Управление пользователями",
     "complexes": "Комплексы",
     "analytics": "Аналитика",
@@ -112,6 +114,7 @@
   "roles": {
     "USER": "Пользователь",
     "SELLER": "Продавец",
+    "REALTOR": "Риелтор",
     "MANAGER_ADMIN": "Менеджер админ",
     "OWNER_ADMIN": "Владелец админ",
     "ADMIN": "Админ"

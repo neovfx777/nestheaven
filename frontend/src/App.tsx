@@ -24,12 +24,14 @@ import VerifyEmailPage from './pages/auth/VerifyEmailPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import UserDashboard from './pages/dashboard/UserDashboard';
 import SellerDashboard from './pages/dashboard/SellerDashboard';
+import RealtorDashboard from './pages/dashboard/RealtorDashboard';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import ManagerDashboard from './pages/dashboard/ManagerDashboard';
 import OwnerDashboard from './pages/dashboard/OwnerDashboard';
 import OwnerSettingsPage from './pages/dashboard/owner/OwnerSettingsPage';
 import OwnerBillingPage from './pages/dashboard/owner/OwnerBillingPage';
 import FavoritesPage from './pages/dashboard/FavoritesPage';
+import MessagesPage from './pages/dashboard/MessagesPage';
 
 // Admin dashboard pages
 import { ComplexFormNew } from './pages/dashboard/admin/ComplexFormNew';
@@ -93,10 +95,19 @@ function App() {
           <Route index element={<DashboardPage />} />
           <Route path="user" element={<UserDashboard />} />
           <Route path="seller" element={<SellerDashboard />} />
+          <Route
+            path="realtor"
+            element={
+              <ProtectedRoute requireRole={['REALTOR', 'OWNER_ADMIN']}>
+                <RealtorDashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route path="admin" element={<AdminDashboard />} />
           <Route path="manager" element={<ManagerDashboard />} />
           <Route path="owner" element={<OwnerDashboard />} />
           <Route path="favorites" element={<FavoritesPage />} />
+          <Route path="messages" element={<MessagesPage />} />
           
           {/* Manager / Owner: Admin management & moderation logs */}
           <Route

@@ -1,6 +1,7 @@
 const ROLES = {
   USER: 'USER',
   SELLER: 'SELLER',
+  REALTOR: 'REALTOR',
   ADMIN: 'ADMIN',
   MANAGER_ADMIN: 'MANAGER_ADMIN',
   OWNER_ADMIN: 'OWNER_ADMIN',
@@ -9,6 +10,7 @@ const ROLES = {
 const ROLE_HIERARCHY = {
   [ROLES.USER]: 0,
   [ROLES.SELLER]: 1,
+  [ROLES.REALTOR]: 1,
   [ROLES.ADMIN]: 2,
   [ROLES.MANAGER_ADMIN]: 3,
   [ROLES.OWNER_ADMIN]: 4,
@@ -26,10 +28,10 @@ function hasRoleOrAbove(roleA, roleB) {
  */
 function canCreateRole(creatorRole, targetRole) {
   if (creatorRole === ROLES.OWNER_ADMIN) {
-    return [ROLES.USER, ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN].includes(targetRole);
+    return [ROLES.USER, ROLES.SELLER, ROLES.REALTOR, ROLES.ADMIN, ROLES.MANAGER_ADMIN].includes(targetRole);
   }
   if (creatorRole === ROLES.MANAGER_ADMIN) {
-    return [ROLES.USER, ROLES.SELLER].includes(targetRole);
+    return [ROLES.USER, ROLES.SELLER, ROLES.REALTOR].includes(targetRole);
   }
   return false;
 }

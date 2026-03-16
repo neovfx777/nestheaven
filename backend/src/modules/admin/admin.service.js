@@ -76,12 +76,12 @@ async function listUsers(filters, reqUser) {
   const where = {};
 
   const allowedRoles = isOwnerAdmin
-    ? [ROLES.USER, ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN]
-    : [ROLES.USER, ROLES.SELLER, ROLES.ADMIN];
+    ? [ROLES.USER, ROLES.SELLER, ROLES.REALTOR, ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN]
+    : [ROLES.USER, ROLES.SELLER, ROLES.REALTOR, ROLES.ADMIN];
 
   let scopedRoles = allowedRoles;
   if (mode === 'users') {
-    scopedRoles = allowedRoles.filter((role) => [ROLES.USER, ROLES.SELLER].includes(role));
+    scopedRoles = allowedRoles.filter((role) => [ROLES.USER, ROLES.SELLER, ROLES.REALTOR].includes(role));
   } else if (mode === 'admins') {
     scopedRoles = allowedRoles.filter((role) => [ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN].includes(role));
   }

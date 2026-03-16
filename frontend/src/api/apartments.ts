@@ -14,6 +14,7 @@ export interface Apartment {
   status: 'ACTIVE' | 'HIDDEN' | 'SOLD' | 'active' | 'hidden' | 'sold';
   complexId: string;
   sellerId: string;
+  realtorId?: string | null;
   constructionStatus?: 'available' | 'built' | null;
   readyByYear?: number | null;
   readyByMonth?: number | null;
@@ -46,6 +47,12 @@ export interface Apartment {
     fullName: string;
     email: string;
   };
+  realtor?: {
+    id: string;
+    fullName: string;
+    email: string;
+    phone?: string | null;
+  } | null;
   // Legacy fields
   titleUz?: string;
   titleRu?: string;
@@ -69,6 +76,7 @@ export interface ApartmentDetail {
   status: 'ACTIVE' | 'HIDDEN' | 'SOLD' | 'active' | 'hidden' | 'sold';
   complexId: string;
   sellerId: string;
+  realtorId?: string | null;
   materials?: { uz: string; ru: string; en: string };
   infrastructureNote?: { uz: string; ru: string; en: string };
   constructionStatus?: 'available' | 'built' | null;
@@ -112,6 +120,12 @@ export interface ApartmentDetail {
     fullName: string;
     email: string;
   };
+  realtor?: {
+    id: string;
+    fullName: string;
+    email: string;
+    phone?: string | null;
+  } | null;
   coverImage: string | null;
   createdAt: string;
   updatedAt: string;
@@ -205,6 +219,7 @@ export interface Complex {
 export interface CreateApartmentData {
   title: { uz: string; ru: string; en: string };
   description?: { uz: string; ru: string; en: string };
+  realtorId?: string | null;
   price: number;
   rooms: number;
   area: number;
@@ -227,6 +242,26 @@ export interface CreateApartmentData {
 }
 
 export interface UpdateApartmentData extends Partial<CreateApartmentData> { }
+
+export interface TourSlots {
+  durationMinutes: number;
+  slots: string[];
+}
+
+export interface TourBooking {
+  id: string;
+  apartmentId: string;
+  realtorId: string;
+  userId: string;
+  startAt: string;
+  endAt: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  apartment?: { id: string; title: any };
+  realtor?: { id: string; fullName: string; email: string; phone?: string | null } | null;
+  user?: { id: string; fullName: string; email: string; phone?: string | null } | null;
+}
 
 export interface AdminStats {
   totalListings: number;
@@ -405,6 +440,21 @@ export const apartmentsApi = {
 
   update: async (id: string, data: Record<string, unknown>): Promise<ApartmentDetail> => {
     const response = await apiClient.patch<{ success: boolean; data: ApartmentDetail }>(`/apartments/${id}`, data);
+    return response.data.data;
+  },
+
+  // Tours
+  getTourSlots: async (id: string, from: string, to: string): Promise<TourSlots> => {
+    const response = await apiClient.get<{ success: boolean; data: TourSlots }>(`/apartments/${id}/tours/slots`, {
+      params: { from, to },
+    });
+    return response.data.data;
+  },
+
+  bookTour: async (id: string, startAt: string): Promise<TourBooking> => {
+    const response = await apiClient.post<{ success: boolean; data: TourBooking }>(`/apartments/${id}/tours/book`, {
+      startAt,
+    });
     return response.data.data;
   },
 

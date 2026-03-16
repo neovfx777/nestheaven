@@ -17,11 +17,15 @@ function requireRoles(...allowedRoles) {
 }
 
 function requireUser(req, res, next) {
-  return requireRoles(ROLES.USER, ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN)(req, res, next);
+  return requireRoles(ROLES.USER, ROLES.SELLER, ROLES.REALTOR, ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN)(req, res, next);
 }
 
 function requireSeller(req, res, next) {
   return requireRoles(ROLES.SELLER, ROLES.OWNER_ADMIN)(req, res, next);
+}
+
+function requireRealtor(req, res, next) {
+  return requireRoles(ROLES.REALTOR, ROLES.OWNER_ADMIN)(req, res, next);
 }
 
 function requireAdmin(req, res, next) {
@@ -40,6 +44,7 @@ module.exports = {
   requireRoles,
   requireUser,
   requireSeller,
+  requireRealtor,
   requireAdmin,
   requireManagerAdmin,
   requireOwnerAdmin,

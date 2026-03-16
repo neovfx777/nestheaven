@@ -2,6 +2,7 @@ import { useAuthStore } from '../../stores/authStore';
 import DashboardLayout from './DashboardLayout';
 import UserDashboard from './UserDashboard';
 import SellerDashboard from './SellerDashboard';
+import RealtorDashboard from './RealtorDashboard';
 import AdminDashboard from './AdminDashboard';
 import ManagerDashboard from './ManagerDashboard';
 import OwnerDashboard from './OwnerDashboard';
@@ -27,6 +28,8 @@ const DashboardPage = () => {
         return <UserDashboard />;
       case 'SELLER':
         return <SellerDashboard />;
+      case 'REALTOR':
+        return <RealtorDashboard />;
       case 'ADMIN':
         return <AdminDashboard />;
       case 'MANAGER_ADMIN':
