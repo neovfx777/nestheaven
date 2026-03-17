@@ -17,5 +17,12 @@
         <item name="android:statusBarColor">@color/nh_surface_card</item>
         <item name="android:navigationBarColor">@color/nh_surface_card</item>
     </style>
+
+    <style name="Theme.NestHeaven.Splash" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/nh_splash_bg</item>
+        <item name="android:statusBarColor">@color/nh_splash_bg</item>
+        <item name="android:navigationBarColor">@color/nh_splash_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
 </resources>
 
