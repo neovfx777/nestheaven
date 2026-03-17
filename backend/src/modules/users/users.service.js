@@ -188,6 +188,28 @@ async function getSellers() {
   return sellers;
 }
 
+async function getRealtors() {
+  const realtors = await prisma.user.findMany({
+    where: {
+      role: ROLES.REALTOR,
+      isActive: true,
+    },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      phone: true,
+      role: true,
+      createdAt: true,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+  return realtors;
+}
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -199,4 +221,5 @@ module.exports = {
   createSavedSearch,
   deleteSavedSearch,
   getSellers,
+  getRealtors,
 };

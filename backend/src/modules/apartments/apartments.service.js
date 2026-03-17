@@ -80,6 +80,27 @@ function getAddressText(complexSummary) {
   return address?.en || address?.uz || address?.ru || '';
 }
 
+async function ensureActiveRealtor(realtorId) {
+  if (!realtorId) return null;
+
+  const realtor = await prisma.user.findFirst({
+    where: {
+      id: realtorId,
+      role: ROLES.REALTOR,
+      isActive: true,
+    },
+    select: { id: true },
+  });
+
+  if (!realtor) {
+    const err = new Error('Realtor not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  return realtor.id;
+}
+
 // LIST funksiyasini soddalashtiramiz (500 xatosini bartaraf qilish uchun)
 async function list(data, reqUser) {
   try {
@@ -318,6 +339,15 @@ async function getById(id, reqUser) {
             phone: true
           }
         },
+        realtor: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          }
+        },
       },
     });
 
@@ -366,6 +396,10 @@ async function getById(id, reqUser) {
       seller: apartment.seller ? {
         ...apartment.seller,
         fullName: `${apartment.seller.firstName || ''} ${apartment.seller.lastName || ''}`.trim()
+      } : null,
+      realtor: apartment.realtor ? {
+        ...apartment.realtor,
+        fullName: `${apartment.realtor.firstName || ''} ${apartment.realtor.lastName || ''}`.trim()
       } : null,
       contactInfo: apartment.seller ? {
         phone: apartment.seller.phone,
@@ -482,6 +516,8 @@ async function create(data, reqUser) {
       }
     }
 
+    const realtorId = await ensureActiveRealtor(data.body.realtorId ?? null);
+
     const title = await completeI18n(data.body.title, { fieldName: 'apartment.title' });
     if (!title || !hasAnyContent(title)) {
       const err = new Error('Title is required in at least one language');
@@ -510,6 +546,7 @@ async function create(data, reqUser) {
       data: {
         complexId,
         sellerId: reqUser.id,
+        realtorId,
         price: parseFloat(data.body.price),
         area: parseFloat(data.body.area),
         rooms: parseInt(data.body.rooms),
@@ -585,6 +622,14 @@ async function update(id, data, reqUser) {
           throw err;
         }
         updates.complexId = data.body.complexId;
+      }
+    }
+
+    if (data.body.realtorId !== undefined) {
+      if (data.body.realtorId === null) {
+        updates.realtorId = null;
+      } else {
+        updates.realtorId = await ensureActiveRealtor(data.body.realtorId);
       }
     }
     if (data.body.price !== undefined) updates.price = parseFloat(data.body.price);

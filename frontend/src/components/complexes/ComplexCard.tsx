@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, MapPin } from 'lucide-react';
 import { Card } from '../ui/Card';
@@ -52,16 +53,27 @@ export function ComplexCard({ complex }: ComplexCardProps) {
       : complex.images?.[0]?.url
         ? getAssetUrl(complex.images[0].url)
         : null;
+  const [coverVisible, setCoverVisible] = useState(true);
+
+  useEffect(() => {
+    setCoverVisible(true);
+  }, [coverUrl]);
 
   return (
     <Link to={`/complexes/${complex.id}`}>
       <Card className="overflow-hidden rounded-3xl border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-        {coverUrl ? (
+        {coverUrl && coverVisible ? (
           <div className="h-40 sm:h-48 overflow-hidden bg-gray-200">
             <img
               src={coverUrl}
               alt={title}
               className="w-full h-full object-cover"
+              onError={() => setCoverVisible(false)}
+              onLoad={(e) => {
+                if (e.currentTarget.naturalWidth < 80 || e.currentTarget.naturalHeight < 80) {
+                  setCoverVisible(false);
+                }
+              }}
             />
           </div>
         ) : (

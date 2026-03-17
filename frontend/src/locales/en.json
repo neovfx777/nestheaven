@@ -69,6 +69,8 @@
     "overview": "Overview",
     "myFavorites": "My Favorites",
     "manageListings": "Manage Listings",
+    "myTours": "My Tours",
+    "messages": "Messages",
     "userManagement": "User Management",
     "complexes": "Complexes",
     "analytics": "Analytics",
@@ -112,6 +114,7 @@
   "roles": {
     "USER": "User",
     "SELLER": "Seller",
+    "REALTOR": "Realtor",
     "MANAGER_ADMIN": "Manager Admin",
     "OWNER_ADMIN": "Owner Admin",
     "ADMIN": "Admin"

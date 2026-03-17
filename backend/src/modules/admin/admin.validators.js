@@ -11,7 +11,7 @@ const createUserSchema = z.object({
   body: z.object({
     email: z.string().email('Invalid email'),
     password: passwordSchema,
-    role: z.enum([ROLES.USER, ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN]),
+    role: z.enum([ROLES.USER, ROLES.SELLER, ROLES.REALTOR, ROLES.ADMIN, ROLES.MANAGER_ADMIN]),
     firstName: z.string().optional(),
     lastName: z.string().optional(),
     phone: z.string().optional(),
@@ -26,7 +26,7 @@ const updateUserSchema = z.object({
     firstName: z.string().optional(),
     lastName: z.string().optional(),
     phone: z.string().optional(),
-    role: z.enum([ROLES.USER, ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN]).optional(),
+    role: z.enum([ROLES.USER, ROLES.SELLER, ROLES.REALTOR, ROLES.ADMIN, ROLES.MANAGER_ADMIN]).optional(),
     isActive: z.boolean().optional(),
   }),
 });
@@ -46,7 +46,7 @@ const deleteUserSchema = z.object({
 // Add search query validation schema
 const listUsersQuerySchema = z.object({
   query: z.object({
-    role: z.enum([ROLES.USER, ROLES.SELLER, ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN]).optional(),
+    role: z.enum([ROLES.USER, ROLES.SELLER, ROLES.REALTOR, ROLES.ADMIN, ROLES.MANAGER_ADMIN, ROLES.OWNER_ADMIN]).optional(),
     searchTerm: z.string().min(1).max(100).optional(),
     searchBy: z.enum(['name', 'email', 'phone', 'all']).default('all').optional(),
   }),

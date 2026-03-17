@@ -29,5 +29,7 @@ router.delete('/saved-searches/:id', validateSavedSearchId, usersController.dele
 
 // Get sellers list (for complex assignment)
 router.get('/sellers', usersController.getSellers);
+// Get realtors list (for apartment tour assignment)
+router.get('/realtors', usersController.getRealtors);
 
 module.exports = router;

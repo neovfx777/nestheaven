@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -74,6 +75,18 @@ const ComplexDetailPage = () => {
   });
 
   const apartments: Apartment[] = apartmentsData?.apartments || [];
+  const complexImages = (complex?.images || [])
+    .map((img) => {
+      const url = getAssetUrl(img.url);
+      return url ? { ...img, url } : null;
+    })
+    .filter((img): img is { id: string; url: string; order: number } => img !== null);
+  const coverImageUrl = complexImages[0]?.url ?? null;
+  const [coverImageVisible, setCoverImageVisible] = useState(true);
+
+  useEffect(() => {
+    setCoverImageVisible(true);
+  }, [coverImageUrl]);
 
   if (complexLoading || apartmentsLoading) {
     return (
@@ -114,10 +127,6 @@ const ComplexDetailPage = () => {
     getLocalizedContent(complex.address as any) ||
     '';
 
-  const complexImages = (complex.images || [])
-    .map((img) => ({ ...img, url: getAssetUrl(img.url) }))
-    .filter((img) => img.url);
-  const coverImageUrl = complexImages.length > 0 ? complexImages[0].url : null;
   const parsedPermissions =
     typeof complex.permissions === 'string'
       ? (() => {
@@ -142,8 +151,11 @@ const ComplexDetailPage = () => {
       url: complex.permission3Url || parsedPermissions?.permission3,
     },
   ]
-    .map((item) => ({ ...item, url: getAssetUrl(item.url || null) }))
-    .filter((item) => item.url);
+    .map((item) => {
+      const url = getAssetUrl(item.url || null);
+      return url ? { ...item, url } : null;
+    })
+    .filter((item): item is { label: string; url: string } => item !== null);
 
   const amenities = complex.amenities || [];
   const nearbyPlaces = complex.nearbyPlaces || complex.nearby || [];
@@ -185,12 +197,18 @@ const ComplexDetailPage = () => {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Cover and gallery: first complex image or placeholder */}
-        {coverImageUrl ? (
+        {coverImageUrl && coverImageVisible ? (
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
             <img
               src={coverImageUrl}
               alt={complexTitle}
               className="w-full h-56 sm:h-64 md:h-80 lg:h-96 object-cover"
+              onError={() => setCoverImageVisible(false)}
+              onLoad={(e) => {
+                if (e.currentTarget.naturalWidth < 80 || e.currentTarget.naturalHeight < 80) {
+                  setCoverImageVisible(false);
+                }
+              }}
             />
           </div>
         ) : (
@@ -407,7 +425,7 @@ const ComplexDetailPage = () => {
                   {permissionLinks.map((item) => (
                     <a
                       key={item.label}
-                      href={item.url as string}
+                      href={item.url}
                       target="_self"
                       rel="noopener"
                       className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-blue-700 hover:text-blue-800 hover:border-blue-200"

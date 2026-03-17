@@ -1,16 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bed,
   Square,
   Layers,
   MapPin,
   Building2,
-  Phone,
-  Mail,
   Share2,
-  User,
   Calendar,
   Shield,
   TrendingUp,
@@ -26,12 +23,26 @@ import { FavoriteButton } from '../../components/apartments/FavoriteButton';
 import { ComplexLocationMap } from '../../components/maps/ComplexLocationMap';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from '../../hooks/useTranslation';
+import { Select } from '../../components/ui/Select';
+import { Input } from '../../components/ui/Input';
+import { Textarea } from '../../components/ui/Textarea';
+import { messagesApi } from '../../api/messages';
+import { useAuthStore } from '../../stores/authStore';
 
 const ApartmentDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const { isAuthenticated } = useAuthStore();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('details');
+  const [tourDate, setTourDate] = useState(() => {
+    const today = new Date();
+    today.setDate(today.getDate() + 1);
+    return today.toISOString().slice(0, 10);
+  });
+  const [selectedTourStartAt, setSelectedTourStartAt] = useState('');
+  const [messageText, setMessageText] = useState('');
 
   // Fetch apartment details
   const {
@@ -44,6 +55,48 @@ const ApartmentDetailPage = () => {
     queryFn: () => apartmentsApi.getApartmentById(id!),
     enabled: !!id,
     retry: 1,
+  });
+
+  const tourRange = (() => {
+    if (!tourDate) return null;
+    const startLocal = new Date(`${tourDate}T00:00:00`);
+    const endLocal = new Date(startLocal.getTime() + 24 * 60 * 60 * 1000);
+    return { from: startLocal.toISOString(), to: endLocal.toISOString() };
+  })();
+
+  const {
+    data: tourSlots,
+    isLoading: tourSlotsLoading,
+    isError: tourSlotsError,
+  } = useQuery({
+    queryKey: ['tour-slots', id, tourDate],
+    queryFn: () => apartmentsApi.getTourSlots(id as string, tourRange!.from, tourRange!.to),
+    enabled: !!id && !!tourRange && !!apartment?.realtorId,
+    retry: 1,
+  });
+
+  const bookTourMutation = useMutation({
+    mutationFn: () => apartmentsApi.bookTour(id as string, selectedTourStartAt),
+    onSuccess: async (booking) => {
+      setSelectedTourStartAt('');
+      await queryClient.invalidateQueries({ queryKey: ['tour-slots', id, tourDate] });
+      toast.success(`Tour booked for ${new Date(booking.startAt).toLocaleString()}`);
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to book tour');
+    },
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: () => messagesApi.sendForApartment(id as string, messageText.trim()),
+    onSuccess: async () => {
+      setMessageText('');
+      await queryClient.invalidateQueries({ queryKey: ['messages-conversations'] });
+      toast.success('Message sent');
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to send message');
+    },
   });
 
   // Debug uchun
@@ -398,11 +451,6 @@ const ApartmentDetailPage = () => {
                     <Share2 className="h-5 w-5 mr-2" />
                     Share
                   </Button>
-                  <Button className="flex-1 w-full sm:w-auto">
-                    <Phone className="h-5 w-5 mr-2" />
-                    <span className="hidden sm:inline">Contact Seller</span>
-                    <span className="sm:hidden">Contact</span>
-                  </Button>
                 </div>
               </div>
             </Card>
@@ -411,7 +459,7 @@ const ApartmentDetailPage = () => {
             <Card>
               <div className="border-b border-gray-200">
                 <nav className="flex">
-                  {['details', 'description', 'contact'].map((tab) => (
+                  {['details', 'description'].map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
@@ -474,25 +522,30 @@ const ApartmentDetailPage = () => {
 
                 {activeTab === 'description' && (
                   <div className="space-y-6">
-                    {/* Description in different languages */}
-                    {['en', 'uz', 'ru'].map((lang) => {
-                      const desc = getDescription(apartment, lang as 'en' | 'uz' | 'ru');
+                    {/* Show only currently selected language description */}
+                    {(() => {
+                      const currentLang = language as 'en' | 'uz' | 'ru';
+                      const desc = getDescription(apartment, currentLang);
                       if (!desc) return null;
 
                       return (
-                        <div key={lang} className="bg-gray-50 rounded-lg p-4">
+                        <div className="bg-gray-50 rounded-lg p-4">
                           <div className="flex items-center mb-3">
                             <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-800 flex items-center justify-center text-sm font-bold mr-2">
-                              {lang.toUpperCase()}
+                              {currentLang.toUpperCase()}
                             </div>
                             <h4 className="font-medium">
-                              {lang === 'en' ? 'English' : lang === 'uz' ? 'Uzbek' : 'Russian'} Description
+                              {currentLang === 'en'
+                                ? 'English'
+                                : currentLang === 'uz'
+                                ? 'Uzbek'
+                                : 'Russian'} Description
                             </h4>
                           </div>
                           <p className="text-gray-700">{desc}</p>
                         </div>
                       );
-                    })}
+                    })()}
 
                     {/* Complex Locations */}
                     {apartment.complex && (
@@ -553,68 +606,99 @@ const ApartmentDetailPage = () => {
                   </div>
                 )}
 
-                {activeTab === 'contact' && apartment.seller && (
-                  <div className="space-y-6">
-                    {/* Seller Info */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Seller Information</h3>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center mb-4">
-                          <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
-                            <User className="h-6 w-6 text-primary-600" />
-                          </div>
-                          <div className="ml-4">
-                            <div className="font-medium">{apartment.seller.fullName}</div>
-                            <div className="text-sm text-gray-500">{apartment.seller.email}</div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          <Button className="w-full">
-                            <Phone className="h-5 w-5 mr-2" />
-                            Call Seller
-                          </Button>
-                          <Button variant="outline" className="w-full">
-                            <Mail className="h-5 w-5 mr-2" />
-                            Send Email
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </Card>
           </div>
 
           {/* Right Column - Sidebar */}
           <div className="space-y-6">
-            {/* Seller Card */}
-            <Card>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Seller</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center">
-                    <User className="h-5 w-5 text-gray-400 mr-3" />
-                    <div>
-                      <div className="font-medium">{apartment.seller.fullName}</div>
-                      <div className="text-sm text-gray-500">Verified Seller</div>
-                    </div>
+            {/* Book a Tour */}
+            {apartment.realtor ? (
+              <Card>
+                <div className="p-6 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-primary-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">Book a Tour</h3>
                   </div>
 
-                  <div className="space-y-2">
-                    <Button className="w-full">
-                      <Phone className="h-5 w-5 mr-2" />
-                      Call Now
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      <Mail className="h-5 w-5 mr-2" />
-                      Send Message
-                    </Button>
+                  <div className="text-sm text-gray-700">
+                    <div className="font-medium">Realtor</div>
+                    <div>{apartment.realtor.fullName || apartment.realtor.email}</div>
+                    {apartment.realtor.phone && <div className="text-gray-500">{apartment.realtor.phone}</div>}
                   </div>
+
+                  {!isAuthenticated ? (
+                    <Button className="w-full" onClick={() => navigate('/login')}>
+                      Login to book a tour
+                    </Button>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                        <Input type="date" value={tourDate} onChange={(e) => setTourDate(e.target.value)} />
+                      </div>
+                      <Select
+                        label="Time (2 hours)"
+                        value={selectedTourStartAt}
+                        onChange={setSelectedTourStartAt}
+                        options={[
+                          { value: '', label: tourSlotsLoading ? 'Loading...' : 'Select a time' },
+                          ...(tourSlots?.slots || []).map((slot) => ({
+                            value: slot,
+                            label: new Date(slot).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                          })),
+                        ]}
+                      />
+                      {tourSlotsError && (
+                        <div className="text-sm text-red-600">Could not load availability for this date.</div>
+                      )}
+                      <Button
+                        className="w-full"
+                        disabled={!selectedTourStartAt || bookTourMutation.isPending || (tourSlots?.slots?.length || 0) === 0}
+                        onClick={() => bookTourMutation.mutate()}
+                      >
+                        {bookTourMutation.isPending ? 'Booking...' : 'Book Tour'}
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </Card>
+              </Card>
+            ) : null}
+
+            {/* Message Realtor */}
+            {apartment.realtor ? (
+              <Card>
+                <div className="p-6 space-y-3">
+                  <h3 className="text-lg font-semibold text-gray-900">Message Realtor</h3>
+                  {!isAuthenticated ? (
+                    <Button className="w-full" onClick={() => navigate('/login')}>
+                      Login to message
+                    </Button>
+                  ) : (
+                    <>
+                      <Textarea
+                        value={messageText}
+                        onChange={(e) => setMessageText(e.target.value)}
+                        placeholder="Write your message..."
+                        rows={4}
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          className="flex-1"
+                          disabled={!messageText.trim() || sendMessageMutation.isPending}
+                          onClick={() => sendMessageMutation.mutate()}
+                        >
+                          {sendMessageMutation.isPending ? 'Sending...' : 'Send'}
+                        </Button>
+                        <Button type="button" variant="outline" onClick={() => navigate('/dashboard/messages')}>
+                          Open chat
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </Card>
+            ) : null}
 
             {/* Mortgage Calculator */}
             <Card>

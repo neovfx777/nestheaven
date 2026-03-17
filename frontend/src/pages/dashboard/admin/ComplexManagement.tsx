@@ -146,14 +146,16 @@ export function ComplexManagement() {
             const title = getLocalizedContent(complex.title, language);
             const amenities = Array.isArray(complex.amenities) ? complex.amenities : [];
             const nearbyPlaces = Array.isArray(complex.nearbyPlaces) ? complex.nearbyPlaces : [];
+            const coverImageSrc =
+              getAssetUrl(complex.coverImage || complex.images?.[0]?.url) ?? undefined;
 
             return (
               <Card key={complex.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 {/* Cover image (first complex image) */}
-                {(complex.coverImage || complex.images?.[0]?.url) && (
+                {coverImageSrc && (
                   <div className="h-48 overflow-hidden bg-gray-200">
                     <img
-                      src={getAssetUrl(complex.coverImage || complex.images?.[0]?.url)}
+                      src={coverImageSrc}
                       alt={title}
                       className="w-full h-full object-cover"
                     />
@@ -170,7 +172,7 @@ export function ComplexManagement() {
                   <div className="flex items-center text-sm text-gray-600 mb-3">
                     <Building2 className="h-4 w-4 mr-1" />
                     <span>{complex.developer}</span>
-                    <span className="mx-2">•</span>
+                    <span className="mx-2">|</span>
                     <span>{complex.city}</span>
                   </div>
 
@@ -256,3 +258,4 @@ export function ComplexManagement() {
     </div>
   );
 }
+
