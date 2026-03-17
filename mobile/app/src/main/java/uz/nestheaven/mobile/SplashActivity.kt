@@ -37,12 +37,8 @@ class SplashActivity : AppCompatActivity() {
         ApiClient.init(applicationContext)
 
         lifecycleScope.launch {
-            delay(1800)
-            val next = if (sessionManager.isGetStartedSeen()) {
-                MainActivity::class.java
-            } else {
-                GetStartedActivity::class.java
-            }
+            delay(2200)
+            val next = if (sessionManager.isLoggedIn()) MainActivity::class.java else GetStartedActivity::class.java
             startActivity(Intent(this@SplashActivity, next))
             finish()
         }

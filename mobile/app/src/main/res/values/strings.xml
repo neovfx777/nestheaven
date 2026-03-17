@@ -19,6 +19,19 @@
     <string name="language_ru_name">Русский</string>
     <string name="language_en_name">English</string>
 
+    <!-- Auth (Login/Register screens) -->
+    <string name="login_card_title">Akkauntingizga kiring.</string>
+    <string name="login_card_subtitle">Iltimos, akkauntingizga kiring</string>
+    <string name="forgot_password">Parolni unutdingizmi?</string>
+    <string name="forgot_password_hint">Parolni tiklash tez kunda qo\'shiladi</string>
+    <string name="login_prompt_no_account">Akkauntingiz yo\'qmi?</string>
+
+    <string name="register_card_title">Akkaunt yarating.</string>
+    <string name="register_card_subtitle">Ma\'lumotlaringizni to\'ldiring</string>
+    <string name="register_prompt_have_account">Akkauntingiz bormi?</string>
+
+    <string name="error_password_policy">Parol kamida 8 ta belgi bo\'lsin va katta/kichik harf hamda raqam bo\'lsin</string>
+
     <string name="auth_title">NestHeaven Mobile</string>
     <string name="auth_subtitle">Bu native Android ilova backend API bilan to\'g\'ridan-to\'g\'ri ishlaydi.</string>
     <string name="auth_hero_badge">VPS Live API</string>

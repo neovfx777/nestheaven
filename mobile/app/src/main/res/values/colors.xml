@@ -36,5 +36,8 @@
     <!-- Splash -->
     <color name="nh_splash_bg">#3F6E5A</color>
     <color name="nh_splash_gold">#D4AF37</color>
+
+    <!-- Auth -->
+    <color name="nh_login_teal">#23B7A6</color>
 </resources>
 

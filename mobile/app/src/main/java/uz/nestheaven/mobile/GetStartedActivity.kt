@@ -15,8 +15,8 @@ import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -29,7 +29,7 @@ class GetStartedActivity : AppCompatActivity() {
         val tag: String,
         val labelRes: Int,
         val shortCode: String,
-        val flagEmoji: String,
+        val flagResId: Int,
     )
 
     private val imagePaths = listOf(
@@ -55,14 +55,15 @@ class GetStartedActivity : AppCompatActivity() {
         val languageButton = findViewById<MaterialButton>(R.id.getStartedLanguageButton)
 
         val languages = listOf(
-            LanguageOption("uz", R.string.language_uz_name, "UZ", "🇺🇿"),
-            LanguageOption("ru", R.string.language_ru_name, "RU", "🇷🇺"),
-            LanguageOption("en", R.string.language_en_name, "EN", "🇺🇸"),
+            LanguageOption("uz", R.string.language_uz_name, "UZ", R.drawable.ic_flag_uz),
+            LanguageOption("ru", R.string.language_ru_name, "RU", R.drawable.ic_flag_ru),
+            LanguageOption("en", R.string.language_en_name, "EN", R.drawable.ic_flag_en),
         )
 
         val currentTag = resolveCurrentLanguageTag(sessionManager, languages)
         val currentLanguage = languages.firstOrNull { it.tag == currentTag }
-        languageButton.text = currentLanguage?.let { "${it.flagEmoji} ${it.shortCode}" } ?: "🇺🇿 UZ"
+        languageButton.text = currentLanguage?.shortCode ?: "UZ"
+        languageButton.setIconResource(currentLanguage?.flagResId ?: R.drawable.ic_flag_uz)
         languageButton.setOnClickListener {
             showLanguagePicker(sessionManager, languages)
         }
@@ -80,14 +81,19 @@ class GetStartedActivity : AppCompatActivity() {
 
         button.setOnClickListener {
             sessionManager.setGetStartedSeen(true)
-            startActivity(Intent(this, MainActivity::class.java))
+            val next = if (sessionManager.isLoggedIn()) {
+                MainActivity::class.java
+            } else {
+                LoginActivity::class.java
+            }
+            startActivity(Intent(this, next))
             finish()
         }
     }
 
     private fun showLanguagePicker(sessionManager: SessionManager, languages: List<LanguageOption>) {
         val currentTag = resolveCurrentLanguageTag(sessionManager, languages)
-        val labels = languages.map { "${it.flagEmoji} ${getString(it.labelRes)}" }.toTypedArray()
+        val labels = languages.map { getString(it.labelRes) }.toTypedArray()
         val checkedIndex = languages.indexOfFirst { it.tag == currentTag }.coerceAtLeast(0)
 
         MaterialAlertDialogBuilder(this)
@@ -95,6 +101,10 @@ class GetStartedActivity : AppCompatActivity() {
             .setSingleChoiceItems(labels, checkedIndex) { dialog, which ->
                 dialog.dismiss()
                 val selected = languages.getOrNull(which) ?: return@setSingleChoiceItems
+                findViewById<MaterialButton>(R.id.getStartedLanguageButton).apply {
+                    text = selected.shortCode
+                    setIconResource(selected.flagResId)
+                }
                 applyLanguage(sessionManager, selected.tag)
             }
             .setNegativeButton(android.R.string.cancel, null)

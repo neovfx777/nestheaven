@@ -1,13 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="login">Войти</string>
+    <string name="logout">Выйти</string>
+    <string name="register">Регистрация</string>
+    <string name="email">Email</string>
+    <string name="password">Пароль</string>
+    <string name="first_name">Имя</string>
+    <string name="last_name">Фамилия</string>
+    <string name="phone">Телефон</string>
+
+    <string name="error_fill_login">Введите email и пароль</string>
+    <string name="error_login_failed">Не удалось войти</string>
+    <string name="error_fill_register">Заполните обязательные поля</string>
+    <string name="error_register_failed">Ошибка регистрации</string>
+    <string name="error_network_generic">Ошибка сети. Проверьте интернет или сервер</string>
+
     <string name="get_started_top_label">Начать</string>
     <string name="get_started_headline">«Ваш дом в одном клике»</string>
     <string name="get_started_subheadline">Найдите дом мечты проще и быстрее</string>
     <string name="get_started_button">Начать</string>
+
+    <string name="login_card_title">Войдите в аккаунт.</string>
+    <string name="login_card_subtitle">Пожалуйста, войдите в свой аккаунт</string>
+    <string name="forgot_password">Забыли пароль?</string>
+    <string name="forgot_password_hint">Восстановление пароля скоро будет доступно</string>
+    <string name="login_prompt_no_account">Нет аккаунта?</string>
+
+    <string name="register_card_title">Создайте аккаунт.</string>
+    <string name="register_card_subtitle">Заполните данные</string>
+    <string name="register_prompt_have_account">Уже есть аккаунт?</string>
+
+    <string name="error_password_policy">Пароль должен быть не менее 8 символов и содержать верхний/нижний регистр и цифру</string>
 
     <string name="language_picker_title">Выберите язык</string>
     <string name="language_uz_name">Узбекский</string>
     <string name="language_ru_name">Русский</string>
     <string name="language_en_name">Английский</string>
 </resources>
-

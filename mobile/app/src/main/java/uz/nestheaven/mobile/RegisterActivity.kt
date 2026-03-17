@@ -1,0 +1,150 @@
+package uz.nestheaven.mobile
+
+import android.content.Intent
+import android.os.Bundle
+import android.widget.ProgressBar
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputEditText
+import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
+import retrofit2.Response
+import uz.nestheaven.mobile.core.ApiClient
+import uz.nestheaven.mobile.core.RegisterRequest
+import uz.nestheaven.mobile.core.SessionManager
+import java.util.regex.Pattern
+
+class RegisterActivity : AppCompatActivity() {
+
+    private val passwordPattern: Pattern = Pattern.compile(
+        "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$",
+    )
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        ApiClient.init(applicationContext)
+
+        val sessionManager = SessionManager(this)
+        if (sessionManager.isLoggedIn()) {
+            openMain()
+            return
+        }
+
+        setContentView(R.layout.activity_register)
+
+        val firstName = findViewById<TextInputEditText>(R.id.registerFirstName)
+        val lastName = findViewById<TextInputEditText>(R.id.registerLastName)
+        val email = findViewById<TextInputEditText>(R.id.registerEmail)
+        val password = findViewById<TextInputEditText>(R.id.registerPassword)
+        val phone = findViewById<TextInputEditText>(R.id.registerPhone)
+        val buttonRegister = findViewById<MaterialButton>(R.id.registerButton)
+        val buttonGoLogin = findViewById<MaterialButton>(R.id.registerGoLogin)
+        val progress = findViewById<ProgressBar>(R.id.registerProgress)
+        val error = findViewById<TextView>(R.id.registerError)
+
+        fun setLoading(loading: Boolean) {
+            progress.isVisible = loading
+            buttonRegister.isEnabled = !loading
+            buttonGoLogin.isEnabled = !loading
+        }
+
+        fun showError(message: String) {
+            error.text = message
+            error.isVisible = true
+        }
+
+        buttonGoLogin.setOnClickListener { finish() }
+
+        buttonRegister.setOnClickListener {
+            val first = firstName.text?.toString()?.trim().orEmpty()
+            val last = lastName.text?.toString()?.trim().orEmpty()
+            val emailValue = email.text?.toString()?.trim().orEmpty()
+            val passwordValue = password.text?.toString().orEmpty()
+            val phoneValue = phone.text?.toString()?.trim()?.takeUnless { it.isNullOrBlank() }?.let { normalizePhone(it) }
+
+            error.isVisible = false
+
+            if (first.isBlank() || last.isBlank() || emailValue.isBlank() || passwordValue.isBlank()) {
+                showError(getString(R.string.error_fill_register))
+                return@setOnClickListener
+            }
+
+            if (!passwordPattern.matcher(passwordValue).matches()) {
+                showError(getString(R.string.error_password_policy))
+                return@setOnClickListener
+            }
+
+            lifecycleScope.launch {
+                setLoading(true)
+                try {
+                    val response = ApiClient.service.register(
+                        RegisterRequest(
+                            email = emailValue,
+                            password = passwordValue,
+                            firstName = first,
+                            lastName = last,
+                            phone = phoneValue,
+                        ),
+                    )
+
+                    if (response.isSuccessful && response.body() != null) {
+                        val body = response.body()!!
+                        sessionManager.saveSession(body.token, body.user)
+                        openMain()
+                    } else {
+                        showError(resolveApiError(response, R.string.error_register_failed))
+                    }
+                } catch (_: Exception) {
+                    showError(getString(R.string.error_network_generic))
+                } finally {
+                    setLoading(false)
+                }
+            }
+        }
+    }
+
+    private fun openMain() {
+        startActivity(Intent(this, MainActivity::class.java))
+        finish()
+    }
+
+    private fun normalizePhone(raw: String): String {
+        val digits = raw.filter { it.isDigit() }
+        if (digits.isBlank()) return ""
+        return if (digits.length == 9) "998$digits" else digits
+    }
+
+    private fun resolveApiError(response: Response<*>, fallbackResId: Int): String {
+        return extractMessage(response) ?: getString(fallbackResId)
+    }
+
+    private fun extractMessage(response: Response<*>): String? {
+        val rawBody = try {
+            response.errorBody()?.string().orEmpty()
+        } catch (_: Exception) {
+            return null
+        }
+
+        if (rawBody.isBlank()) return null
+
+        return try {
+            val json = JSONObject(rawBody)
+            when (val message = json.opt("message")) {
+                is String -> message.takeIf { it.isNotBlank() }
+                is JSONArray -> {
+                    (0 until message.length())
+                        .mapNotNull { index -> message.optString(index).takeIf { it.isNotBlank() } }
+                        .joinToString("\n")
+                        .takeIf { it.isNotBlank() }
+                }
+                else -> null
+            } ?: json.optString("error").takeIf { it.isNotBlank() }
+        } catch (_: Exception) {
+            null
+        }
+    }
+}
