@@ -8,10 +8,16 @@
     <string name="splash_subtitle">REAL ESTATE</string>
 
     <!-- Get Started -->
-    <string name="get_started_top_label">Get Started</string>
-    <string name="get_started_headline">"Your house one click away"</string>
-    <string name="get_started_subheadline">Find your dream house easier and faster</string>
-    <string name="get_started_button">Get Started</string>
+    <string name="get_started_top_label">Boshlash</string>
+    <string name="get_started_headline">Uyingiz bir bosish narida</string>
+    <string name="get_started_subheadline">Orzuingizdagi uyni oson va tez toping</string>
+    <string name="get_started_button">Boshlash</string>
+
+    <!-- Language -->
+    <string name="language_picker_title">Tilni tanlang</string>
+    <string name="language_uz_name">O\'zbekcha</string>
+    <string name="language_ru_name">Русский</string>
+    <string name="language_en_name">English</string>
 
     <string name="auth_title">NestHeaven Mobile</string>
     <string name="auth_subtitle">Bu native Android ilova backend API bilan to\'g\'ridan-to\'g\'ri ishlaydi.</string>
