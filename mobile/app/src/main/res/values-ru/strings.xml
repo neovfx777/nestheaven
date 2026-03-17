@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="get_started_top_label">Начать</string>
+    <string name="get_started_headline">«Ваш дом в одном клике»</string>
+    <string name="get_started_subheadline">Найдите дом мечты проще и быстрее</string>
+    <string name="get_started_button">Начать</string>
+
+    <string name="language_picker_title">Выберите язык</string>
+    <string name="language_uz_name">Узбекский</string>
+    <string name="language_ru_name">Русский</string>
+    <string name="language_en_name">Английский</string>
+</resources>
+
