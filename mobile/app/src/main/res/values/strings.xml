@@ -2,6 +2,17 @@
 <resources>
     <string name="app_name">NestHeaven</string>
 
+    <!-- Splash -->
+    <string name="splash_logo">Splash logo</string>
+    <string name="splash_title">NestHeaven</string>
+    <string name="splash_subtitle">REAL ESTATE</string>
+
+    <!-- Get Started -->
+    <string name="get_started_top_label">Get Started</string>
+    <string name="get_started_headline">"Your house one click away"</string>
+    <string name="get_started_subheadline">Find your dream house easier and faster</string>
+    <string name="get_started_button">Get Started</string>
+
     <string name="auth_title">NestHeaven Mobile</string>
     <string name="auth_subtitle">Bu native Android ilova backend API bilan to\'g\'ridan-to\'g\'ri ishlaydi.</string>
     <string name="auth_hero_badge">VPS Live API</string>
