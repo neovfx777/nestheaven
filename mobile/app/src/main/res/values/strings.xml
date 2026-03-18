@@ -29,6 +29,14 @@
     <string name="register_card_title">Akkaunt yarating.</string>
     <string name="register_card_subtitle">Ma\'lumotlaringizni to\'ldiring</string>
     <string name="register_prompt_have_account">Akkauntingiz bormi?</string>
+    <string name="register_create_account_title">Akkaunt yarating</string>
+    <string name="register_create_account_headline">Bizni tanlaganingizdan xursandmiz</string>
+    <string name="register_create_account_hint">Davom etish uchun quyidagi barcha maydonlarni to\'ldiring</string>
+    <string name="full_name">Ism familiya</string>
+    <string name="email_address">Email manzil</string>
+    <string name="repeat_password">Parolni qayta kiriting</string>
+    <string name="action_continue">Davom etish</string>
+    <string name="action_back">Orqaga</string>
 
     <string name="error_password_policy">Parol kamida 8 ta belgi bo\'lsin va katta/kichik harf hamda raqam bo\'lsin</string>
 
@@ -110,6 +118,7 @@
     <string name="error_fill_login">Email va parolni kiriting</string>
     <string name="error_fill_register">Ro\'yxatdan o\'tish maydonlarini to\'ldiring</string>
     <string name="error_password_short">Parol kamida 6 ta belgidan iborat bo\'lsin</string>
+    <string name="error_password_mismatch">Parollar mos emas</string>
     <string name="error_login_failed">Kirish amalga oshmadi</string>
     <string name="error_register_failed">Ro\'yxatdan o\'tishda xato</string>
     <string name="error_network_generic">Tarmoqda xatolik, internet yoki serverni tekshiring</string>

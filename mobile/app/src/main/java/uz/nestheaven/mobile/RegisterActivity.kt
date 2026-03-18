@@ -2,6 +2,7 @@ package uz.nestheaven.mobile
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -36,10 +37,11 @@ class RegisterActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_register)
 
-        val firstName = findViewById<TextInputEditText>(R.id.registerFirstName)
-        val lastName = findViewById<TextInputEditText>(R.id.registerLastName)
+        val buttonBack = findViewById<ImageButton>(R.id.registerBack)
+        val name = findViewById<TextInputEditText>(R.id.registerName)
         val email = findViewById<TextInputEditText>(R.id.registerEmail)
         val password = findViewById<TextInputEditText>(R.id.registerPassword)
+        val passwordRepeat = findViewById<TextInputEditText>(R.id.registerPasswordRepeat)
         val phone = findViewById<TextInputEditText>(R.id.registerPhone)
         val buttonRegister = findViewById<MaterialButton>(R.id.registerButton)
         val buttonGoLogin = findViewById<MaterialButton>(R.id.registerGoLogin)
@@ -50,6 +52,7 @@ class RegisterActivity : AppCompatActivity() {
             progress.isVisible = loading
             buttonRegister.isEnabled = !loading
             buttonGoLogin.isEnabled = !loading
+            buttonBack.isEnabled = !loading
         }
 
         fun showError(message: String) {
@@ -57,19 +60,25 @@ class RegisterActivity : AppCompatActivity() {
             error.isVisible = true
         }
 
+        buttonBack.setOnClickListener { finish() }
         buttonGoLogin.setOnClickListener { finish() }
 
         buttonRegister.setOnClickListener {
-            val first = firstName.text?.toString()?.trim().orEmpty()
-            val last = lastName.text?.toString()?.trim().orEmpty()
+            val (first, last) = splitName(name.text?.toString()?.trim().orEmpty())
             val emailValue = email.text?.toString()?.trim().orEmpty()
             val passwordValue = password.text?.toString().orEmpty()
+            val passwordRepeatValue = passwordRepeat.text?.toString().orEmpty()
             val phoneValue = phone.text?.toString()?.trim()?.takeUnless { it.isNullOrBlank() }?.let { normalizePhone(it) }
 
             error.isVisible = false
 
-            if (first.isBlank() || last.isBlank() || emailValue.isBlank() || passwordValue.isBlank()) {
+            if (first.isBlank() || emailValue.isBlank() || passwordValue.isBlank() || passwordRepeatValue.isBlank()) {
                 showError(getString(R.string.error_fill_register))
+                return@setOnClickListener
+            }
+
+            if (passwordValue != passwordRepeatValue) {
+                showError(getString(R.string.error_password_mismatch))
                 return@setOnClickListener
             }
 
@@ -116,6 +125,17 @@ class RegisterActivity : AppCompatActivity() {
         val digits = raw.filter { it.isDigit() }
         if (digits.isBlank()) return ""
         return if (digits.length == 9) "998$digits" else digits
+    }
+
+    private fun splitName(raw: String): Pair<String, String> {
+        val parts = raw.trim()
+            .split(Regex("\\s+"))
+            .filter { it.isNotBlank() }
+
+        if (parts.isEmpty()) return "" to ""
+        if (parts.size == 1) return parts[0] to parts[0]
+
+        return parts[0] to parts.drop(1).joinToString(" ")
     }
 
     private fun resolveApiError(response: Response<*>, fallbackResId: Int): String {

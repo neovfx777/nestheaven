@@ -36,4 +36,14 @@
     <string name="language_uz_name">Uzbek</string>
     <string name="language_ru_name">Russian</string>
     <string name="language_en_name">English</string>
+
+    <string name="register_create_account_title">Create an Account</string>
+    <string name="register_create_account_headline">We are happy to see you chose us</string>
+    <string name="register_create_account_hint">Please fill all the fields below to continue</string>
+    <string name="full_name">Name</string>
+    <string name="email_address">Email Address</string>
+    <string name="repeat_password">Repeat Password</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_back">Back</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
 </resources>
