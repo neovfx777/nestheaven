@@ -1,13 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="login">Login</string>
+    <string name="logout">Logout</string>
+    <string name="register">Register</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="first_name">First name</string>
+    <string name="last_name">Last name</string>
+    <string name="phone">Phone</string>
+
+    <string name="error_fill_login">Enter email and password</string>
+    <string name="error_login_failed">Login failed</string>
+    <string name="error_fill_register">Fill in all required fields</string>
+    <string name="error_register_failed">Registration failed</string>
+    <string name="error_network_generic">Network error. Check your internet or server</string>
+
     <string name="get_started_top_label">Get Started</string>
     <string name="get_started_headline">“Your house one click away”</string>
     <string name="get_started_subheadline">Find your dream house easier and faster</string>
     <string name="get_started_button">Get Started</string>
 
+    <string name="login_card_title">Login to your account.</string>
+    <string name="login_card_subtitle">Please sign in to your account</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="forgot_password_hint">Password reset will be available soon</string>
+    <string name="login_prompt_no_account">Don\'t have an account?</string>
+
+    <string name="register_card_title">Create your account.</string>
+    <string name="register_card_subtitle">Please fill in your details</string>
+    <string name="register_prompt_have_account">Already have an account?</string>
+
+    <string name="error_password_policy">Password must be at least 8 characters and include upper/lowercase letters and a number</string>
+
     <string name="language_picker_title">Select language</string>
     <string name="language_uz_name">Uzbek</string>
     <string name="language_ru_name">Russian</string>
     <string name="language_en_name">English</string>
-</resources>
 
+    <string name="register_create_account_title">Create an Account</string>
+    <string name="register_create_account_headline">We are happy to see you chose us</string>
+    <string name="register_create_account_hint">Please fill all the fields below to continue</string>
+    <string name="full_name">Name</string>
+    <string name="email_address">Email Address</string>
+    <string name="repeat_password">Repeat Password</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_back">Back</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+</resources>

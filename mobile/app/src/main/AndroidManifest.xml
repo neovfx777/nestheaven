@@ -17,6 +17,16 @@
             android:name=".ApartmentDetailActivity"
             android:exported="false" />
         <activity
+            android:name=".LoginActivity"
+            android:exported="false"
+            android:theme="@style/Theme.NestHeaven.Auth"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".RegisterActivity"
+            android:exported="false"
+            android:theme="@style/Theme.NestHeaven.Register"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".GetStartedActivity"
             android:exported="false" />
         <activity
