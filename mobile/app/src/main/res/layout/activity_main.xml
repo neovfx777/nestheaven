@@ -1,40 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/nh_surface"
-    android:orientation="vertical">
-
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/mainToolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/nh_surface_card"
-        android:elevation="2dp"
-        android:paddingHorizontal="16dp"
-        app:titleTextColor="@color/nh_text_primary"
-        app:title="NestHeaven" />
+    android:background="@color/nh_surface">
 
     <FrameLayout
         android:id="@+id/fragmentContainer"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        app:layout_constraintBottom_toTopOf="@id/bottomNavCard"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.divider.MaterialDivider
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/nh_divider" />
-
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNav"
-        android:layout_width="match_parent"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/bottomNavCard"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/nh_surface_card"
-        app:itemIconTint="@color/bottom_nav_tint"
-        app:itemTextColor="@color/bottom_nav_tint"
-        app:labelVisibilityMode="labeled"
-        app:menu="@menu/bottom_nav_menu" />
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="12dp"
+        app:cardBackgroundColor="@color/nh_surface_card"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
-</LinearLayout>
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNav"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            app:itemHorizontalTranslationEnabled="false"
+            app:itemIconTint="@color/bottom_nav_tint"
+            app:itemTextColor="@color/bottom_nav_tint"
+            app:labelVisibilityMode="labeled"
+            app:menu="@menu/bottom_nav_menu" />
+    </com.google.android.material.card.MaterialCardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
