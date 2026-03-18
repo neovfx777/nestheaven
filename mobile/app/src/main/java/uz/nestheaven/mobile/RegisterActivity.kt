@@ -31,7 +31,11 @@ class RegisterActivity : AppCompatActivity() {
 
         val sessionManager = SessionManager(this)
         if (sessionManager.isLoggedIn()) {
-            openMain()
+            if (sessionManager.isVerificationPending()) {
+                openPendingVerification(sessionManager)
+            } else {
+                openMain()
+            }
             return
         }
 
@@ -102,8 +106,17 @@ class RegisterActivity : AppCompatActivity() {
 
                     if (response.isSuccessful && response.body() != null) {
                         val body = response.body()!!
-                        sessionManager.saveSession(body.token, body.user)
-                        openMain()
+                        val token = body.token
+                        val user = body.user
+                        if (!token.isNullOrBlank() && user != null) {
+                            sessionManager.saveSession(token, user)
+                            sessionManager.markVerificationPending(SessionManager.VERIFICATION_FLOW_REGISTER, emailValue)
+                            openVerification(emailValue)
+                        } else if (body.requiresEmailVerification == true) {
+                            openVerification(body.email ?: emailValue)
+                        } else {
+                            showError(body.message?.takeIf { it.isNotBlank() } ?: getString(R.string.error_register_failed))
+                        }
                     } else {
                         showError(resolveApiError(response, R.string.error_register_failed))
                     }
@@ -118,6 +131,32 @@ class RegisterActivity : AppCompatActivity() {
 
     private fun openMain() {
         startActivity(Intent(this, MainActivity::class.java))
+        finish()
+    }
+
+    private fun openVerification(email: String) {
+        startActivity(
+            Intent(this, RegisterVerificationActivity::class.java)
+                .putExtra(RegisterVerificationActivity.EXTRA_EMAIL, email),
+        )
+        finish()
+    }
+
+    private fun openPendingVerification(sessionManager: SessionManager) {
+        val flow = sessionManager.getVerificationFlow()
+        val email = sessionManager.getVerificationEmail()
+
+        val next = if (flow == SessionManager.VERIFICATION_FLOW_LOGIN) {
+            LoginVerificationActivity::class.java
+        } else {
+            RegisterVerificationActivity::class.java
+        }
+
+        startActivity(
+            Intent(this, next)
+                .putExtra(RegisterVerificationActivity.EXTRA_EMAIL, email)
+                .putExtra(LoginVerificationActivity.EXTRA_EMAIL, email),
+        )
         finish()
     }
 

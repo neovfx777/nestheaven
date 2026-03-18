@@ -38,7 +38,17 @@ class SplashActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             delay(2200)
-            val next = if (sessionManager.isLoggedIn()) MainActivity::class.java else GetStartedActivity::class.java
+            val next = when {
+                sessionManager.isLoggedIn() && sessionManager.isVerificationPending() -> {
+                    if (sessionManager.getVerificationFlow() == SessionManager.VERIFICATION_FLOW_REGISTER) {
+                        RegisterVerificationActivity::class.java
+                    } else {
+                        LoginVerificationActivity::class.java
+                    }
+                }
+                sessionManager.isLoggedIn() -> MainActivity::class.java
+                else -> GetStartedActivity::class.java
+            }
             startActivity(Intent(this@SplashActivity, next))
             finish()
         }

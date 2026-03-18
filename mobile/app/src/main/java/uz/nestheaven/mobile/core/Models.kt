@@ -29,6 +29,24 @@ data class AuthResponse(
     val user: UserDto,
 )
 
+data class RegisterResponse(
+    val token: String? = null,
+    val user: UserDto? = null,
+    val success: Boolean? = null,
+    val requiresEmailVerification: Boolean? = null,
+    val email: String? = null,
+    val message: String? = null,
+)
+
+data class BasicMessageResponse(
+    val success: Boolean,
+    val message: String,
+)
+
+data class ResendVerificationRequest(
+    val email: String,
+)
+
 data class MeResponse(
     val user: UserDto,
 )

@@ -81,10 +81,16 @@ class GetStartedActivity : AppCompatActivity() {
 
         button.setOnClickListener {
             sessionManager.setGetStartedSeen(true)
-            val next = if (sessionManager.isLoggedIn()) {
-                MainActivity::class.java
-            } else {
-                LoginActivity::class.java
+            val next = when {
+                sessionManager.isLoggedIn() && sessionManager.isVerificationPending() -> {
+                    if (sessionManager.getVerificationFlow() == SessionManager.VERIFICATION_FLOW_REGISTER) {
+                        RegisterVerificationActivity::class.java
+                    } else {
+                        LoginVerificationActivity::class.java
+                    }
+                }
+                sessionManager.isLoggedIn() -> MainActivity::class.java
+                else -> LoginActivity::class.java
             }
             startActivity(Intent(this, next))
             finish()

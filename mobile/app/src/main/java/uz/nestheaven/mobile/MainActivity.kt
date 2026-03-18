@@ -31,6 +31,17 @@ class MainActivity : AppCompatActivity(),
         ApiClient.init(applicationContext)
         sessionManager = SessionManager(this)
 
+        if (sessionManager.isLoggedIn() && sessionManager.isVerificationPending()) {
+            val next = if (sessionManager.getVerificationFlow() == SessionManager.VERIFICATION_FLOW_REGISTER) {
+                RegisterVerificationActivity::class.java
+            } else {
+                LoginVerificationActivity::class.java
+            }
+            startActivity(Intent(this, next))
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_main)
 
         toolbar = findViewById(R.id.mainToolbar)
@@ -65,6 +76,20 @@ class MainActivity : AppCompatActivity(),
 
         if (savedInstanceState == null) {
             bottomNav.selectedItemId = R.id.nav_home
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (sessionManager.isLoggedIn() && sessionManager.isVerificationPending()) {
+            val next = if (sessionManager.getVerificationFlow() == SessionManager.VERIFICATION_FLOW_REGISTER) {
+                RegisterVerificationActivity::class.java
+            } else {
+                LoginVerificationActivity::class.java
+            }
+            startActivity(Intent(this, next))
+            finish()
         }
     }
 

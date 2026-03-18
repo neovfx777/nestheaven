@@ -29,6 +29,15 @@
     <string name="register_card_title">Akkaunt yarating.</string>
     <string name="register_card_subtitle">Ma\'lumotlaringizni to\'ldiring</string>
     <string name="register_prompt_have_account">Akkauntingiz bormi?</string>
+
+    <string name="verification_card_title">Tasdiqlash</string>
+    <string name="verification_card_subtitle">Tasdiqlash uchun sizga yuborilgan 6 xonali kodni kiriting</string>
+    <string name="verification_code_hint">Kod</string>
+    <string name="verification_enter_button">Tasdiqlash</string>
+    <string name="verification_resend_in">Kod qayta yuborish: %1$d soniya</string>
+    <string name="verification_resend">Kod qayta yuborish</string>
+    <string name="verification_resend_sent">Tasdiqlash kodi qayta yuborildi</string>
+    <string name="verification_success">Tasdiqlash muvaffaqiyatli yakunlandi.</string>
     <string name="register_create_account_title">Akkaunt yarating</string>
     <string name="register_create_account_headline">Bizni tanlaganingizdan xursandmiz</string>
     <string name="register_create_account_hint">Davom etish uchun quyidagi barcha maydonlarni to\'ldiring</string>
@@ -39,6 +48,7 @@
     <string name="action_back">Orqaga</string>
 
     <string name="error_password_policy">Parol kamida 8 ta belgi bo\'lsin va katta/kichik harf hamda raqam bo\'lsin</string>
+    <string name="error_fill_verification_code">6 xonali kodni kiriting</string>
 
     <string name="auth_title">NestHeaven Mobile</string>
     <string name="auth_subtitle">Bu native Android ilova backend API bilan to\'g\'ridan-to\'g\'ri ishlaydi.</string>

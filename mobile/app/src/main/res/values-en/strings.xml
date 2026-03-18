@@ -30,7 +30,17 @@
     <string name="register_card_subtitle">Please fill in your details</string>
     <string name="register_prompt_have_account">Already have an account?</string>
 
+    <string name="verification_card_title">Verification</string>
+    <string name="verification_card_subtitle">Enter the 6 digit code we have sent you to verify</string>
+    <string name="verification_code_hint">Code</string>
+    <string name="verification_enter_button">Enter</string>
+    <string name="verification_resend_in">Resend code: %1$d seconds</string>
+    <string name="verification_resend">Resend code</string>
+    <string name="verification_resend_sent">Verification code resent</string>
+    <string name="verification_success">Verification successful.</string>
+
     <string name="error_password_policy">Password must be at least 8 characters and include upper/lowercase letters and a number</string>
+    <string name="error_fill_verification_code">Enter the 6 digit code</string>
 
     <string name="language_picker_title">Select language</string>
     <string name="language_uz_name">Uzbek</string>

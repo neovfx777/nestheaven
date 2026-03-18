@@ -46,4 +46,14 @@
     <string name="action_continue">Продолжить</string>
     <string name="action_back">Назад</string>
     <string name="error_password_mismatch">Пароли не совпадают</string>
+
+    <string name="verification_card_title">Подтверждение</string>
+    <string name="verification_card_subtitle">Введите 6-значный код, который мы отправили вам для подтверждения</string>
+    <string name="verification_code_hint">Код</string>
+    <string name="verification_enter_button">Подтвердить</string>
+    <string name="verification_resend_in">Отправить снова: %1$d сек.</string>
+    <string name="verification_resend">Отправить код снова</string>
+    <string name="verification_resend_sent">Код подтверждения отправлен снова</string>
+    <string name="verification_success">Подтверждение выполнено.</string>
+    <string name="error_fill_verification_code">Введите 6-значный код</string>
 </resources>
