@@ -56,4 +56,20 @@
     <string name="action_continue">Continue</string>
     <string name="action_back">Back</string>
     <string name="error_password_mismatch">Passwords do not match</string>
+
+    <string name="tab_home">Home</string>
+    <string name="tab_search">Search</string>
+    <string name="tab_apartments">Apartments</string>
+    <string name="tab_complexes">Complexes</string>
+    <string name="tab_favorites">Favorites</string>
+    <string name="tab_message">Message</string>
+    <string name="tab_profile">Profile</string>
+
+    <string name="messages_coming_soon">Messages coming soon</string>
+
+    <string name="home_section_complexes">Complexes</string>
+    <string name="home_section_popular">Popular Listing</string>
+    <string name="home_show_all">Show all</string>
+
+    <string name="notifications">Notifications</string>
 </resources>

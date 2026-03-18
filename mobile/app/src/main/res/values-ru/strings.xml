@@ -56,4 +56,20 @@
     <string name="verification_resend_sent">Код подтверждения отправлен снова</string>
     <string name="verification_success">Подтверждение выполнено.</string>
     <string name="error_fill_verification_code">Введите 6-значный код</string>
+
+    <string name="tab_home">Главная</string>
+    <string name="tab_search">Поиск</string>
+    <string name="tab_apartments">Квартиры</string>
+    <string name="tab_complexes">Комплексы</string>
+    <string name="tab_favorites">Избранное</string>
+    <string name="tab_message">Сообщения</string>
+    <string name="tab_profile">Профиль</string>
+
+    <string name="messages_coming_soon">Сообщения скоро появятся</string>
+
+    <string name="home_section_complexes">Комплексы</string>
+    <string name="home_section_popular">Популярные объявления</string>
+    <string name="home_show_all">Показать все</string>
+
+    <string name="notifications">Уведомления</string>
 </resources>

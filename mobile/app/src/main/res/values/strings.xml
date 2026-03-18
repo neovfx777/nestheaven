@@ -72,9 +72,11 @@
     <string name="phone">Telefon</string>
 
     <string name="tab_home">Bosh sahifa</string>
+    <string name="tab_search">Qidirish</string>
     <string name="tab_apartments">Kvartiralar</string>
     <string name="tab_complexes">Komplekslar</string>
     <string name="tab_favorites">Saqlanganlar</string>
+    <string name="tab_message">Xabarlar</string>
     <string name="tab_profile">Profil</string>
 
     <string name="home_title">NestHeaven</string>
@@ -90,6 +92,9 @@
     <string name="home_complexes_title">Mashhur komplekslar</string>
     <string name="home_broadcast_empty">Hozircha yangiliklar yo\'q</string>
     <string name="home_load_failed">Bosh sahifa ma\'lumotini yuklab bo\'lmadi</string>
+    <string name="home_section_complexes">Komplekslar</string>
+    <string name="home_section_popular">Mashhur e\'lonlar</string>
+    <string name="home_show_all">Barchasi</string>
 
     <string name="search">Qidirish</string>
     <string name="search_hint">Nom, shahar yoki kalit so\'z</string>
@@ -114,6 +119,7 @@
     <string name="refresh">Yangilash</string>
     <string name="image">Rasm</string>
     <string name="favorite">Sevimli</string>
+    <string name="notifications">Bildirishnomalar</string>
 
     <string name="favorite_add">Sevimlilarga qo\'shish</string>
     <string name="favorite_remove">Sevimlidan olib tashlash</string>
@@ -149,4 +155,6 @@
     <string name="profile_email">Email</string>
     <string name="profile_role">Rol</string>
     <string name="profile_phone">Telefon</string>
+
+    <string name="messages_coming_soon">Xabarlar tez kunda</string>
 </resources>

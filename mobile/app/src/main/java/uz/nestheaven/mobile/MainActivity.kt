@@ -3,7 +3,6 @@ package uz.nestheaven.mobile
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import uz.nestheaven.mobile.core.ApiClient
 import uz.nestheaven.mobile.core.SessionManager
@@ -12,7 +11,9 @@ import uz.nestheaven.mobile.ui.fragments.AuthFragment
 import uz.nestheaven.mobile.ui.fragments.ComplexesFragment
 import uz.nestheaven.mobile.ui.fragments.FavoritesFragment
 import uz.nestheaven.mobile.ui.fragments.HomeFragment
+import uz.nestheaven.mobile.ui.fragments.MessagesFragment
 import uz.nestheaven.mobile.ui.fragments.ProfileFragment
+import uz.nestheaven.mobile.ui.fragments.SearchFragment
 
 class MainActivity : AppCompatActivity(),
     AuthFragment.AuthHost,
@@ -23,8 +24,8 @@ class MainActivity : AppCompatActivity(),
     ProfileFragment.ProfileHost {
 
     private lateinit var sessionManager: SessionManager
-    private lateinit var toolbar: MaterialToolbar
     private lateinit var bottomNav: BottomNavigationView
+    private var pendingSearchTab: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,26 +45,25 @@ class MainActivity : AppCompatActivity(),
 
         setContentView(R.layout.activity_main)
 
-        toolbar = findViewById(R.id.mainToolbar)
         bottomNav = findViewById(R.id.bottomNav)
-        setSupportActionBar(toolbar)
 
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> {
-                    openFragment(HomeFragment(), getString(R.string.tab_home))
+                    openFragment(HomeFragment())
                     true
                 }
-                R.id.nav_apartments -> {
-                    openFragment(ApartmentsFragment(), getString(R.string.tab_apartments))
-                    true
-                }
-                R.id.nav_complexes -> {
-                    openFragment(ComplexesFragment(), getString(R.string.tab_complexes))
+                R.id.nav_search -> {
+                    openFragment(SearchFragment.newInstance(pendingSearchTab))
+                    pendingSearchTab = 0
                     true
                 }
                 R.id.nav_favorites -> {
-                    openFragment(FavoritesFragment(), getString(R.string.tab_favorites))
+                    openFragment(FavoritesFragment())
+                    true
+                }
+                R.id.nav_message -> {
+                    openFragment(MessagesFragment())
                     true
                 }
                 R.id.nav_profile -> {
@@ -95,14 +95,13 @@ class MainActivity : AppCompatActivity(),
 
     private fun openProfileTab() {
         if (sessionManager.isLoggedIn()) {
-            openFragment(ProfileFragment(), getString(R.string.tab_profile))
+            openFragment(ProfileFragment())
         } else {
-            openFragment(AuthFragment(), getString(R.string.auth_title))
+            openFragment(AuthFragment())
         }
     }
 
-    private fun openFragment(fragment: androidx.fragment.app.Fragment, title: String) {
-        toolbar.title = title
+    private fun openFragment(fragment: androidx.fragment.app.Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
             .commit()
@@ -133,10 +132,12 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun openApartmentsTab() {
-        bottomNav.selectedItemId = R.id.nav_apartments
+        pendingSearchTab = 0
+        bottomNav.selectedItemId = R.id.nav_search
     }
 
     override fun openComplexesTab() {
-        bottomNav.selectedItemId = R.id.nav_complexes
+        pendingSearchTab = 1
+        bottomNav.selectedItemId = R.id.nav_search
     }
 }
