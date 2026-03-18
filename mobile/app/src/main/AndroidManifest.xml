@@ -22,9 +22,19 @@
             android:theme="@style/Theme.NestHeaven.Auth"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".LoginVerificationActivity"
+            android:exported="false"
+            android:theme="@style/Theme.NestHeaven.Auth"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".RegisterActivity"
             android:exported="false"
             android:theme="@style/Theme.NestHeaven.Register"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".RegisterVerificationActivity"
+            android:exported="false"
+            android:theme="@style/Theme.NestHeaven.Auth"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".GetStartedActivity"

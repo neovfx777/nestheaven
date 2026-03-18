@@ -15,7 +15,16 @@ interface ApiService {
     suspend fun login(@Body body: LoginRequest): Response<AuthResponse>
 
     @POST("auth/register")
-    suspend fun register(@Body body: RegisterRequest): Response<AuthResponse>
+    suspend fun register(@Body body: RegisterRequest): Response<RegisterResponse>
+
+    @GET("auth/verify-email")
+    suspend fun verifyEmail(
+        @Query("token") token: String,
+        @Query("email") email: String? = null,
+    ): Response<BasicMessageResponse>
+
+    @POST("auth/resend-verification")
+    suspend fun resendVerification(@Body body: ResendVerificationRequest): Response<BasicMessageResponse>
 
     @GET("auth/me")
     suspend fun me(): Response<MeResponse>

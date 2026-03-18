@@ -39,7 +39,8 @@ async function register(req, res, next) {
 async function verifyEmail(req, res, next) {
   try {
     const token = typeof req.query.token === 'string' ? req.query.token : '';
-    const result = await authService.verifyEmail(token);
+    const email = typeof req.query.email === 'string' ? req.query.email : '';
+    const result = await authService.verifyEmail(token, email);
     res.json(result);
   } catch (err) {
     next(err);

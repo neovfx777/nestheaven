@@ -25,7 +25,7 @@ function getTransporter() {
   return cachedTransporter;
 }
 
-async function sendVerificationEmail({ to, verifyUrl }) {
+async function sendVerificationEmail({ to, verifyUrl, code }) {
   if (!isMailerConfigured()) {
     if (env.EMAIL_REQUIRE_VERIFICATION) {
       const err = new Error('SMTP is not configured for email verification');
@@ -44,11 +44,12 @@ async function sendVerificationEmail({ to, verifyUrl }) {
     from: env.SMTP_FROM,
     to,
     subject: 'NestHeaven email verification',
-    text: `Please verify your email by opening this link: ${verifyUrl}`,
+    text: `${code ? `Your verification code: ${code}\n` : ''}Please verify your email by opening this link: ${verifyUrl}`,
     html: `
       <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827">
         <h2>NestHeaven email verification</h2>
         <p>Accountingizni faollashtirish uchun quyidagi tugmani bosing:</p>
+        ${code ? `<p>Tasdiqlash kodi: <strong style="font-size:18px">${code}</strong></p>` : ''}
         <p>
           <a href="${verifyUrl}" style="display:inline-block;padding:10px 16px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px">
             Emailni tasdiqlash

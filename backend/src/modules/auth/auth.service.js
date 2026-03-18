@@ -14,6 +14,14 @@ function makeToken(ttlMinutes) {
   return { rawToken, tokenHash, expiresAt };
 }
 
+function makeVerificationCode(ttlMinutes, digits = 6) {
+  const max = 10 ** digits;
+  const rawToken = String(crypto.randomInt(0, max)).padStart(digits, '0');
+  const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+  const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
+  return { rawToken, tokenHash, expiresAt };
+}
+
 function buildFullName(user) {
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
   return fullName || user.email;
@@ -275,7 +283,7 @@ async function register(data, requestBaseUrl) {
   const lastName = data.body.lastName || fullNameParts.lastName;
 
   const verificationToken = env.EMAIL_REQUIRE_VERIFICATION
-    ? makeToken(env.EMAIL_VERIFY_TOKEN_TTL_MIN)
+    ? makeVerificationCode(env.EMAIL_VERIFY_TOKEN_TTL_MIN)
     : null;
 
   const user = await prisma.user.create({
@@ -295,8 +303,10 @@ async function register(data, requestBaseUrl) {
   });
 
   if (env.EMAIL_REQUIRE_VERIFICATION) {
-    const verifyUrl = `${requestBaseUrl}/verify-email?token=${verificationToken.rawToken}`;
-    await sendVerificationEmail({ to: user.email, verifyUrl });
+    const verifyUrl = `${requestBaseUrl}/verify-email?token=${verificationToken.rawToken}&email=${encodeURIComponent(
+      user.email
+    )}`;
+    await sendVerificationEmail({ to: user.email, verifyUrl, code: verificationToken.rawToken });
 
     return {
       success: true,
@@ -306,7 +316,7 @@ async function register(data, requestBaseUrl) {
     };
   }
 
-  await ensureFirebaseUserFromLocalLogin(user, password);
+  await ensureFirebaseUserFromLocalLogin(user, data.body.password);
 
   return {
     token: issueLocalToken(user),
@@ -314,9 +324,16 @@ async function register(data, requestBaseUrl) {
   };
 }
 
-async function verifyEmail(token) {
+async function verifyEmail(token, email = '') {
   if (!token) {
     const err = new Error('Verification token is required');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail && token.length <= 12) {
+    const err = new Error('Email is required for verification code');
     err.statusCode = 400;
     throw err;
   }
@@ -326,6 +343,7 @@ async function verifyEmail(token) {
   const user = await prisma.user.findFirst({
     where: {
       emailVerificationToken: tokenHash,
+      ...(normalizedEmail && { email: normalizedEmail }),
       emailVerificationExpiresAt: {
         gt: new Date(),
       },
@@ -366,7 +384,7 @@ async function resendVerificationEmail(email, requestBaseUrl) {
     };
   }
 
-  const verificationToken = makeToken(env.EMAIL_VERIFY_TOKEN_TTL_MIN);
+  const verificationToken = makeVerificationCode(env.EMAIL_VERIFY_TOKEN_TTL_MIN);
 
   await prisma.user.update({
     where: { id: user.id },
@@ -376,8 +394,10 @@ async function resendVerificationEmail(email, requestBaseUrl) {
     },
   });
 
-  const verifyUrl = `${requestBaseUrl}/verify-email?token=${verificationToken.rawToken}`;
-  await sendVerificationEmail({ to: user.email, verifyUrl });
+  const verifyUrl = `${requestBaseUrl}/verify-email?token=${verificationToken.rawToken}&email=${encodeURIComponent(
+    user.email
+  )}`;
+  await sendVerificationEmail({ to: user.email, verifyUrl, code: verificationToken.rawToken });
 
   return {
     success: true,

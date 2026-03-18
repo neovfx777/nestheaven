@@ -16,7 +16,9 @@ import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 import retrofit2.Response
+import uz.nestheaven.mobile.LoginVerificationActivity
 import uz.nestheaven.mobile.R
+import uz.nestheaven.mobile.RegisterVerificationActivity
 import uz.nestheaven.mobile.core.ApiClient
 import uz.nestheaven.mobile.core.LoginRequest
 import uz.nestheaven.mobile.core.RegisterRequest
@@ -204,10 +206,22 @@ class AuthFragment : Fragment(R.layout.fragment_auth) {
                     if (response.isSuccessful && response.body() != null) {
                         val body = response.body()!!
                         sessionManager.saveSession(body.token, body.user)
-                        authHost?.onAuthenticated()
+                        sessionManager.markVerificationPending(SessionManager.VERIFICATION_FLOW_LOGIN, email)
+                        startActivity(
+                            android.content.Intent(requireContext(), LoginVerificationActivity::class.java)
+                                .putExtra(LoginVerificationActivity.EXTRA_EMAIL, email),
+                        )
                     } else {
-                        textError.text = resolveApiError(response, R.string.error_login_failed)
-                        textError.isVisible = true
+                        val (errorCode, message) = extractApiError(response)
+                        if (errorCode == "EMAIL_NOT_VERIFIED") {
+                            startActivity(
+                                android.content.Intent(requireContext(), LoginVerificationActivity::class.java)
+                                    .putExtra(LoginVerificationActivity.EXTRA_EMAIL, email),
+                            )
+                        } else {
+                            textError.text = message ?: getString(R.string.error_login_failed)
+                            textError.isVisible = true
+                        }
                     }
                 } catch (e: Exception) {
                     textError.text = getString(R.string.error_network_generic)
@@ -250,9 +264,24 @@ class AuthFragment : Fragment(R.layout.fragment_auth) {
                     val response = ApiClient.service.register(request)
                     if (response.isSuccessful && response.body() != null) {
                         val body = response.body()!!
-                        sessionManager.saveSession(body.token, body.user)
-                        Snackbar.make(view, getString(R.string.register_success), Snackbar.LENGTH_SHORT).show()
-                        authHost?.onAuthenticated()
+                        val token = body.token
+                        val user = body.user
+                        if (!token.isNullOrBlank() && user != null) {
+                            sessionManager.saveSession(token, user)
+                            sessionManager.markVerificationPending(SessionManager.VERIFICATION_FLOW_REGISTER, email)
+                            startActivity(
+                                android.content.Intent(requireContext(), RegisterVerificationActivity::class.java)
+                                    .putExtra(RegisterVerificationActivity.EXTRA_EMAIL, email),
+                            )
+                        } else if (body.requiresEmailVerification == true) {
+                            startActivity(
+                                android.content.Intent(requireContext(), RegisterVerificationActivity::class.java)
+                                    .putExtra(RegisterVerificationActivity.EXTRA_EMAIL, body.email ?: email),
+                            )
+                        } else {
+                            textError.text = body.message?.takeIf { it.isNotBlank() } ?: getString(R.string.error_register_failed)
+                            textError.isVisible = true
+                        }
                     } else {
                         textError.text = resolveApiError(response, R.string.error_register_failed)
                         textError.isVisible = true
@@ -271,18 +300,19 @@ class AuthFragment : Fragment(R.layout.fragment_auth) {
         return extractMessage(response) ?: getString(fallbackResId)
     }
 
-    private fun extractMessage(response: Response<*>): String? {
+    private fun extractApiError(response: Response<*>): Pair<String?, String?> {
         val rawBody = try {
             response.errorBody()?.string().orEmpty()
         } catch (_: Exception) {
-            return null
+            return null to null
         }
 
-        if (rawBody.isBlank()) return null
+        if (rawBody.isBlank()) return null to null
 
         return try {
             val json = JSONObject(rawBody)
-            when (val message = json.opt("message")) {
+            val code = json.optString("code").takeIf { it.isNotBlank() }
+            val message = when (val message = json.opt("message")) {
                 is String -> message.takeIf { it.isNotBlank() }
                 is JSONArray -> {
                     (0 until message.length())
@@ -292,8 +322,14 @@ class AuthFragment : Fragment(R.layout.fragment_auth) {
                 }
                 else -> null
             } ?: json.optString("error").takeIf { it.isNotBlank() }
+            code to message
         } catch (_: Exception) {
-            null
+            null to null
         }
+    }
+
+    private fun extractMessage(response: Response<*>): String? {
+        val (_, message) = extractApiError(response)
+        return message
     }
 }
