@@ -195,6 +195,85 @@ object JsonParsers {
         )
     }
 
+    fun parseConversations(root: JsonObject?, meId: String?): List<ConversationSummaryModel> {
+        val conversations = root.optArray("data") ?: return emptyList()
+        val normalizedMeId = meId?.trim().orEmpty()
+
+        return conversations.mapNotNull { element ->
+            val obj = element.optObject() ?: return@mapNotNull null
+            val id = obj.optString("id") ?: return@mapNotNull null
+
+            val apartmentObj = obj.optObject("apartment")
+            val apartmentId = apartmentObj?.optString("id")
+            val apartmentTitle = localized(apartmentObj?.get("title"))
+                .ifBlank { apartmentObj?.optString("title").orEmpty() }
+                .trim()
+                .ifBlank { null }
+
+            val userObj = obj.optObject("user")
+            val realtorObj = obj.optObject("realtor")
+
+            val userId = userObj?.optString("id").orEmpty()
+            val counterpartObj = if (normalizedMeId.isNotBlank() && normalizedMeId == userId) realtorObj else userObj
+
+            val counterpartId = counterpartObj?.optString("id")
+            val counterpartName = counterpartObj?.optString("fullName")
+                ?: buildFullName(counterpartObj)
+            val counterpartPhone = counterpartObj?.optString("phone")
+
+            val lastMessage = parseConversationMessage(obj.optObject("lastMessage"))
+
+            ConversationSummaryModel(
+                id = id,
+                apartmentId = apartmentId,
+                apartmentTitle = apartmentTitle,
+                counterpartId = counterpartId,
+                counterpartName = counterpartName.ifBlank { "-" },
+                counterpartPhone = counterpartPhone,
+                lastMessage = lastMessage,
+                updatedAt = obj.optString("updatedAt"),
+            )
+        }
+    }
+
+    fun parseConversationDetail(root: JsonObject?, meId: String?): ConversationDetailModel? {
+        val obj = root.optObject("data") ?: return null
+        val id = obj.optString("id") ?: return null
+        val normalizedMeId = meId?.trim().orEmpty()
+
+        val apartmentObj = obj.optObject("apartment")
+        val apartmentId = apartmentObj?.optString("id")
+        val apartmentTitle = localized(apartmentObj?.get("title"))
+            .ifBlank { apartmentObj?.optString("title").orEmpty() }
+            .trim()
+            .ifBlank { null }
+
+        val userObj = obj.optObject("user")
+        val realtorObj = obj.optObject("realtor")
+
+        val userId = userObj?.optString("id").orEmpty()
+        val counterpartObj = if (normalizedMeId.isNotBlank() && normalizedMeId == userId) realtorObj else userObj
+
+        val counterpartId = counterpartObj?.optString("id")
+        val counterpartName = counterpartObj?.optString("fullName")
+            ?: buildFullName(counterpartObj)
+        val counterpartPhone = counterpartObj?.optString("phone")
+
+        val messages = obj.optArray("messages")
+            ?.mapNotNull { parseConversationMessage(it.optObject()) }
+            ?: emptyList()
+
+        return ConversationDetailModel(
+            id = id,
+            apartmentId = apartmentId,
+            apartmentTitle = apartmentTitle,
+            counterpartId = counterpartId,
+            counterpartName = counterpartName.ifBlank { "-" },
+            counterpartPhone = counterpartPhone,
+            messages = messages,
+        )
+    }
+
     fun localized(element: JsonElement?): String {
         if (element == null || element.isJsonNull) return ""
         if (element.isJsonPrimitive) return element.asString
@@ -208,6 +287,24 @@ object JsonParsers {
         }
 
         return ""
+    }
+
+    private fun buildFullName(user: JsonObject?): String {
+        if (user == null) return ""
+        val first = user.optString("firstName").orEmpty()
+        val last = user.optString("lastName").orEmpty()
+        return "$first $last".trim()
+    }
+
+    private fun parseConversationMessage(obj: JsonObject?): ConversationMessageModel? {
+        if (obj == null) return null
+        val id = obj.optString("id") ?: return null
+        return ConversationMessageModel(
+            id = id,
+            body = obj.optString("body").orEmpty(),
+            senderId = obj.optString("senderId").orEmpty(),
+            createdAt = obj.optString("createdAt"),
+        )
     }
 
     fun resolveAssetUrl(url: String?): String? {

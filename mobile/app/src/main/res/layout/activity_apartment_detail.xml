@@ -159,6 +159,18 @@
                                 android:text="@string/favorite_add"
                                 android:textAllCaps="false"
                                 app:cornerRadius="12dp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/detailChatButton"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:backgroundTint="@color/nh_splash_bg"
+                                android:text="@string/chat_open_button"
+                                android:textAllCaps="false"
+                                android:textColor="@color/nh_text_inverse"
+                                android:visibility="gone"
+                                app:cornerRadius="12dp" />
                         </LinearLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>

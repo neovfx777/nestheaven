@@ -75,4 +75,19 @@ interface ApiService {
 
     @PATCH("users/me")
     suspend fun updateProfile(@Body body: JsonObject): Response<UserDto>
+
+    @GET("messages/conversations")
+    suspend fun listConversations(): Response<JsonObject>
+
+    @GET("messages/conversations/{id}")
+    suspend fun getConversation(@Path("id") id: String): Response<JsonObject>
+
+    @POST("messages/send")
+    suspend fun sendMessage(@Body body: SendMessageRequest): Response<JsonObject>
+
+    @POST("messages/conversations/{id}/messages")
+    suspend fun sendToConversation(
+        @Path("id") id: String,
+        @Body body: SendToConversationRequest,
+    ): Response<JsonObject>
 }

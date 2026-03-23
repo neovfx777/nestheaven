@@ -66,10 +66,28 @@
     <string name="tab_profile">Profile</string>
 
     <string name="messages_coming_soon">Messages coming soon</string>
+    <string name="messages_title">Chat</string>
+    <string name="messages_empty">No chats yet</string>
+    <string name="messages_login_required">Login to see chats</string>
+    <string name="messages_failed">Failed to load chats</string>
+
+    <string name="chat_title">Chat</string>
+    <string name="chat_hint">Type something...</string>
+    <string name="chat_emoji">Emoji</string>
+    <string name="chat_attach">Attach</string>
+    <string name="chat_failed_load">Failed to load chat</string>
+    <string name="chat_failed_send">Failed to send message</string>
+    <string name="chat_login_required">Login to use chat</string>
+    <string name="chat_open_button">Chat</string>
 
     <string name="home_section_complexes">Complexes</string>
     <string name="home_section_popular">Popular Listing</string>
     <string name="home_show_all">Show all</string>
 
     <string name="notifications">Notifications</string>
+
+    <string name="profile_avatar">Profile avatar</string>
+    <string name="profile_settings">Settings</string>
+    <string name="profile_navigate">Navigate</string>
+    <string name="settings_coming_soon">Settings coming soon</string>
 </resources>

@@ -104,3 +104,40 @@ data class ComplexDetailModel(
     val nearbyText: String,
     val imageUrl: String?,
 )
+
+data class ConversationMessageModel(
+    val id: String,
+    val body: String,
+    val senderId: String,
+    val createdAt: String? = null,
+)
+
+data class ConversationSummaryModel(
+    val id: String,
+    val apartmentId: String? = null,
+    val apartmentTitle: String? = null,
+    val counterpartId: String? = null,
+    val counterpartName: String = "",
+    val counterpartPhone: String? = null,
+    val lastMessage: ConversationMessageModel? = null,
+    val updatedAt: String? = null,
+)
+
+data class ConversationDetailModel(
+    val id: String,
+    val apartmentId: String? = null,
+    val apartmentTitle: String? = null,
+    val counterpartId: String? = null,
+    val counterpartName: String = "",
+    val counterpartPhone: String? = null,
+    val messages: List<ConversationMessageModel> = emptyList(),
+)
+
+data class SendMessageRequest(
+    val apartmentId: String,
+    val text: String,
+)
+
+data class SendToConversationRequest(
+    val text: String,
+)
