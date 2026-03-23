@@ -155,6 +155,23 @@
     <string name="profile_email">Email</string>
     <string name="profile_role">Rol</string>
     <string name="profile_phone">Telefon</string>
+    <string name="profile_avatar">Profil rasmi</string>
+    <string name="profile_settings">Sozlamalar</string>
+    <string name="profile_navigate">Ochish</string>
+    <string name="settings_coming_soon">Sozlamalar tez kunda</string>
 
     <string name="messages_coming_soon">Xabarlar tez kunda</string>
+    <string name="messages_title">Chat</string>
+    <string name="messages_empty">Hozircha chatlar yo\'q</string>
+    <string name="messages_login_required">Chatlarni ko\'rish uchun tizimga kiring</string>
+    <string name="messages_failed">Chatlarni yuklab bo\'lmadi</string>
+
+    <string name="chat_title">Chat</string>
+    <string name="chat_hint">Xabar yozing...</string>
+    <string name="chat_emoji">Emoji</string>
+    <string name="chat_attach">Fayl biriktirish</string>
+    <string name="chat_failed_load">Chatni yuklab bo\'lmadi</string>
+    <string name="chat_failed_send">Xabar yuborib bo\'lmadi</string>
+    <string name="chat_login_required">Chat uchun tizimga kiring</string>
+    <string name="chat_open_button">Chat</string>
 </resources>

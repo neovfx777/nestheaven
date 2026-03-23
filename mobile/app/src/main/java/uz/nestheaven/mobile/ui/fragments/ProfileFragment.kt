@@ -5,14 +5,15 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
 import uz.nestheaven.mobile.R
 import uz.nestheaven.mobile.core.ApiClient
 import uz.nestheaven.mobile.core.SessionManager
+import java.util.Locale
 
 class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
@@ -39,100 +40,63 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         sessionManager = SessionManager(requireContext())
 
         val progress = view.findViewById<ProgressBar>(R.id.profileProgress)
-        val stateText = view.findViewById<TextView>(R.id.profileState)
         val nameText = view.findViewById<TextView>(R.id.profileName)
-        val emailText = view.findViewById<TextView>(R.id.profileEmail)
-        val roleText = view.findViewById<TextView>(R.id.profileRole)
         val phoneText = view.findViewById<TextView>(R.id.profilePhone)
-        val refreshButton = view.findViewById<MaterialButton>(R.id.profileRefreshButton)
-        val logoutButton = view.findViewById<MaterialButton>(R.id.profileLogoutButton)
-        val loginButton = view.findViewById<MaterialButton>(R.id.profileLoginButton)
+        val settingsItem = view.findViewById<View>(R.id.profileSettingsItem)
 
-        logoutButton.setOnClickListener {
-            sessionManager.clear()
-            host?.onLogoutRequested()
+        settingsItem.setOnClickListener {
+            if (!sessionManager.isLoggedIn()) {
+                host?.requestLogin()
+                return@setOnClickListener
+            }
+
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.settings_coming_soon),
+                Toast.LENGTH_SHORT,
+            ).show()
         }
 
-        loginButton.setOnClickListener {
-            host?.requestLogin()
-        }
-
-        refreshButton.setOnClickListener {
-            loadProfile(
-                progress,
-                stateText,
-                nameText,
-                emailText,
-                roleText,
-                phoneText,
-                loginButton,
-                logoutButton,
-            )
-        }
-
-        loadProfile(
-            progress,
-            stateText,
-            nameText,
-            emailText,
-            roleText,
-            phoneText,
-            loginButton,
-            logoutButton,
-        )
+        renderUser(nameText, phoneText)
+        refreshProfile(progress, nameText, phoneText)
     }
 
     override fun onResume() {
         super.onResume()
-        view?.let { v ->
-            loadProfile(
-                v.findViewById(R.id.profileProgress),
-                v.findViewById(R.id.profileState),
-                v.findViewById(R.id.profileName),
-                v.findViewById(R.id.profileEmail),
-                v.findViewById(R.id.profileRole),
-                v.findViewById(R.id.profilePhone),
-                v.findViewById(R.id.profileLoginButton),
-                v.findViewById(R.id.profileLogoutButton),
+        view?.let { root ->
+            refreshProfile(
+                progress = root.findViewById(R.id.profileProgress),
+                nameText = root.findViewById(R.id.profileName),
+                phoneText = root.findViewById(R.id.profilePhone),
             )
         }
     }
 
-    private fun loadProfile(
+    private fun renderUser(nameText: TextView, phoneText: TextView) {
+        val user = sessionManager.getUser()
+
+        val fullName = if (user != null) {
+            listOfNotNull(user.firstName, user.lastName)
+                .joinToString(" ")
+                .trim()
+                .ifBlank { "-" }
+        } else {
+            "-"
+        }
+
+        nameText.text = fullName.uppercase(Locale.getDefault())
+        phoneText.text = user?.phone?.trim().orEmpty().ifBlank { "-" }
+    }
+
+    private fun refreshProfile(
         progress: ProgressBar,
-        stateText: TextView,
         nameText: TextView,
-        emailText: TextView,
-        roleText: TextView,
         phoneText: TextView,
-        loginButton: MaterialButton,
-        logoutButton: MaterialButton,
     ) {
         if (!sessionManager.isLoggedIn()) {
             progress.isVisible = false
-            stateText.text = getString(R.string.profile_login_required)
-            loginButton.isVisible = true
-            logoutButton.isVisible = false
-            nameText.text = "-"
-            emailText.text = "-"
-            roleText.text = "-"
-            phoneText.text = "-"
+            renderUser(nameText, phoneText)
             return
-        }
-
-        loginButton.isVisible = false
-        logoutButton.isVisible = true
-
-        val cachedUser = sessionManager.getUser()
-        if (cachedUser != null) {
-            val fullName = listOfNotNull(cachedUser.firstName, cachedUser.lastName)
-                .joinToString(" ")
-                .ifBlank { "-" }
-            nameText.text = fullName
-            emailText.text = cachedUser.email
-            roleText.text = cachedUser.role
-            phoneText.text = cachedUser.phone ?: "-"
-            stateText.text = getString(R.string.profile_synced)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -142,23 +106,14 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 if (response.isSuccessful && response.body() != null) {
                     val user = response.body()!!.user
                     sessionManager.saveSession(sessionManager.getToken().orEmpty(), user)
-
-                    val fullName = listOfNotNull(user.firstName, user.lastName)
-                        .joinToString(" ")
-                        .ifBlank { "-" }
-                    nameText.text = fullName
-                    emailText.text = user.email
-                    roleText.text = user.role
-                    phoneText.text = user.phone ?: "-"
-                    stateText.text = getString(R.string.profile_synced)
-                } else {
-                    stateText.text = getString(R.string.profile_failed)
                 }
-            } catch (e: Exception) {
-                stateText.text = e.message ?: getString(R.string.profile_failed)
+            } catch (_: Exception) {
+                // Ignore refresh errors for now.
             } finally {
                 progress.isVisible = false
+                renderUser(nameText, phoneText)
             }
         }
     }
 }
+

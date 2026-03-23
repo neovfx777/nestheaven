@@ -51,8 +51,18 @@ class ApartmentDetailActivity : AppCompatActivity() {
         val description = findViewById<TextView>(R.id.detailDescription)
         val progress = findViewById<ProgressBar>(R.id.detailProgress)
         val favoriteButton = findViewById<MaterialButton>(R.id.detailFavoriteButton)
+        val chatButton = findViewById<MaterialButton>(R.id.detailChatButton)
 
         favoriteButton.isVisible = sessionManager.isLoggedIn()
+        chatButton.isVisible = sessionManager.isLoggedIn()
+
+        chatButton.setOnClickListener {
+            startActivity(
+                android.content.Intent(this, ChatActivity::class.java).apply {
+                    putExtra(ChatActivity.EXTRA_APARTMENT_ID, apartmentId)
+                },
+            )
+        }
 
         favoriteButton.setOnClickListener {
             if (!sessionManager.isLoggedIn()) {
