@@ -19,8 +19,8 @@ class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val sessionManager = SessionManager(this)
         ThemeManager.applySavedTheme(sessionManager)
-        super.onCreate(savedInstanceState)
         applySavedLanguage(sessionManager)
+        super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_splash)
 
