@@ -138,10 +138,14 @@ class SearchFiltersBottomSheet : BottomSheetDialogFragment(R.layout.bottom_sheet
             }
 
             val minPrice = minPriceInput.text?.toString()?.trim()?.toDoubleOrNull()
+                ?.coerceIn(DEFAULT_MIN_PRICE.toDouble(), DEFAULT_MAX_PRICE.toDouble())
             val maxPrice = maxPriceInput.text?.toString()?.trim()?.toDoubleOrNull()
+                ?.coerceIn(DEFAULT_MIN_PRICE.toDouble(), DEFAULT_MAX_PRICE.toDouble())
 
             val minArea = minAreaInput.text?.toString()?.trim()?.toDoubleOrNull()
+                ?.coerceIn(DEFAULT_MIN_AREA.toDouble(), DEFAULT_MAX_AREA.toDouble())
             val maxArea = maxAreaInput.text?.toString()?.trim()?.toDoubleOrNull()
+                ?.coerceIn(DEFAULT_MIN_AREA.toDouble(), DEFAULT_MAX_AREA.toDouble())
 
             val sortOption = when (sortSpinner.selectedItemPosition) {
                 1 -> SortOption.PRICE_ASC
@@ -228,15 +232,23 @@ class SearchFiltersBottomSheet : BottomSheetDialogFragment(R.layout.bottom_sheet
         minPriceInput.setText(initialFilters.minPrice?.toLong()?.toString().orEmpty())
         maxPriceInput.setText(initialFilters.maxPrice?.toLong()?.toString().orEmpty())
 
-        val rawMinPrice = (initialFilters.minPrice ?: priceSlider.valueFrom.toDouble()).toFloat()
-        val rawMaxPrice = (initialFilters.maxPrice ?: priceSlider.valueTo.toDouble()).toFloat()
+        val rawMinPrice = (initialFilters.minPrice ?: priceSlider.valueFrom.toDouble())
+            .coerceIn(DEFAULT_MIN_PRICE.toDouble(), DEFAULT_MAX_PRICE.toDouble())
+            .toFloat()
+        val rawMaxPrice = (initialFilters.maxPrice ?: priceSlider.valueTo.toDouble())
+            .coerceIn(DEFAULT_MIN_PRICE.toDouble(), DEFAULT_MAX_PRICE.toDouble())
+            .toFloat()
         setSafeRange(priceSlider, rawMinPrice, rawMaxPrice)
 
         minAreaInput.setText(initialFilters.minArea?.toString().orEmpty())
         maxAreaInput.setText(initialFilters.maxArea?.toString().orEmpty())
 
-        val rawMinArea = (initialFilters.minArea ?: areaSlider.valueFrom.toDouble()).toFloat()
-        val rawMaxArea = (initialFilters.maxArea ?: areaSlider.valueTo.toDouble()).toFloat()
+        val rawMinArea = (initialFilters.minArea ?: areaSlider.valueFrom.toDouble())
+            .coerceIn(DEFAULT_MIN_AREA.toDouble(), DEFAULT_MAX_AREA.toDouble())
+            .toFloat()
+        val rawMaxArea = (initialFilters.maxArea ?: areaSlider.valueTo.toDouble())
+            .coerceIn(DEFAULT_MIN_AREA.toDouble(), DEFAULT_MAX_AREA.toDouble())
+            .toFloat()
         setSafeRange(areaSlider, rawMinArea, rawMaxArea)
 
         minFloorInput.setText(initialFilters.minFloor?.toString().orEmpty())
@@ -276,6 +288,11 @@ class SearchFiltersBottomSheet : BottomSheetDialogFragment(R.layout.bottom_sheet
     }
 
     companion object {
+        private const val DEFAULT_MIN_PRICE = 0f
+        private const val DEFAULT_MAX_PRICE = 10_000_000f
+        private const val DEFAULT_MIN_AREA = 0f
+        private const val DEFAULT_MAX_AREA = 500f
+
         fun newInstance(): SearchFiltersBottomSheet {
             return SearchFiltersBottomSheet().apply {
                 arguments = Bundle()

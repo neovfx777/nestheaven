@@ -10,9 +10,9 @@
         android:id="@+id/detailToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/nh_surface_card"
-        android:elevation="2dp"
-        android:title="@string/tab_apartments"
+        android:background="@color/nh_surface"
+        android:elevation="0dp"
+        app:navigationIconTint="@color/nh_text_primary"
         app:titleTextColor="@color/nh_text_primary" />
 
     <FrameLayout
@@ -24,19 +24,19 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fillViewport="true"
+            android:padding="12dp"
             android:scrollbars="none">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp">
+                android:orientation="vertical">
 
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:cardBackgroundColor="@color/nh_surface_card"
-                    app:cardCornerRadius="22dp"
+                    app:cardCornerRadius="26dp"
                     app:cardElevation="2dp"
                     app:strokeColor="@color/nh_border"
                     app:strokeWidth="1dp">
@@ -44,154 +44,648 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:padding="14dp">
 
-                        <ImageView
-                            android:id="@+id/detailImage"
+                        <TextView
+                            android:id="@+id/detailTitle"
                             android:layout_width="match_parent"
-                            android:layout_height="230dp"
-                            android:contentDescription="@string/image"
-                            android:scaleType="centerCrop" />
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/nh_text_primary"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="14dp">
+                            android:layout_marginTop="8dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:contentDescription="@string/detail_location_title"
+                                android:src="@drawable/ic_nav_map_24"
+                                app:tint="@color/nh_text_secondary" />
 
                             <TextView
-                                android:id="@+id/detailTitle"
+                                android:id="@+id/detailLocationInline"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
-                                android:textColor="@color/nh_text_primary"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/detailCity"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="6dp"
+                                android:layout_marginStart="6dp"
                                 android:textColor="@color/nh_text_secondary"
                                 android:textSize="14sp" />
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="198dp"
+                            android:layout_marginTop="16dp">
+
+                            <ImageView
+                                android:id="@+id/detailImage"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:contentDescription="@string/image"
+                                android:scaleType="centerCrop" />
+
+                            <ImageButton
+                                android:id="@+id/detailImagePrevButton"
+                                android:layout_width="34dp"
+                                android:layout_height="34dp"
+                                android:layout_gravity="center_vertical|start"
+                                android:layout_marginStart="10dp"
+                                android:background="@android:color/white"
+                                android:contentDescription="@string/detail_prev_image"
+                                android:padding="6dp"
+                                android:src="@drawable/ic_arrow_back_24"
+                                app:tint="@color/nh_text_primary" />
+
+                            <ImageButton
+                                android:id="@+id/detailImageNextButton"
+                                android:layout_width="34dp"
+                                android:layout_height="34dp"
+                                android:layout_gravity="center_vertical|end"
+                                android:layout_marginEnd="10dp"
+                                android:background="@android:color/white"
+                                android:contentDescription="@string/detail_next_image"
+                                android:padding="6dp"
+                                android:src="@drawable/ic_chevron_right_24"
+                                app:tint="@color/nh_text_primary" />
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:background="@drawable/bg_soft_card"
+                            android:orientation="vertical"
+                            android:padding="14dp">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="10dp"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal">
 
-                                <TextView
-                                    android:id="@+id/detailPrice"
-                                    android:layout_width="wrap_content"
+                                <LinearLayout
+                                    android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:background="@drawable/bg_price_chip"
-                                    android:paddingStart="12dp"
-                                    android:paddingTop="6dp"
-                                    android:paddingEnd="12dp"
-                                    android:paddingBottom="6dp"
-                                    android:textColor="@color/nh_on_price"
-                                    android:textSize="15sp"
-                                    android:textStyle="bold" />
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:id="@+id/detailPrice"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:textColor="@color/nh_text_primary"
+                                        android:textSize="20sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="2dp"
+                                        android:text="@string/detail_total_price"
+                                        android:textColor="@color/nh_text_secondary"
+                                        android:textSize="12sp" />
+                                </LinearLayout>
 
                                 <TextView
                                     android:id="@+id/detailStatus"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="8dp"
-                                    android:background="@drawable/bg_status_default"
-                                    android:paddingStart="10dp"
-                                    android:paddingTop="5dp"
-                                    android:paddingEnd="10dp"
-                                    android:paddingBottom="5dp"
-                                    android:textColor="@color/nh_info_fg"
-                                    android:textSize="12sp"
+                                    android:paddingStart="14dp"
+                                    android:paddingTop="7dp"
+                                    android:paddingEnd="14dp"
+                                    android:paddingBottom="7dp"
+                                    android:textSize="11sp"
                                     android:textStyle="bold" />
                             </LinearLayout>
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_marginTop="14dp"
+                                android:background="@color/nh_border" />
 
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="10dp"
+                                android:layout_marginTop="14dp"
                                 android:orientation="horizontal">
 
-                                <TextView
-                                    android:id="@+id/detailRooms"
+                                <LinearLayout
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginEnd="4dp"
                                     android:layout_weight="1"
-                                    android:background="@drawable/bg_stat_tile"
-                                    android:padding="8dp"
-                                    android:textColor="@color/nh_text_primary"
-                                    android:textSize="12sp" />
+                                    android:gravity="center"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:id="@+id/detailRoomsValue"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:textColor="@color/nh_text_primary"
+                                        android:textSize="16sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:text="@string/detail_stat_rooms"
+                                        android:textColor="@color/nh_text_secondary"
+                                        android:textSize="11sp" />
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:gravity="center"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:id="@+id/detailAreaValue"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:textColor="@color/nh_text_primary"
+                                        android:textSize="16sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:text="@string/detail_stat_area"
+                                        android:textColor="@color/nh_text_secondary"
+                                        android:textSize="11sp" />
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:gravity="center"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:id="@+id/detailFloorValue"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:textColor="@color/nh_text_primary"
+                                        android:textSize="16sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:text="@string/detail_stat_floor"
+                                        android:textColor="@color/nh_text_secondary"
+                                        android:textSize="11sp" />
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:gravity="center"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:id="@+id/detailTotalFloorsValue"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:textColor="@color/nh_text_primary"
+                                        android:textSize="16sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:text="@string/detail_stat_total_floors"
+                                        android:textAlignment="center"
+                                        android:textColor="@color/nh_text_secondary"
+                                        android:textSize="11sp" />
+                                </LinearLayout>
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/detailDescription"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:textColor="@color/nh_text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="18dp"
+                            android:text="@string/detail_specifications_title"
+                            android:textColor="@color/nh_text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/bg_soft_card"
+                                    android:orientation="vertical"
+                                    android:padding="12dp">
+
+                                    <TextView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/detail_price_per_m2"
+                                        android:textColor="@color/nh_text_secondary"
+                                        android:textSize="10sp" />
+
+                                    <TextView
+                                        android:id="@+id/detailPricePerM2Value"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:textColor="@color/nh_text_primary"
+                                        android:textSize="14sp"
+                                        android:textStyle="bold" />
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:background="@drawable/bg_soft_card"
+                                    android:orientation="vertical"
+                                    android:padding="12dp">
+
+                                    <TextView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/detail_condition"
+                                        android:textColor="@color/nh_text_secondary"
+                                        android:textSize="10sp" />
+
+                                    <TextView
+                                        android:id="@+id/detailConditionValue"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:textColor="@color/nh_text_primary"
+                                        android:textSize="14sp"
+                                        android:textStyle="bold" />
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/bg_soft_card"
+                                    android:orientation="vertical"
+                                    android:padding="12dp">
+
+                                    <TextView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/detail_year_built"
+                                        android:textColor="@color/nh_text_secondary"
+                                        android:textSize="10sp" />
+
+                                    <TextView
+                                        android:id="@+id/detailYearBuiltValue"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:textColor="@color/nh_text_primary"
+                                        android:textSize="14sp"
+                                        android:textStyle="bold" />
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:background="@drawable/bg_soft_card"
+                                    android:orientation="vertical"
+                                    android:padding="12dp">
+
+                                    <TextView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/detail_about_complex"
+                                        android:textColor="@color/nh_text_secondary"
+                                        android:textSize="10sp" />
+
+                                    <TextView
+                                        android:id="@+id/detailWalkabilityValue"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:textColor="@color/nh_text_primary"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/detailAirQualityValue"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="6dp"
+                                        android:textColor="@color/nh_text_primary"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/detailAmenitiesValue"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:textColor="@color/nh_text_secondary"
+                                        android:textSize="11sp" />
+                                </LinearLayout>
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="18dp"
+                            android:text="@string/detail_complex_information_title"
+                            android:textColor="@color/nh_text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:background="@drawable/bg_soft_card"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:padding="12dp">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:contentDescription="@string/detail_complex_information_title"
+                                android:src="@drawable/ic_document_24"
+                                app:tint="@color/nh_text_primary" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
 
                                 <TextView
-                                    android:id="@+id/detailArea"
-                                    android:layout_width="0dp"
+                                    android:id="@+id/detailComplexName"
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="2dp"
-                                    android:layout_marginEnd="2dp"
-                                    android:layout_weight="1"
-                                    android:background="@drawable/bg_stat_tile"
-                                    android:padding="8dp"
                                     android:textColor="@color/nh_text_primary"
-                                    android:textSize="12sp" />
+                                    android:textSize="13sp"
+                                    android:textStyle="bold" />
 
                                 <TextView
-                                    android:id="@+id/detailFloor"
-                                    android:layout_width="0dp"
+                                    android:id="@+id/detailCity"
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="4dp"
-                                    android:layout_weight="1"
-                                    android:background="@drawable/bg_stat_tile"
-                                    android:padding="8dp"
-                                    android:textColor="@color/nh_text_primary"
-                                    android:textSize="12sp" />
+                                    android:layout_marginTop="2dp"
+                                    android:textColor="@color/nh_text_secondary"
+                                    android:textSize="11sp" />
                             </LinearLayout>
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/detailFavoriteButton"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="12dp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="40dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:minWidth="0dp"
                                 android:text="@string/favorite_add"
                                 android:textAllCaps="false"
-                                app:cornerRadius="12dp" />
-
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/detailChatButton"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:backgroundTint="@color/nh_splash_bg"
-                                android:text="@string/chat_open_button"
-                                android:textAllCaps="false"
-                                android:textColor="@color/nh_text_inverse"
-                                android:visibility="gone"
-                                app:cornerRadius="12dp" />
+                                android:textSize="11sp"
+                                app:cornerRadius="14dp" />
                         </LinearLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/detailChatButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:layout_marginTop="10dp"
+                            android:backgroundTint="@color/nh_splash_bg"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:minWidth="0dp"
+                            android:text="@string/chat_open_button"
+                            android:textAllCaps="false"
+                            android:textColor="@color/nh_text_inverse"
+                            android:textSize="11sp"
+                            android:visibility="gone"
+                            app:cornerRadius="14dp" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/detailLocationCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="12dp"
                     app:cardBackgroundColor="@color/nh_surface_card"
                     app:cardCornerRadius="22dp"
                     app:cardElevation="1dp"
                     app:strokeColor="@color/nh_border"
                     app:strokeWidth="1dp">
 
-                    <TextView
-                        android:id="@+id/detailDescription"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:padding="14dp"
-                        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
-                        android:textColor="@color/nh_text_primary" />
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/detail_location_title"
+                            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                            android:textColor="@color/nh_text_primary"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/detailLocationText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textColor="@color/nh_text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/detailDeveloperText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:textColor="@color/nh_text_primary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/detailBlockText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="@color/nh_text_primary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/detailCoordinatesText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:background="@drawable/bg_stat_tile"
+                            android:padding="12dp"
+                            android:textColor="@color/nh_text_secondary"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <LinearLayout
+                    android:id="@+id/detailSimilarSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/detail_similar_title"
+                            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                            android:textColor="@color/nh_text_primary"
+                            android:textStyle="bold" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
+
+                        <TextView
+                            android:id="@+id/detailSimilarShowAll"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="6dp"
+                            android:text="@string/home_show_all"
+                            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                            android:textColor="@color/nh_login_teal" />
+                    </LinearLayout>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/detailSimilarRecycler"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:clipToPadding="false"
+                        android:nestedScrollingEnabled="false"
+                        android:scrollbars="none" />
+                </LinearLayout>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/detailMortgageCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    app:cardBackgroundColor="@color/nh_surface_card"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/nh_border"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/detail_mortgage_title"
+                            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                            android:textColor="@color/nh_text_primary"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/detailMortgageLoanLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="@string/detail_mortgage_loan_label"
+                            android:textColor="@color/nh_text_secondary"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/detailMortgageLoanValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="@color/nh_text_primary"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/detailMortgageMonthlyLabel"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="@string/detail_mortgage_monthly_label"
+                            android:textColor="@color/nh_text_secondary"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/detailMortgageMonthlyValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="@color/nh_text_primary"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/detailMortgageMeta"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/detail_mortgage_meta"
+                            android:textColor="@color/nh_text_secondary"
+                            android:textSize="12sp" />
+                    </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
         </ScrollView>
@@ -202,7 +696,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:visibility="gone" />
-
     </FrameLayout>
 
 </LinearLayout>

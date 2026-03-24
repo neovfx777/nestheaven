@@ -138,15 +138,45 @@ object JsonParsers {
         val title = localized(obj.get("title")).ifBlank { "Kvartira" }
         val description = localized(obj.get("description")).ifBlank { "Tavsif berilmagan" }
         val complex = obj.optObject("complex")
+        val complexId = complex?.optString("id")
+        val complexTitle = localized(complex?.get("title"))
+            .ifBlank { localized(complex?.get("name")) }
+            .ifBlank { null }
         val city = complex?.optString("city") ?: obj.optString("city").orEmpty()
-        val priceText = obj.optNumber("price")?.let { "${moneyFormat.format(it)} UZS" } ?: "-"
-        val roomsText = obj.optNumber("rooms")?.let { "${it.toInt()} xonali" } ?: "-"
-        val areaText = obj.optNumber("area")?.let { "${it} m2" } ?: "-"
+        val priceValue = obj.optNumber("price")
+        val priceText = priceValue?.let { "${moneyFormat.format(it)} UZS" } ?: "-"
+        val roomsValue = obj.optNumber("rooms")?.toInt()
+        val areaValue = obj.optNumber("area")
+        val pricePerSquare = if (priceValue != null && areaValue != null && areaValue > 0) priceValue / areaValue else null
+        val roomsText = roomsValue?.let { "${it} xonali" } ?: "-"
+        val areaText = areaValue?.let { "${it} m2" } ?: "-"
         val floor = obj.optNumber("floor")?.toInt()
         val totalFloors = obj.optNumber("totalFloors")?.toInt()
         val floorText = if (floor != null && totalFloors != null) "$floor / $totalFloors" else floor?.toString() ?: "-"
         val statusText = normalizeStatus(obj.optString("status"))
         val image = obj.optArray("images")?.firstObject()?.optString("url") ?: obj.optString("coverImage")
+        val locationText = complex?.optString("locationText")
+            ?: localized(complex?.get("address"))
+        val developerText = complex?.optString("developer")
+        val blockCount = complex?.optNumber("blockCount")?.toInt()
+        val blocksText = if (blockCount != null && blockCount > 0) "$blockCount blok" else null
+        val latitude = complex?.optNumber("locationLat") ?: complex?.optNumber("latitude")
+        val longitude = complex?.optNumber("locationLng") ?: complex?.optNumber("longitude")
+        val yearBuiltText = obj.optNumber("readyByYear")?.toInt()?.toString()
+            ?: complex?.optString("yearBuilt")
+            ?: "2023"
+        val conditionText = when (obj.optString("constructionStatus")?.lowercase()) {
+            "available" -> "Oq suvoq"
+            "built" -> "Tayyor"
+            else -> "Tayyor"
+        }
+        val walkabilityText = complex?.optNumber("walkabilityRating")?.toInt()?.let { "$it%" }
+            ?: complex?.optNumber("walkabilityScore")?.toInt()?.let { "$it%" }
+        val airQualityText = complex?.optNumber("airQualityRating")?.toInt()?.let { "$it%" }
+            ?: complex?.optNumber("airQualityScore")?.toInt()?.let { "$it%" }
+        val amenitiesText = complex?.optArray("amenities")
+            ?.mapNotNull { it.optStringOrNull() }
+            ?: emptyList()
 
         return ApartmentDetailModel(
             id = id,
@@ -154,11 +184,28 @@ object JsonParsers {
             description = description,
             city = city.ifBlank { "Noma'lum" },
             priceText = priceText,
+            priceValue = priceValue,
+            roomsValue = roomsValue,
+            areaValue = areaValue,
+            floorValue = floor,
+            totalFloorsValue = totalFloors,
             roomsText = roomsText,
             areaText = areaText,
             floorText = floorText,
             statusText = statusText,
             imageUrl = resolveAssetUrl(image),
+            complexId = complexId,
+            complexTitle = complexTitle,
+            locationText = locationText?.ifBlank { null },
+            developerText = developerText?.ifBlank { null },
+            blocksText = blocksText,
+            latitude = latitude,
+            longitude = longitude,
+            yearBuiltText = yearBuiltText,
+            conditionText = conditionText,
+            walkabilityText = walkabilityText,
+            airQualityText = airQualityText,
+            amenitiesText = amenitiesText,
         )
     }
 

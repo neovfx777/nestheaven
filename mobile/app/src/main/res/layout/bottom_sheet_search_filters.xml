@@ -239,7 +239,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:valueFrom="0"
-                android:valueTo="10000000000"
+                android:valueTo="10000000"
                 app:labelBehavior="gone"
                 />
 
