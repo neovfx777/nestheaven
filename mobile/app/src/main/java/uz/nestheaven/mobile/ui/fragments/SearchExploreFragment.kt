@@ -83,7 +83,8 @@ class SearchExploreFragment : Fragment(R.layout.fragment_search_explore) {
         showAllPopular.setOnClickListener { (parentFragment as? SearchFragment)?.openApartmentsList() }
 
         filtersButton.setOnClickListener {
-            if (parentFragmentManager.findFragmentByTag("searchFilters") != null) return@setOnClickListener
+            if (!isAdded || childFragmentManager.isStateSaved) return@setOnClickListener
+            if (childFragmentManager.findFragmentByTag("searchFilters") != null) return@setOnClickListener
 
             val sheet = SearchFiltersBottomSheet.newInstance().apply {
                 initialFilters = currentFilters
@@ -99,7 +100,7 @@ class SearchExploreFragment : Fragment(R.layout.fragment_search_explore) {
                     )
                 }
             }
-            sheet.show(parentFragmentManager, "searchFilters")
+            sheet.show(childFragmentManager, "searchFilters")
         }
 
         searchInput.setOnEditorActionListener { _, actionId, _ ->

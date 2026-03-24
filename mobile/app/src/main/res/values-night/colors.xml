@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="nh_blue_50">#172554</color>
+    <color name="nh_blue_600">#60A5FA</color>
+    <color name="nh_blue_700">#3B82F6</color>
+    <color name="nh_indigo_50">#1E1B4B</color>
+    <color name="nh_indigo_800">#818CF8</color>
+
+    <color name="nh_surface">#08111F</color>
+    <color name="nh_surface_card">#0F1B2D</color>
+    <color name="nh_surface_muted">#16263B</color>
+
+    <color name="nh_text_primary">#F4F8FF</color>
+    <color name="nh_text_secondary">#9FB0C7</color>
+    <color name="nh_text_inverse">#F8FBFF</color>
+    <color name="nh_border">#23354B</color>
+
+    <color name="nh_success_bg">#113222</color>
+    <color name="nh_success_fg">#86EFAC</color>
+    <color name="nh_error_bg">#3A171D</color>
+    <color name="nh_error_fg">#FCA5A5</color>
+    <color name="nh_neutral_bg">#243244</color>
+    <color name="nh_neutral_fg">#D8E1EE</color>
+    <color name="nh_info_bg">#142C4E</color>
+    <color name="nh_info_fg">#93C5FD</color>
+    <color name="nh_warning">#FBBF24</color>
+
+    <color name="nh_price_bg">#0B1322</color>
+    <color name="nh_on_price">#F8FBFF</color>
+
+    <color name="nh_divider">#203042</color>
+
+    <color name="error_container">#34151A</color>
+    <color name="on_error_container">#FEB2B2</color>
+
+    <color name="nh_splash_bg">#0B3D34</color>
+    <color name="nh_splash_gold">#E7C765</color>
+
+    <color name="nh_login_teal">#3DD6C1</color>
+</resources>
