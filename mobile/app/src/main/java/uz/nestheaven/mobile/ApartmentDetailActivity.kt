@@ -80,7 +80,9 @@ class ApartmentDetailActivity : AppCompatActivity() {
         val yearBuiltValue = findViewById<TextView>(R.id.detailYearBuiltValue)
         val walkabilityValue = findViewById<TextView>(R.id.detailWalkabilityValue)
         val airQualityValue = findViewById<TextView>(R.id.detailAirQualityValue)
-        val amenitiesValue = findViewById<TextView>(R.id.detailAmenitiesValue)
+        val amenityOne = findViewById<TextView>(R.id.detailAmenityOne)
+        val amenityTwo = findViewById<TextView>(R.id.detailAmenityTwo)
+        val amenityThree = findViewById<TextView>(R.id.detailAmenityThree)
         val complexName = findViewById<TextView>(R.id.detailComplexName)
 
         val similarAdapter = SimilarListingAdapter { model ->
@@ -163,13 +165,14 @@ class ApartmentDetailActivity : AppCompatActivity() {
                         conditionValue.text = model.conditionText ?: getString(R.string.detail_value_unknown)
                         yearBuiltValue.text = model.yearBuiltText ?: getString(R.string.detail_value_unknown)
                         walkabilityValue.text = model.walkabilityText?.let {
-                            getString(R.string.detail_walkability_value, it)
+                            getString(R.string.detail_score_format, it)
                         } ?: getString(R.string.detail_metric_missing, getString(R.string.detail_walkability_label))
                         airQualityValue.text = model.airQualityText?.let {
-                            getString(R.string.detail_air_quality_value, it)
+                            getString(R.string.detail_score_format, it)
                         } ?: getString(R.string.detail_metric_missing, getString(R.string.detail_air_quality_label))
-                        amenitiesValue.text = model.amenitiesText.takeIf { it.isNotEmpty() }?.joinToString("   ")
-                            ?: getString(R.string.detail_value_unknown)
+                        bindAmenityChip(amenityOne, model.amenitiesText.getOrNull(0))
+                        bindAmenityChip(amenityTwo, model.amenitiesText.getOrNull(1))
+                        bindAmenityChip(amenityThree, model.amenitiesText.getOrNull(2))
                         bindLocationSection(
                             model = model,
                             locationCard = locationCard,
@@ -336,6 +339,14 @@ class ApartmentDetailActivity : AppCompatActivity() {
         val price = model.priceValue
         if (area == null || price == null || area <= 0) return getString(R.string.detail_value_unknown)
         return formatCurrency(price / area)
+    }
+
+    private fun bindAmenityChip(view: TextView, value: String?) {
+        val normalized = value?.trim().orEmpty()
+        view.isVisible = normalized.isNotBlank()
+        if (normalized.isNotBlank()) {
+            view.text = normalized.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+        }
     }
 
     companion object {
