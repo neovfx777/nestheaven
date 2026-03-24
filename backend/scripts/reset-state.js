@@ -1,3 +1,5 @@
+require('../src/config/loadEnv');
+
 const bcrypt = require('bcrypt');
 const { PrismaClient } = require('@prisma/client');
 const { loadConfiguredAccounts } = require('./lib/account-config');

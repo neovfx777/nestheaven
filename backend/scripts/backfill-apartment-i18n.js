@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('../src/config/loadEnv');
 const { PrismaClient } = require('@prisma/client');
 const { completeI18n, hasAnyContent } = require('../src/utils/autoTranslateI18n');
 

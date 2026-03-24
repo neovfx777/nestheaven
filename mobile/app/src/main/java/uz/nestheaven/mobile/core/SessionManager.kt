@@ -60,15 +60,25 @@ class SessionManager(context: Context) {
         prefs.edit().putString(KEY_LANGUAGE_TAG, tag).apply()
     }
 
+    fun getThemeMode(): String? = prefs.getString(KEY_THEME_MODE, null)
+
+    fun setThemeMode(mode: String) {
+        prefs.edit().putString(KEY_THEME_MODE, mode).apply()
+    }
+
     fun clear() {
         val keepGetStartedSeen = isGetStartedSeen()
         val keepLanguageTag = getLanguageTag()
+        val keepThemeMode = getThemeMode()
         prefs.edit()
             .clear()
             .putBoolean(KEY_GET_STARTED_SEEN, keepGetStartedSeen)
             .apply {
                 if (!keepLanguageTag.isNullOrBlank()) {
                     putString(KEY_LANGUAGE_TAG, keepLanguageTag)
+                }
+                if (!keepThemeMode.isNullOrBlank()) {
+                    putString(KEY_THEME_MODE, keepThemeMode)
                 }
             }
             .apply()
@@ -80,6 +90,7 @@ class SessionManager(context: Context) {
         private const val KEY_USER = "user"
         private const val KEY_GET_STARTED_SEEN = "get_started_seen"
         private const val KEY_LANGUAGE_TAG = "language_tag"
+        private const val KEY_THEME_MODE = "theme_mode"
 
         private const val KEY_VERIFICATION_PENDING = "verification_pending"
         private const val KEY_VERIFICATION_FLOW = "verification_flow"

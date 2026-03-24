@@ -1,3 +1,5 @@
+require('../src/config/loadEnv');
+
 /**
  * Script to completely clear the database
  * Removes all listings, complexes, and users

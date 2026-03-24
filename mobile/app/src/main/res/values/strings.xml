@@ -178,6 +178,10 @@
     <string name="profile_navigate">Ochish</string>
     <string name="profile_info_coming_soon">Ma\'lumotnomalar tez kunda</string>
     <string name="settings_coming_soon">Sozlamalar tez kunda</string>
+    <string name="theme_switch_to_dark">Qorong\'i rejimni yoqish</string>
+    <string name="theme_switch_to_light">Yorug\' rejimni yoqish</string>
+    <string name="theme_dark_enabled">Qorong\'i rejim yoqildi</string>
+    <string name="theme_light_enabled">Yorug\' rejim yoqildi</string>
 
     <string name="messages_coming_soon">Xabarlar tez kunda</string>
     <string name="messages_title">Chat</string>

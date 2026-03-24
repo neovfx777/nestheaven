@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('./loadEnv');
 
 const TRUE_VALUES = new Set(['1', 'true', 'yes', 'on']);
 
