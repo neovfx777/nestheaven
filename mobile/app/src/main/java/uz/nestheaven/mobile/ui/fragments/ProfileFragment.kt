@@ -7,9 +7,12 @@ import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.isVisible
+import androidx.core.os.LocaleListCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import uz.nestheaven.mobile.R
 import uz.nestheaven.mobile.core.ApiClient
@@ -18,6 +21,12 @@ import uz.nestheaven.mobile.core.ThemeManager
 import java.util.Locale
 
 class ProfileFragment : Fragment(R.layout.fragment_profile) {
+
+    data class LanguageOption(
+        val tag: String,
+        val labelRes: Int,
+        val shortCode: String,
+    )
 
     interface ProfileHost {
         fun onLogoutRequested()
@@ -49,8 +58,15 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         val favoritesItem = view.findViewById<View>(R.id.profileFavoritesItem)
         val messagesItem = view.findViewById<View>(R.id.profileMessagesItem)
         val infoItem = view.findViewById<View>(R.id.profileInfoItem)
+        val languageItem = view.findViewById<View>(R.id.profileLanguageItem)
+        val languageValue = view.findViewById<TextView>(R.id.profileLanguageValue)
         val settingsItem = view.findViewById<View>(R.id.profileSettingsItem)
         val themeToggle = view.findViewById<ImageButton>(R.id.profileThemeToggle)
+        val languages = listOf(
+            LanguageOption("uz", R.string.language_uz_name, "UZ"),
+            LanguageOption("ru", R.string.language_ru_name, "RU"),
+            LanguageOption("en", R.string.language_en_name, "EN"),
+        )
 
         fun requireLoginOr(action: () -> Unit) {
             if (!sessionManager.isLoggedIn()) {
@@ -77,6 +93,11 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     Toast.LENGTH_SHORT,
                 ).show()
             }
+        }
+
+        renderLanguageValue(languageValue, languages)
+        languageItem.setOnClickListener {
+            showLanguagePicker(languageValue, languages)
         }
 
         settingsItem.setOnClickListener {
@@ -133,6 +154,14 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         phoneText.text = user?.phone?.trim().orEmpty().ifBlank { "-" }
     }
 
+    private fun renderLanguageValue(
+        languageValue: TextView,
+        languages: List<LanguageOption>,
+    ) {
+        val currentTag = resolveCurrentLanguageTag(languages)
+        languageValue.text = languages.firstOrNull { it.tag == currentTag }?.shortCode ?: "UZ"
+    }
+
     private fun renderThemeToggle(themeToggle: ImageButton) {
         val darkModeEnabled = ThemeManager.isDarkMode(sessionManager)
         themeToggle.setImageResource(
@@ -141,6 +170,52 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         themeToggle.contentDescription = getString(
             if (darkModeEnabled) R.string.theme_switch_to_light else R.string.theme_switch_to_dark,
         )
+    }
+
+    private fun showLanguagePicker(
+        languageValue: TextView,
+        languages: List<LanguageOption>,
+    ) {
+        val currentTag = resolveCurrentLanguageTag(languages)
+        val labels = languages.map { getString(it.labelRes) }.toTypedArray()
+        val checkedIndex = languages.indexOfFirst { it.tag == currentTag }.coerceAtLeast(0)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.language_picker_title)
+            .setSingleChoiceItems(labels, checkedIndex) { dialog, which ->
+                dialog.dismiss()
+                val selected = languages.getOrNull(which) ?: return@setSingleChoiceItems
+                applyLanguage(selected.tag)
+                renderLanguageValue(languageValue, languages)
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun resolveCurrentLanguageTag(languages: List<LanguageOption>): String {
+        val raw = resolveCurrentLanguageTagRaw()
+        return languages.firstOrNull { it.tag == raw }?.tag ?: "uz"
+    }
+
+    private fun resolveCurrentLanguageTagRaw(): String {
+        val fromPrefs = sessionManager.getLanguageTag()?.trim()
+        val fromAppCompat = AppCompatDelegate.getApplicationLocales().toLanguageTags().trim()
+        val resolved = when {
+            !fromPrefs.isNullOrBlank() -> fromPrefs
+            fromAppCompat.isNotBlank() -> fromAppCompat.substringBefore(',').substringBefore('-')
+            else -> "uz"
+        }
+
+        return resolved.lowercase(Locale.ROOT)
+    }
+
+    private fun applyLanguage(tag: String) {
+        val normalized = tag.lowercase(Locale.ROOT)
+        if (normalized == resolveCurrentLanguageTagRaw()) return
+
+        sessionManager.setLanguageTag(normalized)
+        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(normalized))
+        activity?.recreate()
     }
 
     private fun refreshProfile(

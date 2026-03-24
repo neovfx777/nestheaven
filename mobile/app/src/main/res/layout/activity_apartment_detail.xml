@@ -80,38 +80,52 @@
 
                         <FrameLayout
                             android:layout_width="match_parent"
-                            android:layout_height="198dp"
+                            android:layout_height="236dp"
                             android:layout_marginTop="16dp">
 
-                            <ImageView
-                                android:id="@+id/detailImage"
+                            <com.google.android.material.card.MaterialCardView
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
-                                android:contentDescription="@string/image"
-                                android:scaleType="centerCrop" />
+                                app:cardBackgroundColor="@color/nh_surface_muted"
+                                app:cardCornerRadius="28dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/nh_border"
+                                app:strokeWidth="1dp">
+
+                                <ImageView
+                                    android:id="@+id/detailImage"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:contentDescription="@string/image"
+                                    android:scaleType="centerCrop" />
+                            </com.google.android.material.card.MaterialCardView>
 
                             <ImageButton
                                 android:id="@+id/detailImagePrevButton"
-                                android:layout_width="34dp"
-                                android:layout_height="34dp"
+                                android:layout_width="52dp"
+                                android:layout_height="52dp"
                                 android:layout_gravity="center_vertical|start"
-                                android:layout_marginStart="10dp"
-                                android:background="@android:color/white"
+                                android:layout_marginStart="6dp"
+                                android:background="@drawable/bg_slider_nav_button"
                                 android:contentDescription="@string/detail_prev_image"
-                                android:padding="6dp"
+                                android:elevation="3dp"
+                                android:padding="13dp"
                                 android:src="@drawable/ic_arrow_back_24"
+                                android:translationX="-10dp"
                                 app:tint="@color/nh_text_primary" />
 
                             <ImageButton
                                 android:id="@+id/detailImageNextButton"
-                                android:layout_width="34dp"
-                                android:layout_height="34dp"
+                                android:layout_width="52dp"
+                                android:layout_height="52dp"
                                 android:layout_gravity="center_vertical|end"
-                                android:layout_marginEnd="10dp"
-                                android:background="@android:color/white"
+                                android:layout_marginEnd="6dp"
+                                android:background="@drawable/bg_slider_nav_button"
                                 android:contentDescription="@string/detail_next_image"
-                                android:padding="6dp"
+                                android:elevation="3dp"
+                                android:padding="13dp"
                                 android:src="@drawable/ic_chevron_right_24"
+                                android:translationX="10dp"
                                 app:tint="@color/nh_text_primary" />
                         </FrameLayout>
 
@@ -183,13 +197,28 @@
                                     android:gravity="center"
                                     android:orientation="vertical">
 
-                                    <TextView
-                                        android:id="@+id/detailRoomsValue"
+                                    <LinearLayout
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:textColor="@color/nh_text_primary"
-                                        android:textSize="16sp"
-                                        android:textStyle="bold" />
+                                        android:gravity="center_vertical"
+                                        android:orientation="horizontal">
+
+                                        <ImageView
+                                            android:layout_width="14dp"
+                                            android:layout_height="14dp"
+                                            android:contentDescription="@string/detail_stat_rooms"
+                                            android:src="@drawable/ic_bed_24"
+                                            app:tint="@color/nh_text_secondary" />
+
+                                        <TextView
+                                            android:id="@+id/detailRoomsValue"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginStart="6dp"
+                                            android:textColor="@color/nh_text_primary"
+                                            android:textSize="16sp"
+                                            android:textStyle="bold" />
+                                    </LinearLayout>
 
                                     <TextView
                                         android:layout_width="wrap_content"
@@ -207,13 +236,28 @@
                                     android:gravity="center"
                                     android:orientation="vertical">
 
-                                    <TextView
-                                        android:id="@+id/detailAreaValue"
+                                    <LinearLayout
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:textColor="@color/nh_text_primary"
-                                        android:textSize="16sp"
-                                        android:textStyle="bold" />
+                                        android:gravity="center_vertical"
+                                        android:orientation="horizontal">
+
+                                        <ImageView
+                                            android:layout_width="14dp"
+                                            android:layout_height="14dp"
+                                            android:contentDescription="@string/detail_stat_area"
+                                            android:src="@drawable/ic_square_foot_24"
+                                            app:tint="@color/nh_text_secondary" />
+
+                                        <TextView
+                                            android:id="@+id/detailAreaValue"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginStart="6dp"
+                                            android:textColor="@color/nh_text_primary"
+                                            android:textSize="16sp"
+                                            android:textStyle="bold" />
+                                    </LinearLayout>
 
                                     <TextView
                                         android:layout_width="wrap_content"
@@ -231,13 +275,28 @@
                                     android:gravity="center"
                                     android:orientation="vertical">
 
-                                    <TextView
-                                        android:id="@+id/detailFloorValue"
+                                    <LinearLayout
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:textColor="@color/nh_text_primary"
-                                        android:textSize="16sp"
-                                        android:textStyle="bold" />
+                                        android:gravity="center_vertical"
+                                        android:orientation="horizontal">
+
+                                        <ImageView
+                                            android:layout_width="14dp"
+                                            android:layout_height="14dp"
+                                            android:contentDescription="@string/detail_stat_floor"
+                                            android:src="@drawable/ic_layers_24"
+                                            app:tint="@color/nh_text_secondary" />
+
+                                        <TextView
+                                            android:id="@+id/detailFloorValue"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginStart="6dp"
+                                            android:textColor="@color/nh_text_primary"
+                                            android:textSize="16sp"
+                                            android:textStyle="bold" />
+                                    </LinearLayout>
 
                                     <TextView
                                         android:layout_width="wrap_content"
@@ -255,13 +314,28 @@
                                     android:gravity="center"
                                     android:orientation="vertical">
 
-                                    <TextView
-                                        android:id="@+id/detailTotalFloorsValue"
+                                    <LinearLayout
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:textColor="@color/nh_text_primary"
-                                        android:textSize="16sp"
-                                        android:textStyle="bold" />
+                                        android:gravity="center_vertical"
+                                        android:orientation="horizontal">
+
+                                        <ImageView
+                                            android:layout_width="14dp"
+                                            android:layout_height="14dp"
+                                            android:contentDescription="@string/detail_stat_total_floors"
+                                            android:src="@drawable/ic_calendar_outline_24"
+                                            app:tint="@color/nh_text_secondary" />
+
+                                        <TextView
+                                            android:id="@+id/detailTotalFloorsValue"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginStart="6dp"
+                                            android:textColor="@color/nh_text_primary"
+                                            android:textSize="16sp"
+                                            android:textStyle="bold" />
+                                    </LinearLayout>
 
                                     <TextView
                                         android:layout_width="wrap_content"
@@ -400,31 +474,138 @@
                                         android:textColor="@color/nh_text_secondary"
                                         android:textSize="10sp" />
 
-                                    <TextView
-                                        android:id="@+id/detailWalkabilityValue"
+                                    <LinearLayout
+                                        android:id="@+id/detailWalkabilityCard"
                                         android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
                                         android:layout_marginTop="8dp"
-                                        android:textColor="@color/nh_text_primary"
-                                        android:textSize="12sp"
-                                        android:textStyle="bold" />
+                                        android:background="@drawable/bg_rating_walk"
+                                        android:gravity="center_vertical"
+                                        android:orientation="horizontal"
+                                        android:padding="10dp">
 
-                                    <TextView
-                                        android:id="@+id/detailAirQualityValue"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginTop="6dp"
-                                        android:textColor="@color/nh_text_primary"
-                                        android:textSize="12sp"
-                                        android:textStyle="bold" />
+                                        <ImageView
+                                            android:layout_width="18dp"
+                                            android:layout_height="18dp"
+                                            android:contentDescription="@string/detail_walkability_label"
+                                            android:src="@drawable/ic_walkability_24" />
 
-                                    <TextView
-                                        android:id="@+id/detailAmenitiesValue"
+                                        <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginStart="8dp"
+                                            android:orientation="vertical">
+
+                                            <TextView
+                                                android:layout_width="match_parent"
+                                                android:layout_height="wrap_content"
+                                                android:text="@string/detail_walkability_label"
+                                                android:textColor="@color/nh_text_primary"
+                                                android:textSize="11sp"
+                                                android:textStyle="bold" />
+
+                                            <TextView
+                                                android:id="@+id/detailWalkabilityValue"
+                                                android:layout_width="match_parent"
+                                                android:layout_height="wrap_content"
+                                                android:layout_marginTop="2dp"
+                                                android:textColor="@color/nh_text_secondary"
+                                                android:textSize="10sp" />
+                                        </LinearLayout>
+                                    </LinearLayout>
+
+                                    <LinearLayout
+                                        android:id="@+id/detailAirQualityCard"
                                         android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
                                         android:layout_marginTop="8dp"
+                                        android:background="@drawable/bg_rating_air"
+                                        android:gravity="center_vertical"
+                                        android:orientation="horizontal"
+                                        android:padding="10dp">
+
+                                        <ImageView
+                                            android:layout_width="18dp"
+                                            android:layout_height="18dp"
+                                            android:contentDescription="@string/detail_air_quality_label"
+                                            android:src="@drawable/ic_air_quality_24" />
+
+                                        <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginStart="8dp"
+                                            android:orientation="vertical">
+
+                                            <TextView
+                                                android:layout_width="match_parent"
+                                                android:layout_height="wrap_content"
+                                                android:text="@string/detail_air_quality_label"
+                                                android:textColor="@color/nh_text_primary"
+                                                android:textSize="11sp"
+                                                android:textStyle="bold" />
+
+                                            <TextView
+                                                android:id="@+id/detailAirQualityValue"
+                                                android:layout_width="match_parent"
+                                                android:layout_height="wrap_content"
+                                                android:layout_marginTop="2dp"
+                                                android:textColor="@color/nh_text_secondary"
+                                                android:textSize="10sp" />
+                                        </LinearLayout>
+                                    </LinearLayout>
+
+                                    <TextView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="10dp"
+                                        android:text="@string/detail_amenities_label"
                                         android:textColor="@color/nh_text_secondary"
-                                        android:textSize="11sp" />
+                                        android:textSize="10sp" />
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:orientation="horizontal">
+
+                                        <TextView
+                                            android:id="@+id/detailAmenityOne"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:background="@drawable/bg_amenity_chip"
+                                            android:paddingStart="8dp"
+                                            android:paddingTop="4dp"
+                                            android:paddingEnd="8dp"
+                                            android:paddingBottom="4dp"
+                                            android:textColor="@color/nh_success_fg"
+                                            android:textSize="10sp" />
+
+                                        <TextView
+                                            android:id="@+id/detailAmenityTwo"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginStart="6dp"
+                                            android:background="@drawable/bg_amenity_chip"
+                                            android:paddingStart="8dp"
+                                            android:paddingTop="4dp"
+                                            android:paddingEnd="8dp"
+                                            android:paddingBottom="4dp"
+                                            android:textColor="@color/nh_success_fg"
+                                            android:textSize="10sp" />
+
+                                        <TextView
+                                            android:id="@+id/detailAmenityThree"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginStart="6dp"
+                                            android:background="@drawable/bg_amenity_chip"
+                                            android:paddingStart="8dp"
+                                            android:paddingTop="4dp"
+                                            android:paddingEnd="8dp"
+                                            android:paddingBottom="4dp"
+                                            android:textColor="@color/nh_success_fg"
+                                            android:textSize="10sp" />
+                                    </LinearLayout>
                                 </LinearLayout>
                             </LinearLayout>
                         </LinearLayout>

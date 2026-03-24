@@ -1,5 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">NestHeaven</string>
+    <string name="splash_logo">Splash logo</string>
+    <string name="splash_title">NestHeaven</string>
+    <string name="splash_subtitle">REAL ESTATE</string>
+
+    <string name="get_started_top_label">Get Started</string>
+    <string name="get_started_headline">Your home is one tap away</string>
+    <string name="get_started_subheadline">Find your dream home easily and quickly</string>
+    <string name="get_started_button">Get Started</string>
+
+    <string name="language_picker_title">Select language</string>
+    <string name="language_uz_name">Uzbek</string>
+    <string name="language_ru_name">Russian</string>
+    <string name="language_en_name">English</string>
+
+    <string name="login_card_title">Sign in to your account.</string>
+    <string name="login_card_subtitle">Please log in to continue</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="forgot_password_hint">Password reset will be added soon</string>
+    <string name="login_prompt_no_account">Don\'t have an account?</string>
+    <string name="register_card_title">Create an account.</string>
+    <string name="register_card_subtitle">Fill in your information</string>
+    <string name="register_prompt_have_account">Already have an account?</string>
+    <string name="verification_card_title">Verification</string>
+    <string name="verification_card_subtitle">Enter the 6-digit code sent to you</string>
+    <string name="verification_code_hint">Code</string>
+    <string name="verification_enter_button">Verify</string>
+    <string name="verification_resend_in">Resend code in %1$d seconds</string>
+    <string name="verification_resend">Resend code</string>
+    <string name="verification_resend_sent">Verification code resent</string>
+    <string name="verification_success">Verification completed successfully.</string>
+    <string name="register_create_account_title">Create an account</string>
+    <string name="register_create_account_headline">We are glad you chose us</string>
+    <string name="register_create_account_hint">Please fill in all fields below to continue</string>
+    <string name="full_name">Full name</string>
+    <string name="email_address">Email address</string>
+    <string name="repeat_password">Repeat password</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_back">Back</string>
+
+    <string name="error_password_policy">Password must contain at least 8 characters, upper/lowercase letters, and a number</string>
+    <string name="error_fill_verification_code">Enter the 6-digit code</string>
+    <string name="error_fill_login">Enter email and password</string>
+    <string name="error_login_failed">Login failed</string>
+    <string name="error_fill_register">Fill in all required fields</string>
+    <string name="error_register_failed">Registration failed</string>
+    <string name="error_network_generic">Network error. Check your internet or server</string>
+    <string name="error_password_short">Password must be at least 6 characters</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+    <string name="error_load_apartments">Failed to load apartments</string>
+    <string name="error_load_complexes">Failed to load complexes</string>
+    <string name="error_load_favorites">Failed to load favorites</string>
+    <string name="error_load_details">Failed to load details</string>
+
+    <string name="auth_title">NestHeaven Mobile</string>
+    <string name="auth_subtitle">This native Android app works directly with the backend API.</string>
+    <string name="auth_hero_badge">VPS Live API</string>
+    <string name="auth_welcome_title">Secure access to your NestHeaven account</string>
+    <string name="auth_welcome_subtitle">Choose login or registration. All data is synced directly with the VPS server.</string>
+    <string name="auth_mode_hint">Choose a mode to continue</string>
+    <string name="auth_login_title">Sign in</string>
+    <string name="auth_login_desc">Enter your email and password</string>
+    <string name="auth_register_title">Create a new account</string>
+    <string name="auth_register_desc">Fill in your basic information</string>
+    <string name="auth_prompt_no_account">Don\'t have an account?</string>
+    <string name="auth_prompt_have_account">Already have an account?</string>
+
     <string name="login">Login</string>
     <string name="logout">Logout</string>
     <string name="register">Register</string>
@@ -9,89 +76,149 @@
     <string name="last_name">Last name</string>
     <string name="phone">Phone</string>
 
-    <string name="error_fill_login">Enter email and password</string>
-    <string name="error_login_failed">Login failed</string>
-    <string name="error_fill_register">Fill in all required fields</string>
-    <string name="error_register_failed">Registration failed</string>
-    <string name="error_network_generic">Network error. Check your internet or server</string>
-
-    <string name="get_started_top_label">Get Started</string>
-    <string name="get_started_headline">“Your house one click away”</string>
-    <string name="get_started_subheadline">Find your dream house easier and faster</string>
-    <string name="get_started_button">Get Started</string>
-
-    <string name="login_card_title">Login to your account.</string>
-    <string name="login_card_subtitle">Please sign in to your account</string>
-    <string name="forgot_password">Forgot password?</string>
-    <string name="forgot_password_hint">Password reset will be available soon</string>
-    <string name="login_prompt_no_account">Don\'t have an account?</string>
-
-    <string name="register_card_title">Create your account.</string>
-    <string name="register_card_subtitle">Please fill in your details</string>
-    <string name="register_prompt_have_account">Already have an account?</string>
-
-    <string name="verification_card_title">Verification</string>
-    <string name="verification_card_subtitle">Enter the 6 digit code we have sent you to verify</string>
-    <string name="verification_code_hint">Code</string>
-    <string name="verification_enter_button">Enter</string>
-    <string name="verification_resend_in">Resend code: %1$d seconds</string>
-    <string name="verification_resend">Resend code</string>
-    <string name="verification_resend_sent">Verification code resent</string>
-    <string name="verification_success">Verification successful.</string>
-
-    <string name="error_password_policy">Password must be at least 8 characters and include upper/lowercase letters and a number</string>
-    <string name="error_fill_verification_code">Enter the 6 digit code</string>
-
-    <string name="language_picker_title">Select language</string>
-    <string name="language_uz_name">Uzbek</string>
-    <string name="language_ru_name">Russian</string>
-    <string name="language_en_name">English</string>
-
-    <string name="register_create_account_title">Create an Account</string>
-    <string name="register_create_account_headline">We are happy to see you chose us</string>
-    <string name="register_create_account_hint">Please fill all the fields below to continue</string>
-    <string name="full_name">Name</string>
-    <string name="email_address">Email Address</string>
-    <string name="repeat_password">Repeat Password</string>
-    <string name="action_continue">Continue</string>
-    <string name="action_back">Back</string>
-    <string name="error_password_mismatch">Passwords do not match</string>
-
     <string name="tab_home">Home</string>
     <string name="tab_search">Search</string>
     <string name="tab_apartments">Apartments</string>
     <string name="tab_complexes">Complexes</string>
     <string name="tab_favorites">Favorites</string>
-    <string name="tab_message">Message</string>
+    <string name="tab_message">Messages</string>
     <string name="tab_profile">Profile</string>
+    <string name="tab_map">Map</string>
+    <string name="tab_ai">AI</string>
+
+    <string name="home_title">NestHeaven</string>
+    <string name="home_subtitle">Find new apartments and complexes in one place</string>
+    <string name="home_browse_apartments">Browse apartments</string>
+    <string name="home_browse_complexes">Browse complexes</string>
+    <string name="home_stat_apartments">Listings</string>
+    <string name="home_stat_complexes">Complexes</string>
+    <string name="home_stat_favorites">Favorites</string>
+    <string name="home_broadcast_title">News</string>
+    <string name="home_featured_title">Featured listings</string>
+    <string name="home_recommended_title">Recommendations for you</string>
+    <string name="home_complexes_title">Popular complexes</string>
+    <string name="home_broadcast_empty">No news yet</string>
+    <string name="home_load_failed">Failed to load home data</string>
+    <string name="home_section_complexes">Complexes</string>
+    <string name="home_section_popular">Popular listings</string>
+    <string name="home_show_all">Show all</string>
+
+    <string name="search">Search</string>
+    <string name="search_hint">Name, city, or keyword</string>
+    <string name="filter_min_price">Min price</string>
+    <string name="filter_max_price">Max price</string>
+    <string name="filter_rooms">Rooms</string>
+    <string name="filter_status">Status</string>
+    <string name="filter_sort">Sort</string>
+    <string name="filter_apply">Apply filter</string>
+    <string name="filter_reset">Reset</string>
+    <string name="filter_status_all">All</string>
+    <string name="filter_status_active">Active only</string>
+    <string name="filter_status_sold">Sold only</string>
+    <string name="filter_status_hidden">Hidden only</string>
+    <string name="filter_sort_newest">Newest first</string>
+    <string name="filter_sort_price_asc">Price: low to high</string>
+    <string name="filter_sort_price_desc">Price: high to low</string>
+    <string name="filter_sort_area_asc">Area: small to large</string>
+    <string name="filter_sort_area_desc">Area: large to small</string>
+    <string name="filter_sort_rooms_asc">Rooms: few to many</string>
+    <string name="filter_sort_rooms_desc">Rooms: many to few</string>
+    <string name="refresh">Refresh</string>
+    <string name="image">Image</string>
+    <string name="favorite">Favorite</string>
+    <string name="notifications">Notifications</string>
+    <string name="search_filters">Filter</string>
+    <string name="search_section_popular_areas">Popular areas</string>
+    <string name="filters_title">Large filter panel</string>
+    <string name="filters_smart_voice">Smart and voice search</string>
+    <string name="filters_voice_coming_soon">Voice search coming soon</string>
+    <string name="filter_min_rooms">Min rooms</string>
+    <string name="filter_max_rooms">Max rooms</string>
+    <string name="filters_price_range">Price range</string>
+    <string name="filters_area_range">Area (m2)</string>
+    <string name="filter_min_area">Min m2</string>
+    <string name="filter_max_area">Max m2</string>
+    <string name="filters_floor_range">Floor range</string>
+    <string name="filter_min_floor">Min floor</string>
+    <string name="filter_max_floor">Max floor</string>
+
+    <string name="favorite_add">Add to favorites</string>
+    <string name="favorite_remove">Remove from favorites</string>
+    <string name="favorite_added">Added to favorites</string>
+    <string name="favorite_removed">Removed from favorites</string>
+    <string name="favorite_failed">Favorite action failed</string>
+
+    <string name="empty_apartments">No apartments found</string>
+    <string name="empty_complexes">No complexes found</string>
+    <string name="empty_favorites">Favorites list is empty</string>
+    <string name="register_success">Registration successful</string>
+    <string name="login_required">Please log in first</string>
+    <string name="login_required_favorites">Login is required to view favorites</string>
+
+    <string name="profile_loading">Loading profile...</string>
+    <string name="profile_synced">Profile status: synced</string>
+    <string name="profile_failed">Failed to refresh profile</string>
+    <string name="profile_login_required">Login to view profile</string>
+    <string name="profile_name">Full name</string>
+    <string name="profile_email">Email</string>
+    <string name="profile_role">Role</string>
+    <string name="profile_phone">Phone</string>
+    <string name="profile_avatar">Profile avatar</string>
+    <string name="profile_info">Information</string>
+    <string name="profile_language">Language</string>
+    <string name="profile_settings">Settings</string>
+    <string name="profile_navigate">Open</string>
+    <string name="profile_info_coming_soon">Information section coming soon</string>
+    <string name="settings_coming_soon">Settings coming soon</string>
+    <string name="theme_switch_to_dark">Enable dark mode</string>
+    <string name="theme_switch_to_light">Enable light mode</string>
+    <string name="theme_dark_enabled">Dark mode enabled</string>
+    <string name="theme_light_enabled">Light mode enabled</string>
 
     <string name="messages_coming_soon">Messages coming soon</string>
     <string name="messages_title">Chat</string>
     <string name="messages_empty">No chats yet</string>
     <string name="messages_login_required">Login to see chats</string>
     <string name="messages_failed">Failed to load chats</string>
+    <string name="map_coming_soon">Map coming soon</string>
+    <string name="ai_coming_soon">AI assistant coming soon</string>
 
     <string name="chat_title">Chat</string>
-    <string name="chat_hint">Type something...</string>
+    <string name="chat_hint">Type a message...</string>
     <string name="chat_emoji">Emoji</string>
-    <string name="chat_attach">Attach</string>
+    <string name="chat_attach">Attach file</string>
     <string name="chat_failed_load">Failed to load chat</string>
     <string name="chat_failed_send">Failed to send message</string>
     <string name="chat_login_required">Login to use chat</string>
     <string name="chat_open_button">Chat</string>
 
-    <string name="home_section_complexes">Complexes</string>
-    <string name="home_section_popular">Popular Listing</string>
-    <string name="home_show_all">Show all</string>
-
-    <string name="notifications">Notifications</string>
-
-    <string name="profile_avatar">Profile avatar</string>
-    <string name="profile_settings">Settings</string>
-    <string name="profile_navigate">Navigate</string>
-    <string name="settings_coming_soon">Settings coming soon</string>
-    <string name="theme_switch_to_dark">Enable dark mode</string>
-    <string name="theme_switch_to_light">Enable light mode</string>
-    <string name="theme_dark_enabled">Dark mode enabled</string>
-    <string name="theme_light_enabled">Light mode enabled</string>
+    <string name="detail_location_title">Location</string>
+    <string name="detail_location_developer">Developer: %1$s</string>
+    <string name="detail_location_blocks">Block count: %1$s</string>
+    <string name="detail_location_coordinates">Lat: %1$.5f  Lng: %2$.5f</string>
+    <string name="detail_location_map_soon">Map preview will be added soon</string>
+    <string name="detail_similar_title">Similar listings</string>
+    <string name="detail_mortgage_title">Mortgage Calculator</string>
+    <string name="detail_mortgage_loan_label">Loan amount (70%)</string>
+    <string name="detail_mortgage_monthly_label">Estimated monthly payment</string>
+    <string name="detail_mortgage_meta">Based on a 30-year term at 4.5%% interest</string>
+    <string name="detail_value_unknown">Unknown</string>
+    <string name="detail_prev_image">Previous image</string>
+    <string name="detail_next_image">Next image</string>
+    <string name="detail_total_price">Total price</string>
+    <string name="detail_stat_rooms">Rooms</string>
+    <string name="detail_stat_area">Area (m2)</string>
+    <string name="detail_stat_floor">Floor</string>
+    <string name="detail_stat_total_floors">Total floors</string>
+    <string name="detail_specifications_title">Specifications</string>
+    <string name="detail_price_per_m2">Price per m2</string>
+    <string name="detail_condition">Condition</string>
+    <string name="detail_year_built">Year built</string>
+    <string name="detail_about_complex">About complex</string>
+    <string name="detail_complex_information_title">Complex information</string>
+    <string name="detail_walkability_label">Walkability</string>
+    <string name="detail_air_quality_label">Air quality</string>
+    <string name="detail_amenities_label">Amenities</string>
+    <string name="detail_score_format">%1$s</string>
+    <string name="detail_metric_missing">%1$s: unavailable</string>
 </resources>

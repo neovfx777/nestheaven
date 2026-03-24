@@ -8,7 +8,6 @@ import android.widget.Spinner
 import android.widget.Toast
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.chip.ChipGroup
-import com.google.android.material.slider.RangeSlider
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import uz.nestheaven.mobile.R
@@ -55,11 +54,8 @@ class SearchFiltersBottomSheet : BottomSheetDialogFragment(R.layout.bottom_sheet
 
         val minPriceInput = view.findViewById<TextInputEditText>(R.id.searchFiltersMinPriceInput)
         val maxPriceInput = view.findViewById<TextInputEditText>(R.id.searchFiltersMaxPriceInput)
-        val priceSlider = view.findViewById<RangeSlider>(R.id.searchFiltersPriceSlider)
-
         val minAreaInput = view.findViewById<TextInputEditText>(R.id.searchFiltersMinAreaInput)
         val maxAreaInput = view.findViewById<TextInputEditText>(R.id.searchFiltersMaxAreaInput)
-        val areaSlider = view.findViewById<RangeSlider>(R.id.searchFiltersAreaSlider)
 
         val minFloorInput = view.findViewById<TextInputEditText>(R.id.searchFiltersMinFloorInput)
         val maxFloorInput = view.findViewById<TextInputEditText>(R.id.searchFiltersMaxFloorInput)
@@ -84,32 +80,12 @@ class SearchFiltersBottomSheet : BottomSheetDialogFragment(R.layout.bottom_sheet
             maxRoomsInput = maxRoomsInput,
             minPriceInput = minPriceInput,
             maxPriceInput = maxPriceInput,
-            priceSlider = priceSlider,
             minAreaInput = minAreaInput,
             maxAreaInput = maxAreaInput,
-            areaSlider = areaSlider,
             minFloorInput = minFloorInput,
             maxFloorInput = maxFloorInput,
             sortSpinner = sortSpinner,
         )
-
-        priceSlider.addOnChangeListener { slider, _, fromUser ->
-            if (!fromUser) return@addOnChangeListener
-            val values = slider.values
-            if (values.size >= 2) {
-                minPriceInput.setText(values[0].toLong().toString())
-                maxPriceInput.setText(values[1].toLong().toString())
-            }
-        }
-
-        areaSlider.addOnChangeListener { slider, _, fromUser ->
-            if (!fromUser) return@addOnChangeListener
-            val values = slider.values
-            if (values.size >= 2) {
-                minAreaInput.setText(values[0].toInt().toString())
-                maxAreaInput.setText(values[1].toInt().toString())
-            }
-        }
 
         resetButton.setOnClickListener {
             onApplyFilters?.invoke(Filters())
@@ -203,10 +179,8 @@ class SearchFiltersBottomSheet : BottomSheetDialogFragment(R.layout.bottom_sheet
         maxRoomsInput: TextInputEditText,
         minPriceInput: TextInputEditText,
         maxPriceInput: TextInputEditText,
-        priceSlider: RangeSlider,
         minAreaInput: TextInputEditText,
         maxAreaInput: TextInputEditText,
-        areaSlider: RangeSlider,
         minFloorInput: TextInputEditText,
         maxFloorInput: TextInputEditText,
         sortSpinner: Spinner,
@@ -232,24 +206,8 @@ class SearchFiltersBottomSheet : BottomSheetDialogFragment(R.layout.bottom_sheet
         minPriceInput.setText(initialFilters.minPrice?.toLong()?.toString().orEmpty())
         maxPriceInput.setText(initialFilters.maxPrice?.toLong()?.toString().orEmpty())
 
-        val rawMinPrice = (initialFilters.minPrice ?: priceSlider.valueFrom.toDouble())
-            .coerceIn(DEFAULT_MIN_PRICE.toDouble(), DEFAULT_MAX_PRICE.toDouble())
-            .toFloat()
-        val rawMaxPrice = (initialFilters.maxPrice ?: priceSlider.valueTo.toDouble())
-            .coerceIn(DEFAULT_MIN_PRICE.toDouble(), DEFAULT_MAX_PRICE.toDouble())
-            .toFloat()
-        setSafeRange(priceSlider, rawMinPrice, rawMaxPrice)
-
         minAreaInput.setText(initialFilters.minArea?.toString().orEmpty())
         maxAreaInput.setText(initialFilters.maxArea?.toString().orEmpty())
-
-        val rawMinArea = (initialFilters.minArea ?: areaSlider.valueFrom.toDouble())
-            .coerceIn(DEFAULT_MIN_AREA.toDouble(), DEFAULT_MAX_AREA.toDouble())
-            .toFloat()
-        val rawMaxArea = (initialFilters.maxArea ?: areaSlider.valueTo.toDouble())
-            .coerceIn(DEFAULT_MIN_AREA.toDouble(), DEFAULT_MAX_AREA.toDouble())
-            .toFloat()
-        setSafeRange(areaSlider, rawMinArea, rawMaxArea)
 
         minFloorInput.setText(initialFilters.minFloor?.toString().orEmpty())
         maxFloorInput.setText(initialFilters.maxFloor?.toString().orEmpty())
@@ -265,26 +223,6 @@ class SearchFiltersBottomSheet : BottomSheetDialogFragment(R.layout.bottom_sheet
                 else -> 0
             },
         )
-    }
-
-    private fun setSafeRange(slider: RangeSlider, rawMin: Float, rawMax: Float) {
-        val from = slider.valueFrom
-        val to = slider.valueTo
-
-        var safeMin = rawMin.coerceIn(from, to)
-        var safeMax = rawMax.coerceIn(from, to)
-
-        if (safeMin > safeMax) {
-            val tmp = safeMin
-            safeMin = safeMax
-            safeMax = tmp
-        }
-
-        runCatching {
-            slider.values = listOf(safeMin, safeMax)
-        }.getOrElse {
-            slider.values = listOf(from, to)
-        }
     }
 
     companion object {

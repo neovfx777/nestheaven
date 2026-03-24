@@ -23,7 +23,7 @@ object JsonParsers {
             val floorValue = obj.optNumber("floor")?.toInt()
             val statusRaw = obj.optString("status")?.lowercase().orEmpty()
             val priceText = priceValue?.let { "${moneyFormat.format(it)} UZS" } ?: "-"
-            val roomsText = roomsValue?.let { "${it} xonali" } ?: "-"
+            val roomsText = roomsValue?.let { formatRoomCount(it) } ?: "-"
             val statusText = normalizeStatus(statusRaw)
             val coverImage = obj.optString("coverImage")
                 ?: obj.optArray("images")?.firstObject()?.optString("url")
@@ -32,8 +32,8 @@ object JsonParsers {
 
             ApartmentCardModel(
                 id = id,
-                title = title.ifBlank { "Kvartira" },
-                city = city.ifBlank { "Noma'lum" },
+                title = title.ifBlank { apartmentFallback() },
+                city = city.ifBlank { unknownLabel() },
                 priceText = priceText,
                 roomsText = roomsText,
                 statusText = statusText,
@@ -61,9 +61,9 @@ object JsonParsers {
             val walkability = obj.optNumber("walkability")?.toInt()
             val airQuality = obj.optNumber("airQuality")?.toInt()
             val ratingText = listOfNotNull(
-                walkability?.let { "Walk: $it" },
-                airQuality?.let { "Air: $it" },
-            ).joinToString("  |  ").ifBlank { "Reyting yo'q" }
+                walkability?.let { "${walkabilityShortLabel()}: $it" },
+                airQuality?.let { "${airQualityShortLabel()}: $it" },
+            ).joinToString("  |  ").ifBlank { noRatingLabel() }
             val banner = obj.optString("coverImage")
                 ?: obj.optArray("images")?.firstObject()?.optString("url")
                 ?: obj.optString("bannerImage")
@@ -71,9 +71,9 @@ object JsonParsers {
 
             ComplexCardModel(
                 id = id,
-                title = title.ifBlank { "Kompleks" },
-                city = city.ifBlank { "Noma'lum" },
-                blocksText = if (blocks > 0) "$blocks blok" else "-",
+                title = title.ifBlank { complexFallback() },
+                city = city.ifBlank { unknownLabel() },
+                blocksText = if (blocks > 0) formatBlockCount(blocks) else "-",
                 ratingText = ratingText,
                 imageUrl = resolveAssetUrl(banner),
             )
@@ -99,15 +99,15 @@ object JsonParsers {
             val floorValue = obj.optNumber("floor")?.toInt()
             val statusRaw = obj.optString("status")?.lowercase().orEmpty()
             val priceText = priceValue?.let { "${moneyFormat.format(it)} UZS" } ?: "-"
-            val roomsText = roomsValue?.let { "${it} xonali" } ?: "-"
+            val roomsText = roomsValue?.let { formatRoomCount(it) } ?: "-"
             val statusText = normalizeStatus(statusRaw)
             val coverImage = obj.optString("coverImage")
                 ?: obj.optArray("images")?.firstObject()?.optString("url")
 
             ApartmentCardModel(
                 id = id,
-                title = title.ifBlank { "Kvartira" },
-                city = city.ifBlank { "Noma'lum" },
+                title = title.ifBlank { apartmentFallback() },
+                city = city.ifBlank { unknownLabel() },
                 priceText = priceText,
                 roomsText = roomsText,
                 statusText = statusText,
@@ -126,7 +126,7 @@ object JsonParsers {
         val list = root.optArray("data") ?: return emptyList()
         return list.mapNotNull { item ->
             val obj = item.optObject() ?: return@mapNotNull null
-            val title = localized(obj.get("title")).ifBlank { "E'lon" }
+            val title = localized(obj.get("title")).ifBlank { listingFallback() }
             val message = localized(obj.get("message")).ifBlank { "" }
             BroadcastModel(title = title, message = message)
         }
@@ -135,8 +135,8 @@ object JsonParsers {
     fun parseApartmentDetail(root: JsonObject?): ApartmentDetailModel? {
         val obj = root.optObject("data") ?: return null
         val id = obj.optString("id") ?: return null
-        val title = localized(obj.get("title")).ifBlank { "Kvartira" }
-        val description = localized(obj.get("description")).ifBlank { "Tavsif berilmagan" }
+        val title = localized(obj.get("title")).ifBlank { apartmentFallback() }
+        val description = localized(obj.get("description")).ifBlank { descriptionFallback() }
         val complex = obj.optObject("complex")
         val complexId = complex?.optString("id")
         val complexTitle = localized(complex?.get("title"))
@@ -148,7 +148,7 @@ object JsonParsers {
         val roomsValue = obj.optNumber("rooms")?.toInt()
         val areaValue = obj.optNumber("area")
         val pricePerSquare = if (priceValue != null && areaValue != null && areaValue > 0) priceValue / areaValue else null
-        val roomsText = roomsValue?.let { "${it} xonali" } ?: "-"
+        val roomsText = roomsValue?.let { formatRoomCount(it) } ?: "-"
         val areaText = areaValue?.let { "${it} m2" } ?: "-"
         val floor = obj.optNumber("floor")?.toInt()
         val totalFloors = obj.optNumber("totalFloors")?.toInt()
@@ -159,16 +159,16 @@ object JsonParsers {
             ?: localized(complex?.get("address"))
         val developerText = complex?.optString("developer")
         val blockCount = complex?.optNumber("blockCount")?.toInt()
-        val blocksText = if (blockCount != null && blockCount > 0) "$blockCount blok" else null
+        val blocksText = if (blockCount != null && blockCount > 0) formatBlockCount(blockCount) else null
         val latitude = complex?.optNumber("locationLat") ?: complex?.optNumber("latitude")
         val longitude = complex?.optNumber("locationLng") ?: complex?.optNumber("longitude")
         val yearBuiltText = obj.optNumber("readyByYear")?.toInt()?.toString()
             ?: complex?.optString("yearBuilt")
             ?: "2023"
         val conditionText = when (obj.optString("constructionStatus")?.lowercase()) {
-            "available" -> "Oq suvoq"
-            "built" -> "Tayyor"
-            else -> "Tayyor"
+            "available" -> availableCondition()
+            "built" -> readyCondition()
+            else -> readyCondition()
         }
         val walkabilityText = complex?.optNumber("walkabilityRating")?.toInt()?.let { "$it%" }
             ?: complex?.optNumber("walkabilityScore")?.toInt()?.let { "$it%" }
@@ -182,7 +182,7 @@ object JsonParsers {
             id = id,
             title = title,
             description = description,
-            city = city.ifBlank { "Noma'lum" },
+            city = city.ifBlank { unknownLabel() },
             priceText = priceText,
             priceValue = priceValue,
             roomsValue = roomsValue,
@@ -212,28 +212,28 @@ object JsonParsers {
     fun parseComplexDetail(root: JsonObject?): ComplexDetailModel? {
         val obj = root.optObject("data") ?: return null
         val id = obj.optString("id") ?: return null
-        val title = localized(obj.get("title")).ifBlank { localized(obj.get("name")) }.ifBlank { "Kompleks" }
-        val description = localized(obj.get("description")).ifBlank { "Tavsif berilmagan" }
+        val title = localized(obj.get("title")).ifBlank { localized(obj.get("name")) }.ifBlank { complexFallback() }
+        val description = localized(obj.get("description")).ifBlank { descriptionFallback() }
         val city = obj.optString("city").orEmpty()
         val blocks = obj.optNumber("blockCount")?.toInt() ?: 0
         val walkability = obj.optNumber("walkability")?.toInt()
         val airQuality = obj.optNumber("airQuality")?.toInt()
         val ratingText = listOfNotNull(
-            walkability?.let { "Walkability: $it" },
-            airQuality?.let { "Air quality: $it" },
-        ).joinToString("\n").ifBlank { "Reyting yo'q" }
+            walkability?.let { "${walkabilityLongLabel()}: $it" },
+            airQuality?.let { "${airQualityLongLabel()}: $it" },
+        ).joinToString("\n").ifBlank { noRatingLabel() }
 
         val amenities = obj.optArray("amenities")
             ?.mapNotNull { it.optStringOrNull() }
             ?.joinToString(", ")
-            ?.ifBlank { "Ko'rsatilmagan" }
-            ?: "Ko'rsatilmagan"
+            ?.ifBlank { notSpecifiedLabel() }
+            ?: notSpecifiedLabel()
 
         val nearby = obj.optArray("nearby")
             ?.mapNotNull { it.optObject()?.optString("name") }
             ?.joinToString(", ")
-            ?.ifBlank { "Ko'rsatilmagan" }
-            ?: "Ko'rsatilmagan"
+            ?.ifBlank { notSpecifiedLabel() }
+            ?: notSpecifiedLabel()
 
         val banner = obj.optString("coverImage")
             ?: obj.optArray("images")?.firstObject()?.optString("url")
@@ -244,8 +244,8 @@ object JsonParsers {
             id = id,
             title = title,
             description = description,
-            city = city.ifBlank { "Noma'lum" },
-            blocksText = if (blocks > 0) "$blocks blok" else "-",
+            city = city.ifBlank { unknownLabel() },
+            blocksText = if (blocks > 0) formatBlockCount(blocks) else "-",
             ratingText = ratingText,
             amenitiesText = amenities,
             nearbyText = nearby,
@@ -338,10 +338,11 @@ object JsonParsers {
 
         if (element.isJsonObject) {
             val obj = element.asJsonObject
-            return obj.optString("uz")
-                ?: obj.optString("ru")
-                ?: obj.optString("en")
-                ?: ""
+            return AppLanguage.pick(
+                uz = obj.optString("uz"),
+                ru = obj.optString("ru"),
+                en = obj.optString("en"),
+            )
         }
 
         return ""
@@ -376,12 +377,57 @@ object JsonParsers {
     private fun normalizeStatus(raw: String?): String {
         val normalized = raw?.trim()?.lowercase()
         return when (normalized) {
-            "active" -> "Faol"
-            "sold" -> "Sotilgan"
-            "hidden" -> "Yashirilgan"
-            else -> if (raw.isNullOrBlank()) "Noma'lum" else raw
+            "active" -> AppLanguage.translate("Faol", "Активно", "Active")
+            "sold" -> AppLanguage.translate("Sotilgan", "Продано", "Sold")
+            "hidden" -> AppLanguage.translate("Yashirin", "Скрыто", "Hidden")
+            else -> if (raw.isNullOrBlank()) unknownLabel() else raw
         }
     }
+
+    private fun apartmentFallback(): String =
+        AppLanguage.translate("Kvartira", "Квартира", "Apartment")
+
+    private fun complexFallback(): String =
+        AppLanguage.translate("Kompleks", "Комплекс", "Complex")
+
+    private fun listingFallback(): String =
+        AppLanguage.translate("E'lon", "Объявление", "Listing")
+
+    private fun descriptionFallback(): String =
+        AppLanguage.translate("Tavsif berilmagan", "Описание не указано", "Description not provided")
+
+    private fun unknownLabel(): String =
+        AppLanguage.translate("Noma'lum", "Неизвестно", "Unknown")
+
+    private fun noRatingLabel(): String =
+        AppLanguage.translate("Reyting yo'q", "Нет рейтинга", "No rating")
+
+    private fun notSpecifiedLabel(): String =
+        AppLanguage.translate("Ko'rsatilmagan", "Не указано", "Not specified")
+
+    private fun readyCondition(): String =
+        AppLanguage.translate("Tayyor", "Готово", "Ready")
+
+    private fun availableCondition(): String =
+        AppLanguage.translate("Oq suvoq", "Предчистовая отделка", "White box")
+
+    private fun formatRoomCount(count: Int): String =
+        AppLanguage.translate("$count xonali", "$count-комн.", "$count-room")
+
+    private fun formatBlockCount(count: Int): String =
+        AppLanguage.translate("$count blok", "$count блок", "$count blocks")
+
+    private fun walkabilityShortLabel(): String =
+        AppLanguage.translate("Piyoda", "Пешком", "Walk")
+
+    private fun airQualityShortLabel(): String =
+        AppLanguage.translate("Havo", "Воздух", "Air")
+
+    private fun walkabilityLongLabel(): String =
+        AppLanguage.translate("Piyoda qulayligi", "Пешая доступность", "Walkability")
+
+    private fun airQualityLongLabel(): String =
+        AppLanguage.translate("Havo sifati", "Качество воздуха", "Air quality")
 
     private fun JsonElement?.optObject(): JsonObject? {
         if (this == null || this.isJsonNull || !this.isJsonObject) return null
