@@ -20,13 +20,15 @@ object JsonParsers {
             val priceValue = obj.optNumber("price")
             val roomsValue = obj.optNumber("rooms")?.toInt()
             val areaValue = obj.optNumber("area")
+            val floorValue = obj.optNumber("floor")?.toInt()
             val statusRaw = obj.optString("status")?.lowercase().orEmpty()
             val priceText = priceValue?.let { "${moneyFormat.format(it)} UZS" } ?: "-"
             val roomsText = roomsValue?.let { "${it} xonali" } ?: "-"
             val statusText = normalizeStatus(statusRaw)
             val coverImage = obj.optString("coverImage")
                 ?: obj.optArray("images")?.firstObject()?.optString("url")
-                ?: complex?.optString("bannerImageUrl")
+                ?: complex?.optString("coverImage")
+                ?: complex?.optArray("images")?.firstObject()?.optString("url")
 
             ApartmentCardModel(
                 id = id,
@@ -40,6 +42,7 @@ object JsonParsers {
                 priceValue = priceValue,
                 roomsValue = roomsValue,
                 areaValue = areaValue,
+                floorValue = floorValue,
                 createdAt = obj.optString("createdAt"),
             )
         }
@@ -61,7 +64,10 @@ object JsonParsers {
                 walkability?.let { "Walk: $it" },
                 airQuality?.let { "Air: $it" },
             ).joinToString("  |  ").ifBlank { "Reyting yo'q" }
-            val banner = obj.optString("bannerImage") ?: obj.optString("bannerImageUrl")
+            val banner = obj.optString("coverImage")
+                ?: obj.optArray("images")?.firstObject()?.optString("url")
+                ?: obj.optString("bannerImage")
+                ?: obj.optString("bannerImageUrl")
 
             ComplexCardModel(
                 id = id,
@@ -90,6 +96,7 @@ object JsonParsers {
             val priceValue = obj.optNumber("price")
             val roomsValue = obj.optNumber("rooms")?.toInt()
             val areaValue = obj.optNumber("area")
+            val floorValue = obj.optNumber("floor")?.toInt()
             val statusRaw = obj.optString("status")?.lowercase().orEmpty()
             val priceText = priceValue?.let { "${moneyFormat.format(it)} UZS" } ?: "-"
             val roomsText = roomsValue?.let { "${it} xonali" } ?: "-"
@@ -109,6 +116,7 @@ object JsonParsers {
                 priceValue = priceValue,
                 roomsValue = roomsValue,
                 areaValue = areaValue,
+                floorValue = floorValue,
                 createdAt = obj.optString("createdAt"),
             )
         }
@@ -180,7 +188,10 @@ object JsonParsers {
             ?.ifBlank { "Ko'rsatilmagan" }
             ?: "Ko'rsatilmagan"
 
-        val banner = obj.optString("bannerImage") ?: obj.optString("bannerImageUrl")
+        val banner = obj.optString("coverImage")
+            ?: obj.optArray("images")?.firstObject()?.optString("url")
+            ?: obj.optString("bannerImage")
+            ?: obj.optString("bannerImageUrl")
 
         return ComplexDetailModel(
             id = id,

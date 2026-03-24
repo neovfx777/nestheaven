@@ -78,6 +78,8 @@
     <string name="tab_favorites">Saqlanganlar</string>
     <string name="tab_message">Xabarlar</string>
     <string name="tab_profile">Profil</string>
+    <string name="tab_map">Xarita</string>
+    <string name="tab_ai">AI</string>
 
     <string name="home_title">NestHeaven</string>
     <string name="home_subtitle">Yangi kvartira va komplekslarni bir joyda toping</string>
@@ -120,6 +122,21 @@
     <string name="image">Rasm</string>
     <string name="favorite">Sevimli</string>
     <string name="notifications">Bildirishnomalar</string>
+    <string name="search_filters">Filter</string>
+    <string name="search_section_popular_areas">Mashhur hududlar</string>
+
+    <string name="filters_title">Katta Filter Panel</string>
+    <string name="filters_smart_voice">Aqlli va ovozli qidiruv</string>
+    <string name="filters_voice_coming_soon">Ovozli qidiruv tez kunda</string>
+    <string name="filter_min_rooms">Min xona</string>
+    <string name="filter_max_rooms">Max xona</string>
+    <string name="filters_price_range">Narx oralig\'i</string>
+    <string name="filters_area_range">Maydon (m2)</string>
+    <string name="filter_min_area">Min m2</string>
+    <string name="filter_max_area">Max m2</string>
+    <string name="filters_floor_range">Qavat oralig\'i</string>
+    <string name="filter_min_floor">Min qavat</string>
+    <string name="filter_max_floor">Max qavat</string>
 
     <string name="favorite_add">Sevimlilarga qo\'shish</string>
     <string name="favorite_remove">Sevimlidan olib tashlash</string>
@@ -156,8 +173,10 @@
     <string name="profile_role">Rol</string>
     <string name="profile_phone">Telefon</string>
     <string name="profile_avatar">Profil rasmi</string>
+    <string name="profile_info">Ma\'lumotnomalar</string>
     <string name="profile_settings">Sozlamalar</string>
     <string name="profile_navigate">Ochish</string>
+    <string name="profile_info_coming_soon">Ma\'lumotnomalar tez kunda</string>
     <string name="settings_coming_soon">Sozlamalar tez kunda</string>
 
     <string name="messages_coming_soon">Xabarlar tez kunda</string>
@@ -165,6 +184,9 @@
     <string name="messages_empty">Hozircha chatlar yo\'q</string>
     <string name="messages_login_required">Chatlarni ko\'rish uchun tizimga kiring</string>
     <string name="messages_failed">Chatlarni yuklab bo\'lmadi</string>
+
+    <string name="map_coming_soon">Xarita tez kunda</string>
+    <string name="ai_coming_soon">AI chat yordamchi tez kunda</string>
 
     <string name="chat_title">Chat</string>
     <string name="chat_hint">Xabar yozing...</string>

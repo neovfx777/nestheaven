@@ -14,6 +14,9 @@ import uz.nestheaven.mobile.ui.fragments.HomeFragment
 import uz.nestheaven.mobile.ui.fragments.MessagesFragment
 import uz.nestheaven.mobile.ui.fragments.ProfileFragment
 import uz.nestheaven.mobile.ui.fragments.SearchFragment
+import uz.nestheaven.mobile.ui.fragments.SearchExploreFragment
+import uz.nestheaven.mobile.ui.fragments.AiAssistantFragment
+import uz.nestheaven.mobile.ui.fragments.MapFragment
 
 class MainActivity : AppCompatActivity(),
     AuthFragment.AuthHost,
@@ -21,11 +24,12 @@ class MainActivity : AppCompatActivity(),
     ApartmentsFragment.ApartmentsHost,
     ComplexesFragment.ComplexesHost,
     FavoritesFragment.FavoritesHost,
-    ProfileFragment.ProfileHost {
+    ProfileFragment.ProfileHost,
+    SearchExploreFragment.SearchExploreHost {
 
     private lateinit var sessionManager: SessionManager
     private lateinit var bottomNav: BottomNavigationView
-    private var pendingSearchTab: Int = 0
+    private var pendingSearchTab: Int = SearchFragment.MODE_EXPLORE
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,15 +59,15 @@ class MainActivity : AppCompatActivity(),
                 }
                 R.id.nav_search -> {
                     openFragment(SearchFragment.newInstance(pendingSearchTab))
-                    pendingSearchTab = 0
+                    pendingSearchTab = SearchFragment.MODE_EXPLORE
                     true
                 }
-                R.id.nav_favorites -> {
-                    openFragment(FavoritesFragment())
+                R.id.nav_map -> {
+                    openFragment(MapFragment())
                     true
                 }
-                R.id.nav_message -> {
-                    openFragment(MessagesFragment())
+                R.id.nav_ai -> {
+                    openFragment(AiAssistantFragment())
                     true
                 }
                 R.id.nav_profile -> {
@@ -131,13 +135,21 @@ class MainActivity : AppCompatActivity(),
         openProfileTab()
     }
 
+    override fun openFavorites() {
+        openFragment(FavoritesFragment())
+    }
+
+    override fun openMessages() {
+        openFragment(MessagesFragment())
+    }
+
     override fun openApartmentsTab() {
-        pendingSearchTab = 0
+        pendingSearchTab = SearchFragment.MODE_APARTMENTS
         bottomNav.selectedItemId = R.id.nav_search
     }
 
     override fun openComplexesTab() {
-        pendingSearchTab = 1
+        pendingSearchTab = SearchFragment.MODE_COMPLEXES
         bottomNav.selectedItemId = R.id.nav_search
     }
 }
