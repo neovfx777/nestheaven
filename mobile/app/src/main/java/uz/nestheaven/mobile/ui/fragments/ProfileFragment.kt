@@ -3,6 +3,7 @@ package uz.nestheaven.mobile.ui.fragments
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -13,6 +14,7 @@ import kotlinx.coroutines.launch
 import uz.nestheaven.mobile.R
 import uz.nestheaven.mobile.core.ApiClient
 import uz.nestheaven.mobile.core.SessionManager
+import uz.nestheaven.mobile.core.ThemeManager
 import java.util.Locale
 
 class ProfileFragment : Fragment(R.layout.fragment_profile) {
@@ -48,6 +50,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         val messagesItem = view.findViewById<View>(R.id.profileMessagesItem)
         val infoItem = view.findViewById<View>(R.id.profileInfoItem)
         val settingsItem = view.findViewById<View>(R.id.profileSettingsItem)
+        val themeToggle = view.findViewById<ImageButton>(R.id.profileThemeToggle)
 
         fun requireLoginOr(action: () -> Unit) {
             if (!sessionManager.isLoggedIn()) {
@@ -86,6 +89,19 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             }
         }
 
+        renderThemeToggle(themeToggle)
+        themeToggle.setOnClickListener {
+            val darkModeEnabled = ThemeManager.toggleTheme(sessionManager)
+            renderThemeToggle(themeToggle)
+            Toast.makeText(
+                requireContext(),
+                getString(
+                    if (darkModeEnabled) R.string.theme_dark_enabled else R.string.theme_light_enabled,
+                ),
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
+
         renderUser(nameText, phoneText)
         refreshProfile(progress, nameText, phoneText)
     }
@@ -115,6 +131,16 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         nameText.text = fullName.uppercase(Locale.getDefault())
         phoneText.text = user?.phone?.trim().orEmpty().ifBlank { "-" }
+    }
+
+    private fun renderThemeToggle(themeToggle: ImageButton) {
+        val darkModeEnabled = ThemeManager.isDarkMode(sessionManager)
+        themeToggle.setImageResource(
+            if (darkModeEnabled) R.drawable.ic_light_mode_24 else R.drawable.ic_dark_mode_24,
+        )
+        themeToggle.contentDescription = getString(
+            if (darkModeEnabled) R.string.theme_switch_to_light else R.string.theme_switch_to_dark,
+        )
     }
 
     private fun refreshProfile(

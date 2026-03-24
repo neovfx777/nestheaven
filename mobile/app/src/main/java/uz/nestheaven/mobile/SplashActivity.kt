@@ -12,13 +12,14 @@ import uz.nestheaven.mobile.core.ApiClient
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import uz.nestheaven.mobile.core.SessionManager
+import uz.nestheaven.mobile.core.ThemeManager
 import java.util.Locale
 
 class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
         val sessionManager = SessionManager(this)
+        ThemeManager.applySavedTheme(sessionManager)
+        super.onCreate(savedInstanceState)
         applySavedLanguage(sessionManager)
 
         setContentView(R.layout.activity_splash)
