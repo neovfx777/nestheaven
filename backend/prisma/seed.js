@@ -27,6 +27,14 @@ function getFallbackAccounts() {
       phone: '+998905555555',
     },
     {
+      role: 'USER',
+      email: (process.env.DEMO_USER_EMAIL || 'user@goodhome.uz').toLowerCase(),
+      password: process.env.DEMO_USER_PASSWORD || 'user123',
+      firstName: 'Demo',
+      lastName: 'User',
+      phone: '+998901111111',
+    },
+    {
       role: 'ADMIN',
       email: (process.env.ADMIN_EMAIL || 'admin@goodhome.uz').toLowerCase(),
       password: process.env.ADMIN_PASSWORD || 'admin123',
@@ -56,6 +64,8 @@ function getFallbackAccounts() {
 async function clearAllData() {
   await prisma.favorite.deleteMany({});
   await prisma.savedSearch.deleteMany({});
+  await prisma.conversationMessage.deleteMany({});
+  await prisma.conversation.deleteMany({});
   await prisma.apartmentImage.deleteMany({});
   await prisma.apartment.deleteMany({});
   await prisma.complex.deleteMany({});
@@ -72,7 +82,23 @@ async function createSeedUsers() {
     accounts = getFallbackAccounts();
   }
 
+  const demoUserAccount = {
+    role: 'USER',
+    email: (process.env.DEMO_USER_EMAIL || 'user@goodhome.uz').toLowerCase(),
+    password: process.env.DEMO_USER_PASSWORD || 'user123',
+    firstName: 'Demo',
+    lastName: 'User',
+    phone: '+998901111111',
+  };
+
+  if (!accounts.some((account) => account.role === 'USER')) {
+    const ownerIndex = accounts.findIndex((account) => account.role === 'OWNER_ADMIN');
+    const insertIndex = ownerIndex >= 0 ? ownerIndex + 1 : 0;
+    accounts.splice(insertIndex, 0, demoUserAccount);
+  }
+
   const createdUsers = [];
+  let ownerId = null;
   for (const account of accounts) {
     const passwordHash = await bcrypt.hash(account.password, 10);
     const user = await prisma.user.create({
@@ -84,8 +110,18 @@ async function createSeedUsers() {
         lastName: account.lastName,
         phone: account.phone,
         isActive: true,
+        createdBy:
+          account.role === 'OWNER_ADMIN' || !ownerId
+            ? undefined
+            : {
+                connect: { id: ownerId },
+              },
       },
     });
+
+    if (account.role === 'OWNER_ADMIN') {
+      ownerId = user.id;
+    }
     createdUsers.push(user);
   }
 
@@ -94,6 +130,11 @@ async function createSeedUsers() {
     users: createdUsers,
     owner: findByRole('OWNER_ADMIN') || createdUsers[0],
     seller: findByRole('SELLER') || createdUsers[0],
+    demoUser: findByRole('USER') || createdUsers[0],
+    demoUserCredentials: {
+      email: demoUserAccount.email,
+      password: demoUserAccount.password,
+    },
   };
 }
 
@@ -187,8 +228,19 @@ async function createDemoComplexes({ ownerId, sellerId }) {
         amenities: JSON.stringify(complex.amenities),
         nearbyPlaces: JSON.stringify(complex.nearbyPlaces),
         allowedSellers: JSON.stringify([sellerId]),
-        createdById: ownerId || null,
-        bannerImageUrl: `https://picsum.photos/seed/nestheaven-complex-${complex.key}/1200/700`,
+        createdBy: ownerId ? { connect: { id: ownerId } } : undefined,
+        images: {
+          create: [
+            {
+              url: `https://picsum.photos/seed/nestheaven-complex-${complex.key}-a/1200/700`,
+              order: 0,
+            },
+            {
+              url: `https://picsum.photos/seed/nestheaven-complex-${complex.key}-b/1200/700`,
+              order: 1,
+            },
+          ],
+        },
       },
     });
 
@@ -226,8 +278,9 @@ async function createDemoApartments({ sellerId, complexes }) {
 
     const apartment = await prisma.apartment.create({
       data: {
-        complexId: complex.id,
-        sellerId,
+        complex: { connect: { id: complex.id } },
+        seller: { connect: { id: sellerId } },
+        realtor: { connect: { id: sellerId } },
         status: 'active',
         price: item.price,
         area: item.area,
@@ -267,6 +320,45 @@ async function createDemoApartments({ sellerId, complexes }) {
   return createdApartments;
 }
 
+async function createDemoConversations({ apartments, userId, realtorId, messages }) {
+  if (!apartments?.length) return [];
+
+  const targetApartment = apartments[0];
+  const conversation = await prisma.conversation.create({
+    data: {
+      apartment: { connect: { id: targetApartment.id } },
+      user: { connect: { id: userId } },
+      realtor: { connect: { id: realtorId } },
+    },
+  });
+
+  const now = Date.now();
+
+  const defaultMessages = [
+    { senderId: userId, body: 'Assalomu alaykum! Shu kvartira hali sotuvdami?' },
+    { senderId: realtorId, body: 'Va alaykum assalom! Ha, sotuvda. Qaysi vaqt kelib ko‘rasiz?' },
+    { senderId: userId, body: 'Bugun kechqurun 19:00 atrofida bo‘ladimi?' },
+  ];
+
+  const sourceMessages = Array.isArray(messages) && messages.length ? messages : defaultMessages;
+  const payload = sourceMessages.map((message, index) => ({
+    conversationId: conversation.id,
+    senderId: message.senderId,
+    body: message.body,
+    createdAt: message.createdAt || new Date(now - 1000 * 60 * (sourceMessages.length - index)),
+  }));
+
+  await prisma.conversationMessage.createMany({ data: payload });
+
+  const lastCreatedAt = payload.at(-1)?.createdAt || new Date(now);
+  await prisma.conversation.update({
+    where: { id: conversation.id },
+    data: { updatedAt: lastCreatedAt },
+  });
+
+  return [conversation];
+}
+
 async function createDemoBroadcast(ownerId) {
   await prisma.broadcast.create({
     data: {
@@ -274,7 +366,7 @@ async function createDemoBroadcast(ownerId) {
       message:
         'Welcome to NestHeaven demo data. This database now includes sample complexes and apartments.',
       isActive: true,
-      createdById: ownerId || null,
+      createdBy: ownerId ? { connect: { id: ownerId } } : undefined,
     },
   });
 }
@@ -285,7 +377,7 @@ async function main() {
 
   await clearAllData();
 
-  const { users, owner, seller } = await createSeedUsers();
+  const { users, owner, seller, demoUser, demoUserCredentials } = await createSeedUsers();
   const complexes = await createDemoComplexes({
     ownerId: owner?.id || null,
     sellerId: seller.id,
@@ -294,11 +386,31 @@ async function main() {
     sellerId: seller.id,
     complexes,
   });
+  const demoUserConversations = await createDemoConversations({
+    apartments,
+    userId: demoUser.id,
+    realtorId: seller.id,
+  });
+  const ownerConversations = await createDemoConversations({
+    apartments,
+    userId: owner.id,
+    realtorId: seller.id,
+    messages: [
+      { senderId: seller.id, body: 'Hello! Do you want details for unit #7771?' },
+      { senderId: owner.id, body: 'Yes please. How much is it, and is installment available?' },
+      {
+        senderId: seller.id,
+        body: 'Price is $148,000. Installment is available for 12 months. We can schedule a viewing today.',
+      },
+    ],
+  });
+  const conversations = [...demoUserConversations, ...ownerConversations];
   await createDemoBroadcast(owner?.id || null);
 
   console.log(
-    `Seed completed: users=${users.length}, complexes=${complexes.length}, apartments=${apartments.length}, broadcasts=1`
+    `Seed completed: users=${users.length}, complexes=${complexes.length}, apartments=${apartments.length}, conversations=${conversations.length}, broadcasts=1`
   );
+  console.log(`Demo USER credentials: ${demoUserCredentials.email} / ${demoUserCredentials.password}`);
 }
 
 main()

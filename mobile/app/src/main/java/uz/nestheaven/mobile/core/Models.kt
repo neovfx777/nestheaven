@@ -63,6 +63,7 @@ data class ApartmentCardModel(
     val priceValue: Double? = null,
     val roomsValue: Int? = null,
     val areaValue: Double? = null,
+    val floorValue: Int? = null,
     val createdAt: String? = null,
 )
 

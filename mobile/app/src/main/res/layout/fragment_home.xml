@@ -73,14 +73,14 @@
                         android:layout_weight="1" />
 
                     <ImageButton
-                        android:id="@+id/homeNotificationsButton"
+                        android:id="@+id/homeFavoritesButton"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:background="@drawable/bg_icon_circle"
-                        android:contentDescription="@string/notifications"
+                        android:contentDescription="@string/favorite"
                         android:padding="10dp"
-                        android:src="@drawable/ic_bell_24"
-                        app:tint="@color/nh_text_secondary" />
+                        android:src="@drawable/ic_nav_favorites_24"
+                        app:tint="@color/nh_login_teal" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -202,4 +202,3 @@
     </FrameLayout>
 
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-

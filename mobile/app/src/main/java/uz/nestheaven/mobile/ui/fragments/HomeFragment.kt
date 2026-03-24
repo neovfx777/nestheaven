@@ -31,6 +31,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         fun openComplexDetail(id: String)
         fun openApartmentsTab()
         fun openComplexesTab()
+        fun openFavorites()
     }
 
     private var host: HomeHost? = null
@@ -59,6 +60,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         val complexesRecycler = view.findViewById<RecyclerView>(R.id.homeComplexesRecycler)
         val popularRecycler = view.findViewById<RecyclerView>(R.id.homePopularRecycler)
 
+        val favoritesButton = view.findViewById<View>(R.id.homeFavoritesButton)
         val showAllComplexes = view.findViewById<View>(R.id.homeShowAllComplexes)
         val showAllPopular = view.findViewById<View>(R.id.homeShowAllPopular)
 
@@ -77,6 +79,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         popularRecycler.adapter = popularAdapter
         popularRecycler.isNestedScrollingEnabled = false
 
+        favoritesButton.setOnClickListener { host?.openFavorites() }
         showAllComplexes.setOnClickListener { host?.openComplexesTab() }
         showAllPopular.setOnClickListener { host?.openApartmentsTab() }
 
@@ -190,4 +193,3 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         return 0L
     }
 }
-

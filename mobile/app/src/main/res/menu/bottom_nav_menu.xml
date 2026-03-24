@@ -9,13 +9,13 @@
         android:icon="@drawable/ic_nav_search_24"
         android:title="@string/tab_search" />
     <item
-        android:id="@+id/nav_favorites"
-        android:icon="@drawable/ic_nav_favorites_24"
-        android:title="@string/tab_favorites" />
+        android:id="@+id/nav_map"
+        android:icon="@drawable/ic_nav_map_24"
+        android:title="@string/tab_map" />
     <item
-        android:id="@+id/nav_message"
-        android:icon="@drawable/ic_nav_message_24"
-        android:title="@string/tab_message" />
+        android:id="@+id/nav_ai"
+        android:icon="@drawable/ic_nav_ai_24"
+        android:title="@string/tab_ai" />
     <item
         android:id="@+id/nav_profile"
         android:icon="@drawable/ic_nav_profile_24"

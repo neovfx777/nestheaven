@@ -69,8 +69,9 @@ class ChatActivity : AppCompatActivity() {
 
         val sendCurrent = {
             val text = input.text?.toString()?.trim().orEmpty()
-            if (text.isBlank()) return@sendCurrent
-            sendMessage(text)
+            if (text.isNotBlank()) {
+                sendMessage(text)
+            }
         }
 
         sendButton.setOnClickListener { sendCurrent() }
@@ -205,4 +206,3 @@ class ChatActivity : AppCompatActivity() {
         const val EXTRA_APARTMENT_ID = "extra_apartment_id"
     }
 }
-

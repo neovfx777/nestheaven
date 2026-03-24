@@ -1,26 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/searchContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/nh_surface"
-    android:orientation="vertical">
-
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/searchTabs"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/nh_surface_card"
-        app:tabIndicatorColor="@color/nh_login_teal"
-        app:tabIndicatorFullWidth="false"
-        app:tabSelectedTextColor="@color/nh_text_primary"
-        app:tabTextColor="@color/nh_text_secondary" />
-
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/searchPager"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
-</LinearLayout>
-
+    android:background="@color/nh_surface" />
