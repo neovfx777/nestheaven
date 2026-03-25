@@ -7,12 +7,10 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import uz.nestheaven.mobile.R
 import uz.nestheaven.mobile.core.ApartmentCardModel
-import java.util.Locale
+import uz.nestheaven.mobile.core.ImageLoading
 
 class ApartmentAdapter(
     private val onItemClick: (ApartmentCardModel) -> Unit,
@@ -58,26 +56,9 @@ class ApartmentAdapter(
             textTitle.text = item.title
             textMeta.text = "${item.city} - ${item.roomsText}"
             textPrice.text = item.priceText
-            textStatus.text = item.statusText
+            textStatus.visibility = View.GONE
 
-            val context = itemView.context
-            val statusRaw = item.statusRaw.lowercase(Locale.getDefault())
-            val (statusBgRes, statusTextRes) = when (statusRaw) {
-                "active" -> R.drawable.bg_status_active to R.color.nh_success_fg
-                "sold" -> R.drawable.bg_status_sold to R.color.nh_error_fg
-                "hidden" -> R.drawable.bg_status_hidden to R.color.nh_neutral_fg
-                else -> R.drawable.bg_status_default to R.color.nh_info_fg
-            }
-
-            textStatus.setBackgroundResource(statusBgRes)
-            textStatus.setTextColor(ContextCompat.getColor(context, statusTextRes))
-
-            Glide.with(itemView)
-                .load(item.imageUrl)
-                .placeholder(R.drawable.placeholder_image)
-                .error(R.drawable.placeholder_image)
-                .centerCrop()
-                .into(imageCover)
+            ImageLoading.load(imageCover, item.imageUrl, caller = "ApartmentAdapter")
 
             val isFavorite = favoriteIds.contains(item.id)
             buttonFavorite.setImageResource(

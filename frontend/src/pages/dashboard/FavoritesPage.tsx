@@ -4,6 +4,7 @@ import { Heart, Trash2, Search, Filter } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersApi } from '../../api/users';
 import { apartmentsApi, Apartment } from '../../api/apartments';
+import { getAssetUrl } from '../../api/client';
 import { useAuthStore } from '../../stores/authStore';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -354,9 +355,9 @@ const FavoritesPage = () => {
                   <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
                     {/* Image */}
                     <div className="h-48 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-                      {apartment.coverImage ? (
+                      {getAssetUrl(apartment.coverImage) ? (
                         <img
-                          src={apartment.coverImage}
+                          src={getAssetUrl(apartment.coverImage) || ''}
                           alt={apartment.title?.en || apartment.titleEn || 'Apartment'}
                           className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                         />
@@ -369,17 +370,6 @@ const FavoritesPage = () => {
                     
                     {/* Content */}
                     <div className="p-5">
-                      {/* Status Badge */}
-                      <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-3 ${
-                        apartment.status === 'active' || apartment.status === 'ACTIVE'
-                          ? 'bg-green-100 text-green-800'
-                          : apartment.status === 'sold' || apartment.status === 'SOLD'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {apartment.status.toUpperCase()}
-                      </div>
-                      
                       {/* Title */}
                       <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">
                         {apartment.title?.en || apartment.titleEn || 'Apartment'}

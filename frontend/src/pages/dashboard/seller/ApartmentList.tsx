@@ -28,23 +28,6 @@ export const SellerApartmentList: React.FC = () => {
     queryFn: apartmentsApi.getMyListings,
   });
 
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'success' | 'destructive' | 'secondary' | 'default'> = {
-      'ACTIVE': 'success',
-      'active': 'success',
-      'SOLD': 'destructive',
-      'sold': 'destructive',
-      'HIDDEN': 'secondary',
-      'hidden': 'secondary'
-    };
-    
-    return (
-      <Badge variant={variants[status] || 'default'}>
-        {status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()}
-      </Badge>
-    );
-  };
-
   const getTitle = (apartment: ApiApartment) => {
     return apartment.title?.en || apartment.title?.uz || apartment.title?.ru || 'Untitled';
   };
@@ -191,9 +174,6 @@ export const SellerApartmentList: React.FC = () => {
                     <span>No Image</span>
                   </div>
                 )}
-                <div className="absolute top-2 right-2">
-                  {getStatusBadge(apt.status)}
-                </div>
                 {apt.complex && (
                   <div className="absolute bottom-2 left-2">
                     <Badge variant="outline" className="bg-white/90">

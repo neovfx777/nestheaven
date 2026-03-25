@@ -46,6 +46,18 @@ app.use(cors(buildCorsOptions()));
 app.use(express.json({ limit: env.BODY_LIMIT }));
 app.use(express.urlencoded({ extended: true, limit: env.BODY_LIMIT }));
 
+// Static files (served both with and without /api prefix for reverse proxies)
+const uploadsStatic = express.static(path.join(process.cwd(), env.UPLOAD_DIR), {
+  dotfiles: 'deny',
+  index: false,
+  maxAge: '1d',
+  setHeaders(res) {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+  },
+});
+app.use('/uploads', uploadsStatic);
+app.use('/api/uploads', uploadsStatic);
+
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/verify-email', authLimiter);
@@ -57,19 +69,6 @@ app.use('/api/admin', adminLimiter);
 app.use('/api', mutationLimiter);
 app.use('/api', apiLimiter);
 
-// Static files
-app.use(
-  '/uploads',
-  express.static(path.join(process.cwd(), env.UPLOAD_DIR), {
-    dotfiles: 'deny',
-    index: false,
-    maxAge: '1d',
-    setHeaders(res) {
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-    },
-  })
-);
-
 // IMPORTANT: Specific routes FIRST, then general routes
 app.use('/api/users/sellers', sellersRoutes);
 app.use('/api/apartment-status', statusRoutes);
@@ -78,7 +77,7 @@ app.use('/api/apartment-status', statusRoutes);
 app.use('/api', routes);
 
 // Health check
-app.get('/health', (req, res) => {
+function healthHandler(req, res) {
   const payload = {
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -90,7 +89,9 @@ app.get('/health', (req, res) => {
   }
 
   res.json(payload);
-});
+}
+app.get('/health', healthHandler);
+app.get('/api/health', healthHandler);
 
 // Test endpoint
 if (env.NODE_ENV !== 'production') {

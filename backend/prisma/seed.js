@@ -1,8 +1,11 @@
 require('../src/config/loadEnv');
 
 const bcrypt = require('bcrypt');
+const fs = require('fs');
+const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 const { loadConfiguredAccounts } = require('../scripts/lib/account-config');
+const env = require('../src/config/env');
 
 const prisma = new PrismaClient();
 
@@ -16,6 +19,44 @@ function assertSeedSafety() {
 
 function localized(uz, ru = uz, en = uz) {
   return JSON.stringify({ uz, ru, en });
+}
+
+function ensureDir(dir) {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+}
+
+function prepareSeedImages() {
+  const uploadRoot = path.resolve(process.cwd(), env.UPLOAD_DIR);
+  const seedDir = path.join(uploadRoot, 'seed');
+  ensureDir(seedDir);
+
+  const sourceDir = path.resolve(__dirname, '..', '..', 'public', 'images');
+  if (!fs.existsSync(sourceDir)) {
+    console.warn('Seed image source directory not found:', sourceDir);
+    return [];
+  }
+
+  const sources = fs
+    .readdirSync(sourceDir)
+    .filter((file) => /\.(jpe?g|png|webp)$/i.test(file))
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+  if (sources.length === 0) {
+    console.warn('No seed images found in:', sourceDir);
+    return [];
+  }
+
+  for (const file of sources) {
+    const src = path.join(sourceDir, file);
+    const dst = path.join(seedDir, file);
+    if (!fs.existsSync(dst)) {
+      fs.copyFileSync(src, dst);
+    }
+  }
+
+  return sources.map((file) => `/api/uploads/seed/${file}`);
 }
 
 function getFallbackAccounts() {
@@ -140,7 +181,9 @@ async function createSeedUsers() {
   };
 }
 
-async function createDemoComplexes({ ownerId, sellerId }) {
+async function createDemoComplexes({ ownerId, sellerId, seedImages }) {
+  const imagePool = Array.isArray(seedImages) ? seedImages.filter(Boolean) : [];
+  let imageCursor = 0;
   const complexesPayload = [
     {
       key: 'chilonzor',
@@ -234,17 +277,24 @@ async function createDemoComplexes({ ownerId, sellerId }) {
         images: {
           create: [
             {
-              url: `https://picsum.photos/seed/nestheaven-complex-${complex.key}-a/1200/700`,
+              url:
+                imagePool.length > 0
+                  ? imagePool[imageCursor % imagePool.length]
+                  : `https://picsum.photos/seed/nestheaven-complex-${complex.key}-a/1200/700`,
               order: 0,
             },
             {
-              url: `https://picsum.photos/seed/nestheaven-complex-${complex.key}-b/1200/700`,
+              url:
+                imagePool.length > 0
+                  ? imagePool[(imageCursor + 1) % imagePool.length]
+                  : `https://picsum.photos/seed/nestheaven-complex-${complex.key}-b/1200/700`,
               order: 1,
             },
           ],
         },
       },
     });
+    imageCursor += 2;
 
     created.push(item);
   }
@@ -252,7 +302,9 @@ async function createDemoComplexes({ ownerId, sellerId }) {
   return created;
 }
 
-async function createDemoApartments({ sellerId, complexes }) {
+async function createDemoApartments({ sellerId, complexes, seedImages }) {
+  const imagePool = Array.isArray(seedImages) ? seedImages.filter(Boolean) : [];
+  let imageCursor = 0;
   const apartmentsPayload = [
     { c: 0, rooms: 2, area: 62, floor: 4, totalFloors: 9, price: 78000 },
     { c: 0, rooms: 3, area: 86, floor: 6, totalFloors: 12, price: 109000 },
@@ -305,16 +357,23 @@ async function createDemoApartments({ sellerId, complexes }) {
       data: [
         {
           apartmentId: apartment.id,
-          url: `https://picsum.photos/seed/nestheaven-apt-${index + 1}-a/1200/800`,
+          url:
+            imagePool.length > 0
+              ? imagePool[imageCursor % imagePool.length]
+              : `https://picsum.photos/seed/nestheaven-apt-${index + 1}-a/1200/800`,
           order: 0,
         },
         {
           apartmentId: apartment.id,
-          url: `https://picsum.photos/seed/nestheaven-apt-${index + 1}-b/1200/800`,
+          url:
+            imagePool.length > 0
+              ? imagePool[(imageCursor + 1) % imagePool.length]
+              : `https://picsum.photos/seed/nestheaven-apt-${index + 1}-b/1200/800`,
           order: 1,
         },
       ],
     });
+    imageCursor += 2;
 
     createdApartments.push(apartment);
   }
@@ -379,14 +438,17 @@ async function main() {
 
   await clearAllData();
 
+  const seedImages = prepareSeedImages();
   const { users, owner, seller, demoUser, demoUserCredentials } = await createSeedUsers();
   const complexes = await createDemoComplexes({
     ownerId: owner?.id || null,
     sellerId: seller.id,
+    seedImages,
   });
   const apartments = await createDemoApartments({
     sellerId: seller.id,
     complexes,
+    seedImages,
   });
   const demoUserConversations = await createDemoConversations({
     apartments,

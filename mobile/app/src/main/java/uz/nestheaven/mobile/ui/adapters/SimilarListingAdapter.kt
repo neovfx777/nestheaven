@@ -6,9 +6,9 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import uz.nestheaven.mobile.R
 import uz.nestheaven.mobile.core.ApartmentCardModel
+import uz.nestheaven.mobile.core.ImageLoading
 
 class SimilarListingAdapter(
     private val onItemClick: (ApartmentCardModel) -> Unit,
@@ -43,12 +43,7 @@ class SimilarListingAdapter(
             textTitle.text = item.title
             textMeta.text = item.city
 
-            Glide.with(itemView)
-                .load(item.imageUrl)
-                .placeholder(R.drawable.placeholder_image)
-                .error(R.drawable.placeholder_image)
-                .centerCrop()
-                .into(imageCover)
+            ImageLoading.load(imageCover, item.imageUrl, caller = "SimilarListingAdapter")
 
             itemView.setOnClickListener { onItemClick(item) }
         }

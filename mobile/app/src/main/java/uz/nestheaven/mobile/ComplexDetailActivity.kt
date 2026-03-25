@@ -7,11 +7,11 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
-import com.bumptech.glide.Glide
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import uz.nestheaven.mobile.core.ApiClient
+import uz.nestheaven.mobile.core.ImageLoading
 import uz.nestheaven.mobile.core.JsonParsers
 
 class ComplexDetailActivity : AppCompatActivity() {
@@ -59,12 +59,7 @@ class ComplexDetailActivity : AppCompatActivity() {
                         nearby.text = model.nearbyText
                         description.text = model.description
 
-                        Glide.with(this@ComplexDetailActivity)
-                            .load(model.imageUrl)
-                            .placeholder(R.drawable.placeholder_image)
-                            .error(R.drawable.placeholder_image)
-                            .centerCrop()
-                            .into(image)
+                        ImageLoading.load(image, model.imageUrl, caller = "ComplexDetailActivity")
                     }
                 }
             } catch (e: Exception) {

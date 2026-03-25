@@ -314,14 +314,6 @@ export function ComplexList() {
               <option value="false">Without Apartments</option>
             </Select>
             <Select
-              value={filters.hasActiveApartments}
-              onChange={(value) => handleFilterChange('hasActiveApartments', value)}
-            >
-              <option value="">All</option>
-              <option value="true">With Active Listings</option>
-              <option value="false">Without Active Listings</option>
-            </Select>
-            <Select
               value={filters.sortBy}
               onChange={(value) => handleFilterChange('sortBy', value)}
             >
@@ -379,9 +371,7 @@ export function ComplexList() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Apartments
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Active Listings
-                    </th>
+                    <th className="hidden px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" />
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Created
                     </th>
@@ -431,9 +421,7 @@ export function ComplexList() {
                             {complex._count?.apartments || 0} apartments
                           </Badge>
                         </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-gray-500">N/A</span>
-                        </td>
+                        <td className="hidden px-6 py-4" />
                         <td className="px-6 py-4 text-sm text-gray-500">
                           {new Date(complex.createdAt).toLocaleDateString()}
                         </td>

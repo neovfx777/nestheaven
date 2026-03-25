@@ -10,7 +10,7 @@ function getFile(files, ...names) {
 }
 
 function buildUrl(complexId, file, baseUrl) {
-  const relative = `/uploads/complexes/${complexId}/${file.filename}`;
+  const relative = `/api/uploads/complexes/${complexId}/${file.filename}`;
   if (!baseUrl) return relative;
   return `${baseUrl}${relative}`;
 }

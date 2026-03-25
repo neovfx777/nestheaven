@@ -3,6 +3,8 @@ package uz.nestheaven.mobile.core
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import com.google.gson.JsonParser
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.text.DecimalFormat
 
 object JsonParsers {
@@ -334,7 +336,22 @@ object JsonParsers {
 
     fun localized(element: JsonElement?): String {
         if (element == null || element.isJsonNull) return ""
-        if (element.isJsonPrimitive) return element.asString
+        if (element.isJsonPrimitive) {
+            val value = element.asString
+            val trimmed = value.trim()
+            if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+                val parsed = runCatching { JsonParser.parseString(trimmed) }.getOrNull()
+                if (parsed?.isJsonObject == true) {
+                    val obj = parsed.asJsonObject
+                    return AppLanguage.pick(
+                        uz = obj.optString("uz"),
+                        ru = obj.optString("ru"),
+                        en = obj.optString("en"),
+                    )
+                }
+            }
+            return value
+        }
 
         if (element.isJsonObject) {
             val obj = element.asJsonObject
@@ -368,10 +385,49 @@ object JsonParsers {
 
     fun resolveAssetUrl(url: String?): String? {
         if (url.isNullOrBlank()) return null
-        if (url.startsWith("http://") || url.startsWith("https://")) return url
+
+        val trimmed = url.trim()
+        val parsed = trimmed.toHttpUrlOrNull()
+        val activeBase = ApiClient.activeBaseUrl.toHttpUrlOrNull()
+        val origin = activeBase?.newBuilder()?.encodedPath("/")?.build()
+
+        if (parsed != null && activeBase != null) {
+            val localHosts = setOf("localhost", "127.0.0.1", "10.0.2.2", "10.0.3.2")
+            val normalizedPath = when {
+                parsed.encodedPath.startsWith("/api/uploads/") -> parsed.encodedPath
+                parsed.encodedPath.startsWith("/uploads/") -> "/api${parsed.encodedPath}"
+                else -> parsed.encodedPath
+            }
+            val builder = parsed.newBuilder().encodedPath(normalizedPath)
+            if (parsed.host in localHosts) {
+                builder.scheme(activeBase.scheme)
+                    .host(activeBase.host)
+                    .port(activeBase.port)
+            }
+            return builder.build().toString()
+        }
+
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed
+
+        if (origin != null) {
+            val rewritten = when {
+                trimmed.startsWith("/api/uploads/") -> trimmed
+                trimmed.startsWith("/uploads/") -> "/api$trimmed"
+                trimmed.startsWith("uploads/") -> "/api/$trimmed"
+                else -> trimmed
+            }
+            val resolved = origin.resolve(rewritten)?.toString()
+            if (resolved != null) return resolved
+        }
 
         val baseHost = ApiClient.activeBaseUrl.replace(Regex("/api/?$"), "")
-        return if (url.startsWith("/")) "$baseHost$url" else "$baseHost/$url"
+        val rewritten = when {
+            trimmed.startsWith("/api/uploads/") -> trimmed
+            trimmed.startsWith("/uploads/") -> "/api$trimmed"
+            trimmed.startsWith("uploads/") -> "/api/$trimmed"
+            else -> trimmed
+        }
+        return if (rewritten.startsWith("/")) "$baseHost$rewritten" else "$baseHost/$rewritten"
     }
 
     private fun normalizeStatus(raw: String?): String {

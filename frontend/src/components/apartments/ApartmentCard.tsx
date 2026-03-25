@@ -38,32 +38,6 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'sold':
-        return 'bg-red-100 text-red-800';
-      case 'hidden':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-blue-100 text-blue-800';
-    }
-  };
-
-  const formatStatus = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return 'Faol';
-      case 'sold':
-        return 'Sotilgan';
-      case 'hidden':
-        return 'Yashirilgan';
-      default:
-        return status;
-    }
-  };
-
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -162,10 +136,6 @@ const ApartmentCard = ({ apartment }: ApartmentCardProps) => {
             </div>
           </div>
         )}
-
-        <div className={`absolute top-3 sm:top-4 left-3 sm:left-4 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wide ${getStatusColor(apartment.status)}`}>
-          {formatStatus(apartment.status)}
-        </div>
 
         <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 bg-gradient-to-r from-gray-900 to-black text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl backdrop-blur-sm shadow-lg">
           <div className="text-sm sm:text-lg font-bold">{formatPrice(apartment.price)}</div>

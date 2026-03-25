@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
-  Search, Filter, Eye, EyeOff, CheckCircle,
+  Search, Filter, Eye, EyeOff,
   AlertTriangle, RefreshCw
 } from 'lucide-react';
 import { apartmentsApi } from '../../../api/apartments';
@@ -106,31 +106,11 @@ export const AdminApartments: React.FC = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const normalized = status?.toUpperCase();
-    switch (normalized) {
-      case 'ACTIVE':
-        return <Badge variant="success">Active</Badge>;
-      case 'HIDDEN':
-        return <Badge variant="secondary">Hidden</Badge>;
-      case 'SOLD':
-        return <Badge variant="destructive">Sold</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
-    }
+    return null;
   };
 
   const getStatusIcon = (status: string) => {
-    const normalized = status?.toUpperCase();
-    switch (normalized) {
-      case 'ACTIVE':
-        return <Eye className="h-4 w-4 text-green-600" />;
-      case 'HIDDEN':
-        return <EyeOff className="h-4 w-4 text-gray-600" />;
-      case 'SOLD':
-        return <CheckCircle className="h-4 w-4 text-blue-600" />;
-      default:
-        return null;
-    }
+    return null;
   };
 
   const handleQuickAction = (apartmentId: string, action: 'hide' | 'unhide') => {
@@ -170,7 +150,7 @@ export const AdminApartments: React.FC = () => {
 
       {/* Filters */}
       <Card className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <Input
               placeholder="Search apartments..."
@@ -179,17 +159,6 @@ export const AdminApartments: React.FC = () => {
               leftIcon={<Search className="h-4 w-4" />}
             />
           </div>
-          
-          <Select
-            value={filters.status}
-            onChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
-            options={[
-              { value: '', label: 'All Status' },
-              { value: 'ACTIVE', label: 'Active' },
-              { value: 'HIDDEN', label: 'Hidden' },
-              { value: 'SOLD', label: 'Sold' },
-            ]}
-          />
           
           <div className="flex gap-2">
             <Input
@@ -304,9 +273,7 @@ export const AdminApartments: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Details
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
+                  <th className="hidden px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" />
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
@@ -361,12 +328,7 @@ export const AdminApartments: React.FC = () => {
                         {new Date(apartment.createdAt).toLocaleDateString()}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(apartment.status)}
-                        {getStatusBadge(apartment.status)}
-                      </div>
-                    </td>
+                    <td className="hidden px-6 py-4 whitespace-nowrap" />
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
                         <Button
