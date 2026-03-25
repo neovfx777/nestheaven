@@ -387,14 +387,6 @@ const ApartmentDetailPage = () => {
                     <div className="text-3xl font-bold text-primary-600">{formatPrice(apartment.price)}</div>
                     <div className="text-gray-500">Total Price</div>
                   </div>
-                  <div className={`px-4 py-2 rounded-full text-sm font-medium ${apartment.status === 'active' || apartment.status === 'ACTIVE'
-                      ? 'bg-green-100 text-green-800'
-                      : apartment.status === 'sold' || apartment.status === 'SOLD'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                    {apartment.status.toUpperCase()}
-                  </div>
                 </div>
 
                 {/* Quick Stats */}

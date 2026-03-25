@@ -135,15 +135,6 @@ const UserDashboard = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="font-medium text-gray-900">{apartment.titleEn}</div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      apartment.status === 'ACTIVE'
-                        ? 'bg-green-100 text-green-800'
-                        : apartment.status === 'SOLD'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {apartment.status}
-                    </span>
                   </div>
                   <div className="text-sm text-gray-600 space-y-1">
                     <p>${apartment.price.toLocaleString()} • {apartment.rooms} rooms • {apartment.area}m²</p>

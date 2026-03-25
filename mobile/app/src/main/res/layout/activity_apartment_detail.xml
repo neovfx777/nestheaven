@@ -110,7 +110,8 @@
                                 android:contentDescription="@string/detail_prev_image"
                                 android:elevation="3dp"
                                 android:padding="13dp"
-                                android:src="@drawable/ic_arrow_back_24"
+                                android:rotation="180"
+                                android:src="@drawable/ic_chevron_right_24"
                                 android:translationX="-10dp"
                                 app:tint="@color/nh_text_primary" />
 
@@ -175,7 +176,8 @@
                                     android:paddingEnd="14dp"
                                     android:paddingBottom="7dp"
                                     android:textSize="11sp"
-                                    android:textStyle="bold" />
+                                    android:textStyle="bold"
+                                    android:visibility="gone" />
                             </LinearLayout>
 
                             <View
@@ -617,7 +619,8 @@
                             android:text="@string/detail_complex_information_title"
                             android:textColor="@color/nh_text_primary"
                             android:textSize="14sp"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            android:visibility="gone" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -663,12 +666,14 @@
                                 android:id="@+id/detailFavoriteButton"
                                 android:layout_width="wrap_content"
                                 android:layout_height="40dp"
+                                android:contentDescription="@string/favorite_add"
                                 android:insetTop="0dp"
                                 android:insetBottom="0dp"
+                                android:minHeight="40dp"
                                 android:minWidth="0dp"
-                                android:text="@string/favorite_add"
+                                android:text="🤍"
                                 android:textAllCaps="false"
-                                android:textSize="11sp"
+                                android:textSize="18sp"
                                 app:cornerRadius="14dp" />
                         </LinearLayout>
 

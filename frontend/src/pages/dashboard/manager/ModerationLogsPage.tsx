@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, Filter, Eye, EyeOff, CheckCircle, Building2 } from 'lucide-react';
+import { AlertTriangle, Filter, Building2 } from 'lucide-react';
 import { apartmentsApi, Apartment } from '../../../api/apartments';
 import { Button } from '../../../components/ui/Button';
 
@@ -49,36 +49,6 @@ export const ModerationLogsPage = () => {
     if (statusFilter === 'ALL') return list;
     return list.filter((log) => log.status === statusFilter);
   }, [apartments, statusFilter]);
-
-  const getStatusBadge = (status: string) => {
-    const s = status.toUpperCase();
-    if (s === 'ACTIVE')
-      return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-          <Eye className="h-3 w-3 mr-1" />
-          ACTIVE
-        </span>
-      );
-    if (s === 'HIDDEN')
-      return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-          <EyeOff className="h-3 w-3 mr-1" />
-          HIDDEN
-        </span>
-      );
-    if (s === 'SOLD')
-      return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-          <CheckCircle className="h-3 w-3 mr-1" />
-          SOLD
-        </span>
-      );
-    return (
-      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-        {status}
-      </span>
-    );
-  };
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -142,9 +112,7 @@ export const ModerationLogsPage = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Complex
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
+                    <th className="hidden px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" />
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Price
                     </th>
@@ -170,9 +138,7 @@ export const ModerationLogsPage = () => {
                       <td className="px-6 py-4 text-gray-700">
                         {log.complexName || '—'}
                       </td>
-                      <td className="px-6 py-4">
-                        {getStatusBadge(log.status)}
-                      </td>
+                      <td className="hidden px-6 py-4" />
                       <td className="px-6 py-4 text-gray-700">
                         {log.price ? `$${log.price.toLocaleString()}` : '—'}
                       </td>

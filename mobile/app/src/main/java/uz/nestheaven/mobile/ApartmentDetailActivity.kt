@@ -8,10 +8,8 @@ import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
-import com.bumptech.glide.Glide
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
@@ -20,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.launch
 import uz.nestheaven.mobile.core.ApiClient
 import uz.nestheaven.mobile.core.ApartmentDetailModel
+import uz.nestheaven.mobile.core.ImageLoading
 import uz.nestheaven.mobile.core.JsonParsers
 import uz.nestheaven.mobile.core.SessionManager
 import uz.nestheaven.mobile.ui.adapters.SimilarListingAdapter
@@ -29,6 +28,8 @@ import java.util.Locale
 class ApartmentDetailActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
+    private val favoriteOnEmoji = "❤️"
+    private val favoriteOffEmoji = "🤍"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -131,11 +132,7 @@ class ApartmentDetailActivity : AppCompatActivity() {
                     }
 
                     if (response.isSuccessful) {
-                        favoriteButton.text = if (isFavorite) {
-                            getString(R.string.favorite_add)
-                        } else {
-                            getString(R.string.favorite_remove)
-                        }
+                        renderFavoriteButton(favoriteButton, isFavoriteNow = !isFavorite)
                     }
                 }
             }
@@ -157,8 +154,7 @@ class ApartmentDetailActivity : AppCompatActivity() {
                         area.text = model.areaValue?.toInt()?.toString() ?: "-"
                         floor.text = model.floorValue?.toString() ?: "-"
                         totalFloors.text = model.totalFloorsValue?.toString() ?: "-"
-                        status.text = model.statusText
-                        applyStatusStyle(status, model.statusText)
+                        status.isVisible = false
                         description.text = model.description
                         complexName.text = model.complexTitle ?: getString(R.string.detail_value_unknown)
                         pricePerM2Value.text = buildPricePerM2(model)
@@ -195,12 +191,7 @@ class ApartmentDetailActivity : AppCompatActivity() {
                             showAllView = similarShowAll,
                         )
 
-                        Glide.with(this@ApartmentDetailActivity)
-                            .load(model.imageUrl)
-                            .placeholder(R.drawable.placeholder_image)
-                            .error(R.drawable.placeholder_image)
-                            .centerCrop()
-                            .into(image)
+                        ImageLoading.load(image, model.imageUrl, caller = "ApartmentDetailActivity")
                     }
                 }
 
@@ -211,7 +202,7 @@ class ApartmentDetailActivity : AppCompatActivity() {
                         ?.get("isFavorite")
                         ?.asBoolean
                         ?: false
-                    favoriteButton.text = if (isFavorite) getString(R.string.favorite_remove) else getString(R.string.favorite_add)
+                    renderFavoriteButton(favoriteButton, isFavoriteNow = isFavorite)
                 }
             } catch (e: Exception) {
                 Snackbar.make(title, e.message ?: getString(R.string.error_load_details), Snackbar.LENGTH_LONG).show()
@@ -221,17 +212,13 @@ class ApartmentDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun applyStatusStyle(view: TextView, statusText: String) {
-        val normalized = statusText.lowercase(Locale.getDefault())
-        val (backgroundRes, textColorRes) = when {
-            "faol" in normalized || "active" in normalized -> R.drawable.bg_status_active to R.color.nh_success_fg
-            "sot" in normalized || "sold" in normalized -> R.drawable.bg_status_sold to R.color.nh_error_fg
-            "yash" in normalized || "hidden" in normalized -> R.drawable.bg_status_hidden to R.color.nh_neutral_fg
-            else -> R.drawable.bg_status_default to R.color.nh_info_fg
+    private fun renderFavoriteButton(button: MaterialButton, isFavoriteNow: Boolean) {
+        button.text = if (isFavoriteNow) favoriteOnEmoji else favoriteOffEmoji
+        button.contentDescription = if (isFavoriteNow) {
+            getString(R.string.favorite_remove)
+        } else {
+            getString(R.string.favorite_add)
         }
-
-        view.setBackgroundResource(backgroundRes)
-        view.setTextColor(ContextCompat.getColor(this, textColorRes))
     }
 
     private fun bindLocationSection(

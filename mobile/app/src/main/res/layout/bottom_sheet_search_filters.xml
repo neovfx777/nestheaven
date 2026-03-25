@@ -104,26 +104,36 @@
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/searchFiltersRoom1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     style="@style/Widget.Material3.Chip.Assist"
                     android:text="1 xona" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/searchFiltersRoom2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     style="@style/Widget.Material3.Chip.Assist"
                     android:text="2 xona" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/searchFiltersRoom3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     style="@style/Widget.Material3.Chip.Assist"
                     android:text="3 xona" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/searchFiltersRoom4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     style="@style/Widget.Material3.Chip.Assist"
                     android:text="4 xona" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/searchFiltersRoom5Plus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     style="@style/Widget.Material3.Chip.Assist"
                     android:text="5+ xona" />
             </com.google.android.material.chip.ChipGroup>

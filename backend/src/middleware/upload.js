@@ -107,9 +107,13 @@ function extractUploadPath(url) {
 
 function deleteFileByUrl(url) {
   const pathname = extractUploadPath(url);
-  if (!pathname || !pathname.startsWith('/uploads/')) return;
+  if (!pathname) return;
 
-  const relative = pathname.replace('/uploads/', '');
+  const prefixes = ['/uploads/', '/api/uploads/'];
+  const prefix = prefixes.find((item) => pathname.startsWith(item));
+  if (!prefix) return;
+
+  const relative = pathname.slice(prefix.length);
   const filePath = path.join(uploadDir, relative);
 
   if (!filePath.startsWith(uploadDir)) return;

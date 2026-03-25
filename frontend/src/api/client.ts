@@ -14,6 +14,14 @@ const apiClient = axios.create({
 export function getAssetUrl(url?: string | null) {
   if (!url) return null;
   const base = apiBaseUrl.replace(/\/api\/?$/, '');
+
+  const normalizeUploadsPath = (pathname: string) => {
+    if (pathname.startsWith('/api/uploads/')) return pathname;
+    if (pathname.startsWith('/uploads/')) return `/api${pathname}`;
+    if (pathname.startsWith('uploads/')) return `/api/${pathname}`;
+    return pathname;
+  };
+
   if (url.startsWith('http://') || url.startsWith('https://')) {
     // Normalize local absolute URLs (localhost/127.0.0.1) to current API origin.
     // This avoids broken images when stored host differs from current runtime host.
@@ -24,15 +32,18 @@ export function getAssetUrl(url?: string | null) {
       const sameHost = incoming.hostname === current.hostname;
       const bothLocal = localHosts.has(incoming.hostname) && localHosts.has(current.hostname);
       if (sameHost || bothLocal) {
-        return `${current.origin}${incoming.pathname}${incoming.search}${incoming.hash}`;
+        const path = normalizeUploadsPath(incoming.pathname);
+        return `${current.origin}${path}${incoming.search}${incoming.hash}`;
       }
     } catch {
       // Keep original URL if parsing fails.
     }
     return url;
   }
-  if (url.startsWith('/')) return `${base}${url}`;
-  return `${base}/${url}`;
+
+  const normalized = normalizeUploadsPath(url);
+  if (normalized.startsWith('/')) return `${base}${normalized}`;
+  return `${base}/${normalized}`;
 }
 
 // Request interceptor to add auth token

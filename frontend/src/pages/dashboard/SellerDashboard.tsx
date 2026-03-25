@@ -147,20 +147,6 @@ const SellerDashboard = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusUpper = status.toUpperCase();
-    switch (statusUpper) {
-      case 'ACTIVE':
-        return <Badge variant="success">Active</Badge>;
-      case 'SOLD':
-        return <Badge variant="destructive">Sold</Badge>;
-      case 'HIDDEN':
-        return <Badge variant="secondary">Hidden</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
-    }
-  };
-
   const getTitle = (listing: Listing) => {
     return listing.titleEn || listing.titleUz || listing.titleRu || 'Untitled';
   };
@@ -414,7 +400,6 @@ const SellerDashboard = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <div className="font-medium">{getTitle(listing)}</div>
-                          {getStatusBadge(listing.status)}
                         </div>
                         <div className="text-sm text-gray-500 space-y-1">
                           <p>${listing.price.toLocaleString()} • {listing.rooms} rooms • {listing.area} m²</p>

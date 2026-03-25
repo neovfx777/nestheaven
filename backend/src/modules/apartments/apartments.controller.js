@@ -105,8 +105,7 @@ async function uploadImages(req, res, next) {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' });
     }
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const urls = req.files.map((f) => `${baseUrl}/uploads/${f.filename}`);
+    const urls = req.files.map((f) => `/api/uploads/${f.filename}`);
     const result = await apartmentsService.addImages(apartmentId, urls, req.user);
     res.status(201).json(result);
   } catch (err) {

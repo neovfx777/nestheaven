@@ -28,8 +28,7 @@ async function create(req, res, next) {
     console.log('Validated:', JSON.stringify(req.validated, null, 2).substring(0, 500));
     console.log('User:', req.user?.id, req.user?.email);
     
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const result = await complexesService.create(req.validated, req.user, baseUrl);
+    const result = await complexesService.create(req.validated, req.user);
     res.status(201).json({ success: true, data: result });
   } catch (err) {
     console.error('=== ERROR in complexesController.create ===');
@@ -48,8 +47,7 @@ async function create(req, res, next) {
 async function update(req, res, next) {
   try {
     const { id } = req.validated.params;
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const result = await complexesService.update(id, req.validated, req.user, baseUrl);
+    const result = await complexesService.update(id, req.validated, req.user);
     res.json({ success: true, data: result });
   } catch (err) {
     console.error('Error in complexesController.update:', err);
