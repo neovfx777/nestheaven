@@ -20,6 +20,7 @@ import kotlinx.coroutines.supervisorScope
 import uz.nestheaven.mobile.R
 import uz.nestheaven.mobile.core.ApiClient
 import uz.nestheaven.mobile.core.ApartmentCardModel
+import uz.nestheaven.mobile.core.BlockedListings
 import uz.nestheaven.mobile.core.JsonParsers
 import uz.nestheaven.mobile.ui.adapters.HomeComplexAdapter
 import uz.nestheaven.mobile.ui.adapters.HomeListingAdapter
@@ -70,6 +71,7 @@ class SearchExploreFragment : Fragment(R.layout.fragment_search_explore) {
 
         complexesAdapter = HomeComplexAdapter { model -> host?.openComplexDetail(model.id) }
         popularAdapter = HomeListingAdapter { model -> host?.openApartmentDetail(model.id) }
+        popularAdapter.setBlockedIds(BlockedListings.getBlockedApartmentIds(requireContext()))
 
         complexesRecycler.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         complexesRecycler.adapter = complexesAdapter
@@ -195,6 +197,7 @@ class SearchExploreFragment : Fragment(R.layout.fragment_search_explore) {
                 }
 
                 complexesAdapter.submitList(complexes)
+                popularAdapter.setBlockedIds(BlockedListings.getBlockedApartmentIds(requireContext()))
                 popularAdapter.submitList(apartments)
 
                 complexesEmpty.isVisible = complexes.isEmpty()

@@ -201,6 +201,8 @@
     <string name="chat_failed_send">Xabar yuborib bo\'lmadi</string>
     <string name="chat_login_required">Chat uchun tizimga kiring</string>
     <string name="chat_open_button">Chat</string>
+    <string name="share">Ulashish</string>
+    <string name="block_listing">Bloklash</string>
     <string name="detail_location_title">Joylashuv</string>
     <string name="detail_location_developer">Quruvchi: %1$s</string>
     <string name="detail_location_blocks">Bloklar soni: %1$s</string>
@@ -223,6 +225,8 @@
     <string name="detail_price_per_m2">1 m2 narxi</string>
     <string name="detail_condition">Holati</string>
     <string name="detail_year_built">Qurilgan yil</string>
+    <string name="detail_estimated_monthly_label">Taxminiy oylik to\'lov</string>
+    <string name="detail_complex_ratings_label">Kompleks reytinglari</string>
     <string name="detail_about_complex">Kompleks haqida</string>
     <string name="detail_complex_information_title">Kompleks ma\'lumoti</string>
     <string name="detail_walkability_label">Piyoda qulayligi</string>

@@ -3,7 +3,10 @@ const multer = require('multer');
 const env = require('../config/env');
 const fs = require('fs');
 
-const uploadDir = path.resolve(process.cwd(), env.UPLOAD_DIR);
+// Resolve relative to the backend project root (not process.cwd()) so the uploads
+// directory is stable regardless of where the server is started from.
+const projectRoot = path.resolve(__dirname, '..', '..');
+const uploadDir = path.resolve(projectRoot, env.UPLOAD_DIR);
 const maxSize = env.MAX_FILE_SIZE_MB * 1024 * 1024;
 
 function ensureDir(dir) {

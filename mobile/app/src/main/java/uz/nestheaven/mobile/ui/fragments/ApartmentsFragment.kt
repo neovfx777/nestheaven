@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import uz.nestheaven.mobile.R
 import uz.nestheaven.mobile.core.ApiClient
 import uz.nestheaven.mobile.core.ApartmentCardModel
+import uz.nestheaven.mobile.core.BlockedListings
 import uz.nestheaven.mobile.core.JsonParsers
 import uz.nestheaven.mobile.core.SessionManager
 import uz.nestheaven.mobile.ui.adapters.ApartmentAdapter
@@ -90,6 +91,7 @@ class ApartmentsFragment : Fragment(R.layout.fragment_apartments) {
             onItemClick = { item -> host?.openApartmentDetail(item.id) },
             onFavoriteClick = { item -> toggleFavorite(item.id, view) },
         )
+        adapter.setBlockedIds(BlockedListings.getBlockedApartmentIds(requireContext()))
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
@@ -236,6 +238,7 @@ class ApartmentsFragment : Fragment(R.layout.fragment_apartments) {
                         JsonParsers.parseApartments(response.body()),
                         filter.sortOption,
                     )
+                    adapter.setBlockedIds(BlockedListings.getBlockedApartmentIds(requireContext()))
                     adapter.submitList(items)
                     empty.isVisible = items.isEmpty()
                     empty.text = getString(R.string.empty_apartments)

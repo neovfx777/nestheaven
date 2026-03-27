@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import uz.nestheaven.mobile.R
 import uz.nestheaven.mobile.core.ApiClient
+import uz.nestheaven.mobile.core.BlockedListings
 import uz.nestheaven.mobile.core.JsonParsers
 import uz.nestheaven.mobile.ui.adapters.HomeComplexAdapter
 import uz.nestheaven.mobile.ui.adapters.HomeListingAdapter
@@ -70,6 +71,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         popularAdapter = HomeListingAdapter { model ->
             host?.openApartmentDetail(model.id)
         }
+        popularAdapter.setBlockedIds(BlockedListings.getBlockedApartmentIds(requireContext()))
 
         complexesRecycler.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         complexesRecycler.adapter = complexesAdapter
@@ -160,6 +162,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 val popular = apartments.take(12)
 
                 complexesAdapter.submitList(complexes)
+                popularAdapter.setBlockedIds(BlockedListings.getBlockedApartmentIds(requireContext()))
                 popularAdapter.submitList(popular)
 
                 complexesEmpty.isVisible = complexes.isEmpty()

@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import uz.nestheaven.mobile.R
 import uz.nestheaven.mobile.core.ApartmentCardModel
@@ -19,16 +20,26 @@ class ApartmentAdapter(
 
     private val items = mutableListOf<ApartmentCardModel>()
     private val favoriteIds = mutableSetOf<String>()
+    private val blockedIds = mutableSetOf<String>()
 
     fun submitList(newItems: List<ApartmentCardModel>) {
         items.clear()
-        items.addAll(newItems)
+        items.addAll(newItems.filterNot { blockedIds.contains(it.id) })
         notifyDataSetChanged()
     }
 
     fun setFavoriteIds(ids: Set<String>) {
         favoriteIds.clear()
         favoriteIds.addAll(ids)
+        notifyDataSetChanged()
+    }
+
+    fun setBlockedIds(ids: Set<String>) {
+        blockedIds.clear()
+        blockedIds.addAll(ids)
+        if (blockedIds.isNotEmpty()) {
+            items.removeAll { blockedIds.contains(it.id) }
+        }
         notifyDataSetChanged()
     }
 
@@ -67,7 +78,7 @@ class ApartmentAdapter(
             )
             buttonFavorite.imageTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(
-                    context,
+                    itemView.context,
                     if (isFavorite) R.color.nh_warning else R.color.nh_text_secondary,
                 ),
             )
