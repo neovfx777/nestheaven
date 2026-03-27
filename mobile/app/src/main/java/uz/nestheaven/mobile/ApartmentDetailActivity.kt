@@ -22,6 +22,7 @@ import uz.nestheaven.mobile.core.ApartmentDetailModel
 import uz.nestheaven.mobile.core.BlockedListings
 import uz.nestheaven.mobile.core.ImageLoading
 import uz.nestheaven.mobile.core.JsonParsers
+import uz.nestheaven.mobile.core.MapLinks
 import uz.nestheaven.mobile.core.SessionManager
 import uz.nestheaven.mobile.ui.adapters.SimilarListingAdapter
 import kotlin.math.pow
@@ -157,6 +158,12 @@ class ApartmentDetailActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 runCatching {
                     val statusResp = ApiClient.service.getFavoriteStatus(apartmentId)
+                    if (statusResp.code() == 401) {
+                        sessionManager.clear()
+                        Snackbar.make(title, getString(R.string.login_required), Snackbar.LENGTH_SHORT).show()
+                        startActivity(Intent(this@ApartmentDetailActivity, LoginActivity::class.java))
+                        return@runCatching
+                    }
                     val isFavorite = statusResp.body()
                         ?.getAsJsonObject("data")
                         ?.get("isFavorite")
@@ -171,6 +178,10 @@ class ApartmentDetailActivity : AppCompatActivity() {
 
                     if (response.isSuccessful) {
                         renderFavoriteAction(actionFavorite, isFavoriteNow = !isFavorite)
+                    } else if (response.code() == 401) {
+                        sessionManager.clear()
+                        Snackbar.make(title, getString(R.string.login_required), Snackbar.LENGTH_SHORT).show()
+                        startActivity(Intent(this@ApartmentDetailActivity, LoginActivity::class.java))
                     } else {
                         Snackbar.make(title, getString(R.string.favorite_failed), Snackbar.LENGTH_SHORT).show()
                     }
@@ -294,6 +305,23 @@ class ApartmentDetailActivity : AppCompatActivity() {
             getString(R.string.detail_location_coordinates, model.latitude, model.longitude)
         } else {
             getString(R.string.detail_location_map_soon)
+        }
+
+        val hasCoords = model.latitude != null && model.longitude != null
+        locationCard.isClickable = hasCoords
+        locationCard.isFocusable = hasCoords
+        coordinatesText.isClickable = hasCoords
+        coordinatesText.isFocusable = hasCoords
+
+        if (hasCoords) {
+            val openMap = View.OnClickListener {
+                MapLinks.openYandexMaps(this@ApartmentDetailActivity, model.latitude!!, model.longitude!!)
+            }
+            locationCard.setOnClickListener(openMap)
+            coordinatesText.setOnClickListener(openMap)
+        } else {
+            locationCard.setOnClickListener(null)
+            coordinatesText.setOnClickListener(null)
         }
     }
 

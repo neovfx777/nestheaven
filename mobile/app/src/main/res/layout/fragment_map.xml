@@ -44,9 +44,20 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:gravity="center"
-            android:text="@string/map_coming_soon"
+            android:text="@string/map_open_yandex_hint"
             android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
             android:textColor="@color/nh_text_secondary" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/mapOpenYandexButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/map_open_yandex"
+            app:icon="@drawable/ic_nav_map_24"
+            app:iconTint="@color/nh_surface"
+            app:iconPadding="8dp"
+            app:backgroundTint="@color/nh_login_teal"
+            android:textColor="@color/nh_surface" />
     </LinearLayout>
 </FrameLayout>
-

@@ -1,8 +1,12 @@
 const apartmentsService = require('./apartments.service');
 
+function getBaseUrl(req) {
+  return `${req.protocol}://${req.get('host')}`;
+}
+
 async function list(req, res, next) {
   try {
-    const result = await apartmentsService.list(req.validated, req.user);
+    const result = await apartmentsService.list(req.validated, req.user, getBaseUrl(req));
     res.json({ success: true, data: result });
   } catch (err) {
     next(err);
@@ -12,7 +16,7 @@ async function list(req, res, next) {
 async function getById(req, res, next) {
   try {
     const { id } = req.validated.params;
-    const result = await apartmentsService.getById(id, req.user);
+    const result = await apartmentsService.getById(id, req.user, getBaseUrl(req));
     res.json({ success: true, data: result });
   } catch (err) {
     next(err);

@@ -191,6 +191,8 @@
     <string name="messages_failed">Chatlarni yuklab bo\'lmadi</string>
 
     <string name="map_coming_soon">Xarita tez kunda</string>
+    <string name="map_open_yandex">Yandex Maps</string>
+    <string name="map_open_yandex_hint">Yandex Maps orqali joylashuvni ko\'rish</string>
     <string name="ai_coming_soon">AI chat yordamchi tez kunda</string>
 
     <string name="chat_title">Chat</string>

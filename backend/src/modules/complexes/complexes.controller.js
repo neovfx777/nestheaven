@@ -1,8 +1,12 @@
 const complexesService = require('./complexes.service');
 
+function getBaseUrl(req) {
+  return `${req.protocol}://${req.get('host')}`;
+}
+
 async function list(req, res, next) {
   try {
-    const result = await complexesService.list(req.validated);
+    const result = await complexesService.list(req.validated, getBaseUrl(req));
     res.json({ success: true, data: result.items, pagination: result.pagination });
   } catch (err) {
     next(err);
@@ -12,7 +16,7 @@ async function list(req, res, next) {
 async function getById(req, res, next) {
   try {
     const { id } = req.validated.params;
-    const result = await complexesService.getById(id);
+    const result = await complexesService.getById(id, getBaseUrl(req));
     res.json({ success: true, data: result });
   } catch (err) {
     next(err);

@@ -1,6 +1,7 @@
 const { prisma } = require('../../config/db');
 const { ROLES } = require('../../utils/roles');
 const { completeI18n, hasAnyContent } = require('../../utils/autoTranslateI18n');
+const env = require('../../config/env');
 const isDev = process.env.NODE_ENV !== 'production';
 
 function debugLog(...args) {
@@ -28,7 +29,18 @@ function parseJsonMaybe(val, fallback) {
   return val;
 }
 
-function formatComplexSummary(complex) {
+function shouldProxyImage(url) {
+  return typeof url === 'string' && url.startsWith('https://picsum.photos/');
+}
+
+function maybeProxyImageUrl(url, baseUrl) {
+  if (env.NODE_ENV === 'production') return url;
+  if (!baseUrl) return url;
+  if (!shouldProxyImage(url)) return url;
+  return `${baseUrl}/api/proxy/image?url=${encodeURIComponent(url)}`;
+}
+
+function formatComplexSummary(complex, baseUrl) {
   if (!complex) return null;
 
   const name = parseJsonMaybe(complex.name, { uz: '', ru: '', en: '' });
@@ -44,7 +56,7 @@ function formatComplexSummary(complex) {
       ? address
       : address?.en || address?.uz || address?.ru || '');
 
-  const firstImageUrl = complex.images?.[0]?.url || null;
+  const firstImageUrl = maybeProxyImageUrl(complex.images?.[0]?.url || null, baseUrl);
 
   // Parse nearbyPlaces if it's a JSON string
   let nearbyPlaces = null;
@@ -68,6 +80,9 @@ function formatComplexSummary(complex) {
     locationLng: complex.locationLng ?? null,
     nearbyPlaces,
     nearbyNote: complex.nearbyNote ?? null,
+    images: Array.isArray(complex.images)
+      ? complex.images.map((img) => ({ ...img, url: maybeProxyImageUrl(img.url, baseUrl) }))
+      : complex.images,
     coverImage: firstImageUrl,
   };
 }
@@ -102,7 +117,7 @@ async function ensureActiveRealtor(realtorId) {
 }
 
 // LIST funksiyasini soddalashtiramiz (500 xatosini bartaraf qilish uchun)
-async function list(data, reqUser) {
+async function list(data, reqUser, baseUrl) {
   try {
     const {
       page = 1,
@@ -274,7 +289,7 @@ async function list(data, reqUser) {
           ? JSON.parse(apartment.description)
           : apartment.description;
 
-        const complexSummary = formatComplexSummary(apartment.complex);
+        const complexSummary = formatComplexSummary(apartment.complex, baseUrl);
 
         return {
           ...apartment,
@@ -282,7 +297,10 @@ async function list(data, reqUser) {
           description,
           address: getAddressText(complexSummary),
           complex: complexSummary,
-          coverImage: apartment.images?.[0]?.url || null,
+          images: Array.isArray(apartment.images)
+            ? apartment.images.map((img) => ({ ...img, url: maybeProxyImageUrl(img.url, baseUrl) }))
+            : apartment.images,
+          coverImage: maybeProxyImageUrl(apartment.images?.[0]?.url || null, baseUrl),
           titleUz: title.uz,
           titleRu: title.ru,
           titleEn: title.en,
@@ -315,7 +333,7 @@ async function list(data, reqUser) {
 }
 
 // GET BY ID funksiyasini soddalashtiramiz
-async function getById(id, reqUser) {
+async function getById(id, reqUser, baseUrl) {
   try {
     debugLog('Getting apartment by ID:', id);
 
@@ -380,7 +398,7 @@ async function getById(id, reqUser) {
       ? JSON.parse(apartment.infrastructureNote)
       : apartment.infrastructureNote;
 
-    const complexSummary = formatComplexSummary(apartment.complex);
+    const complexSummary = formatComplexSummary(apartment.complex, baseUrl);
 
     return {
       ...apartment,
@@ -389,6 +407,9 @@ async function getById(id, reqUser) {
       materials,
       infrastructureNote,
       complex: complexSummary,
+      images: Array.isArray(apartment.images)
+        ? apartment.images.map((img) => ({ ...img, url: maybeProxyImageUrl(img.url, baseUrl) }))
+        : apartment.images,
       titleUz: title.uz,
       titleRu: title.ru,
       titleEn: title.en,

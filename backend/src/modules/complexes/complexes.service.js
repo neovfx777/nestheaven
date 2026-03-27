@@ -1,5 +1,6 @@
 const { prisma } = require('../../config/db');
 const { deleteFileByUrl, removeComplexDirIfEmpty } = require('../../middleware/upload');
+const env = require('../../config/env');
 
 function getFile(files, ...names) {
   for (const name of names) {
@@ -67,7 +68,18 @@ function normalizeAmenities(amenities) {
   return amenities.map((item) => String(item)).filter(Boolean);
 }
 
-function formatComplex(complex) {
+function shouldProxyImage(url) {
+  return typeof url === 'string' && url.startsWith('https://picsum.photos/');
+}
+
+function maybeProxyImageUrl(url, baseUrl) {
+  if (env.NODE_ENV === 'production') return url;
+  if (!baseUrl) return url;
+  if (!shouldProxyImage(url)) return url;
+  return `${baseUrl}/api/proxy/image?url=${encodeURIComponent(url)}`;
+}
+
+function formatComplex(complex, baseUrl) {
   const title = parseJsonMaybe(complex.title, { uz: '', ru: '', en: '' });
   const description = parseJsonMaybe(complex.description, null);
   const amenities = parseJsonMaybe(complex.amenities, []);
@@ -85,7 +97,11 @@ function formatComplex(complex) {
   const allowedSellers = parseJsonMaybe(complex.allowedSellers, []);
 
   const images = (complex.images || [])
-    .map((img) => ({ id: img.id, url: img.url, order: img.order }))
+    .map((img) => ({
+      id: img.id,
+      url: maybeProxyImageUrl(img.url, baseUrl),
+      order: img.order,
+    }))
     .sort((a, b) => a.order - b.order);
   const coverImage = images.length > 0 ? images[0].url : null;
 
@@ -112,7 +128,7 @@ function formatComplex(complex) {
   };
 }
 
-async function list(data) {
+async function list(data, baseUrl) {
   try {
     const { page = 1, limit = 20, search, city } = data.query || {};
     const skip = (page - 1) * limit;
@@ -143,7 +159,7 @@ async function list(data) {
     });
 
     return {
-      items: complexes.map(formatComplex),
+      items: complexes.map((complex) => formatComplex(complex, baseUrl)),
       pagination: {
         total,
         page: Number(page),
@@ -157,7 +173,7 @@ async function list(data) {
   }
 }
 
-async function getById(id) {
+async function getById(id, baseUrl) {
   try {
     const complex = await prisma.complex.findUnique({
       where: { id },
@@ -174,7 +190,7 @@ async function getById(id) {
       throw err;
     }
 
-    const formatted = formatComplex(complex);
+    const formatted = formatComplex(complex, baseUrl);
     return {
       ...formatted,
       apartments: complex.apartments,

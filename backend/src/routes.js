@@ -9,6 +9,7 @@ const broadcastRoutes = require('./modules/broadcasts/broadcasts.routes');
 const chatRoutes = require('./modules/chat/chat.routes');
 const realtorRoutes = require('./modules/realtors/realtors.routes');
 const messagesRoutes = require('./modules/messages/messages.routes');
+const proxyRoutes = require('./modules/proxy/proxy.routes');
 
 const router = express.Router();
 
@@ -22,5 +23,6 @@ router.use('/broadcasts', broadcastRoutes);
 router.use('/chat', chatRoutes);
 router.use('/realtors', realtorRoutes);
 router.use('/messages', messagesRoutes);
+router.use('/proxy', proxyRoutes);
 
 module.exports = router;
