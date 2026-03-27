@@ -76,6 +76,13 @@ data class ComplexCardModel(
     val imageUrl: String?,
 )
 
+data class ComplexMapMarkerModel(
+    val id: String,
+    val title: String,
+    val lat: Double,
+    val lng: Double,
+)
+
 data class BroadcastModel(
     val title: String,
     val message: String,

@@ -67,6 +67,16 @@ const Header = () => {
               >
                 {t('navigation.complexes')}
               </Link>
+              <Link
+                to="/apartments/map"
+                className={`transition-colors ${
+                  location.pathname === '/apartments/map' || location.pathname === '/map'
+                    ? 'text-blue-600 font-semibold'
+                    : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
+                {t('navigation.map')}
+              </Link>
             </nav>
 
             {/* Language Selector & Auth Section */}

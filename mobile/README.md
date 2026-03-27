@@ -63,3 +63,46 @@ cd mobile
 APK:
 
 `mobile\app\build\outputs\apk\release\app-release.apk`
+
+## Publish (signed) release build
+
+Google Play uchun odatda **AAB** tavsiya qilinadi, APK esa test/sideload uchun qulay.
+
+### 1) Java 17 (majburiy)
+
+Gradle ishlashi uchun JDK 17 kerak:
+- `JAVA_HOME` ni JDK 17 ga ko'rsating
+- `java -version` 17 chiqsin
+
+### 2) Keystore yaratish (1 marta)
+
+```powershell
+keytool -genkeypair -v -keystore nestheaven-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias nestheaven
+```
+
+Key’ni xavfsiz joyda saqlang (gitga qo'shmang).
+
+### 3) `mobile/keystore.properties` qo'shing (gitga kirmaydi)
+
+`mobile/keystore.properties`:
+
+```properties
+RELEASE_STORE_FILE=nestheaven-release.jks
+RELEASE_STORE_PASSWORD=YOUR_STORE_PASSWORD
+RELEASE_KEY_ALIAS=nestheaven
+RELEASE_KEY_PASSWORD=YOUR_KEY_PASSWORD
+```
+
+### 4) Versiyani chiqarish (versionCode/versionName)
+
+Build vaqtida berishingiz mumkin:
+
+```powershell
+.\gradlew.bat assembleRelease -PVERSION_CODE=2 -PVERSION_NAME=1.0.1
+.\gradlew.bat bundleRelease -PVERSION_CODE=2 -PVERSION_NAME=1.0.1
+```
+
+### Outputlar
+
+- Signed APK: `mobile\app\build\outputs\apk\release\app-release.apk`
+- AAB: `mobile\app\build\outputs\bundle\release\app-release.aab`

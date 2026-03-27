@@ -5,59 +5,69 @@
     android:layout_height="match_parent"
     android:background="@color/nh_surface">
 
-    <LinearLayout
+    <com.yandex.mapkit.mapview.MapView
+        android:id="@+id/mapView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="24dp">
+        android:layout_height="match_parent" />
 
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            app:cardBackgroundColor="@color/nh_surface_card"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="6dp"
-            app:strokeColor="@color/nh_border"
-            app:strokeWidth="1dp">
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_margin="16dp"
+        app:cardBackgroundColor="@color/nh_surface"
+        app:cardCornerRadius="18dp"
+        app:cardElevation="8dp"
+        app:strokeColor="@color/nh_border"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:gravity="center_vertical">
 
             <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:contentDescription="@string/tab_map"
-                android:padding="16dp"
-                android:src="@drawable/ic_nav_map_24"
+                android:src="@drawable/ic_house_marker_green_24"
                 app:tint="@color/nh_login_teal" />
-        </com.google.android.material.card.MaterialCardView>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="@string/tab_map"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-            android:textColor="@color/nh_text_primary"
-            android:textStyle="bold" />
+            <TextView
+                android:id="@+id/mapComplexCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                android:textColor="@color/nh_text_primary"
+                android:textStyle="bold"
+                android:text="0 ta kompleks" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:gravity="center"
-            android:text="@string/map_open_yandex_hint"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            android:textColor="@color/nh_text_secondary" />
+    <ProgressBar
+        android:id="@+id/mapProgress"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center"
+        android:indeterminate="true"
+        android:visibility="gone" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/mapOpenYandexButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/map_open_yandex"
-            app:icon="@drawable/ic_nav_map_24"
-            app:iconTint="@color/nh_surface"
-            app:iconPadding="8dp"
-            app:backgroundTint="@color/nh_login_teal"
-            android:textColor="@color/nh_surface" />
-    </LinearLayout>
+    <TextView
+        android:id="@+id/mapError"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="24dp"
+        android:gravity="center"
+        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+        android:textColor="@color/nh_text_secondary"
+        android:visibility="gone"
+        android:text="@string/home_load_failed" />
 </FrameLayout>
+

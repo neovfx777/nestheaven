@@ -59,6 +59,53 @@
   }
 }
 
+/* Leaflet marker UI (map search) */
+.nh-price-marker {
+  background: transparent;
+  border: none;
+}
+.nh-price-marker__label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: -0.2px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.14);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  color: #111827;
+  transform: translate(-50%, -50%);
+  transition: transform 120ms ease, background 120ms ease, color 120ms ease;
+}
+.nh-price-marker--hovered .nh-price-marker__label {
+  transform: translate(-50%, -55%) scale(1.05);
+}
+.nh-price-marker--selected .nh-price-marker__label {
+  background: #facc15; /* yellow-400 */
+  color: #111827;
+  border-color: rgba(0, 0, 0, 0.14);
+  transform: translate(-50%, -58%) scale(1.08);
+}
+
+.nh-center-marker {
+  background: transparent;
+  border: none;
+}
+.nh-center-marker__dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #111827;
+  border: 3px solid #facc15; /* yellow-400 */
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+  transform: translate(-50%, -50%);
+}
+
 @layer utilities {
   .animate-in {
     animation: fadeIn 0.5s ease-in-out;

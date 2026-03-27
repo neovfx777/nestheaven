@@ -22,7 +22,6 @@ import uz.nestheaven.mobile.core.ApartmentDetailModel
 import uz.nestheaven.mobile.core.BlockedListings
 import uz.nestheaven.mobile.core.ImageLoading
 import uz.nestheaven.mobile.core.JsonParsers
-import uz.nestheaven.mobile.core.MapLinks
 import uz.nestheaven.mobile.core.SessionManager
 import uz.nestheaven.mobile.ui.adapters.SimilarListingAdapter
 import kotlin.math.pow
@@ -315,7 +314,11 @@ class ApartmentDetailActivity : AppCompatActivity() {
 
         if (hasCoords) {
             val openMap = View.OnClickListener {
-                MapLinks.openYandexMaps(this@ApartmentDetailActivity, model.latitude!!, model.longitude!!)
+                val intent = android.content.Intent(this@ApartmentDetailActivity, YandexMapActivity::class.java)
+                intent.putExtra(YandexMapActivity.EXTRA_LAT, model.latitude!!)
+                intent.putExtra(YandexMapActivity.EXTRA_LNG, model.longitude!!)
+                intent.putExtra(YandexMapActivity.EXTRA_TITLE, model.locationText ?: model.city)
+                startActivity(intent)
             }
             locationCard.setOnClickListener(openMap)
             coordinatesText.setOnClickListener(openMap)
