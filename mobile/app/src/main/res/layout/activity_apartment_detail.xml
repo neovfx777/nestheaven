@@ -13,6 +13,8 @@
         android:background="@color/nh_surface"
         android:elevation="0dp"
         app:navigationIconTint="@color/nh_text_primary"
+        app:title="NestHeaven"
+        app:titleCentered="true"
         app:titleTextColor="@color/nh_text_primary" />
 
     <FrameLayout
@@ -21,6 +23,7 @@
         android:layout_weight="1">
 
         <ScrollView
+            android:id="@+id/detailScroll"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fillViewport="true"
@@ -56,11 +59,13 @@
                             android:textStyle="bold" />
 
                         <LinearLayout
+                            android:id="@+id/detailLocationInlineRow"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
                             android:gravity="center_vertical"
-                            android:orientation="horizontal">
+                            android:orientation="horizontal"
+                            android:visibility="gone">
 
                             <ImageView
                                 android:layout_width="16dp"
@@ -99,6 +104,49 @@
                                     android:contentDescription="@string/image"
                                     android:scaleType="centerCrop" />
                             </com.google.android.material.card.MaterialCardView>
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="40dp"
+                                android:layout_gravity="top|end"
+                                android:layout_marginTop="12dp"
+                                android:layout_marginEnd="12dp"
+                                android:background="@drawable/bg_image_actions_container"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:paddingStart="6dp"
+                                android:paddingEnd="6dp">
+
+                                <ImageButton
+                                    android:id="@+id/detailActionFavorite"
+                                    android:layout_width="36dp"
+                                    android:layout_height="36dp"
+                                    android:background="?attr/selectableItemBackgroundBorderless"
+                                    android:contentDescription="@string/favorite_add"
+                                    android:padding="8dp"
+                                    android:src="@drawable/ic_heart_outline_24"
+                                    app:tint="@color/nh_text_primary" />
+
+                                <ImageButton
+                                    android:id="@+id/detailActionShare"
+                                    android:layout_width="36dp"
+                                    android:layout_height="36dp"
+                                    android:background="?attr/selectableItemBackgroundBorderless"
+                                    android:contentDescription="@string/share"
+                                    android:padding="8dp"
+                                    android:src="@drawable/ic_share_24"
+                                    app:tint="@color/nh_text_primary" />
+
+                                <ImageButton
+                                    android:id="@+id/detailActionBlock"
+                                    android:layout_width="36dp"
+                                    android:layout_height="36dp"
+                                    android:background="?attr/selectableItemBackgroundBorderless"
+                                    android:contentDescription="@string/block_listing"
+                                    android:padding="8dp"
+                                    android:src="@drawable/ic_block_24"
+                                    app:tint="@color/nh_text_primary" />
+                            </LinearLayout>
 
                             <ImageButton
                                 android:id="@+id/detailImagePrevButton"
@@ -472,89 +520,18 @@
                                     <TextView
                                         android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
-                                        android:text="@string/detail_about_complex"
+                                        android:text="@string/detail_estimated_monthly_label"
                                         android:textColor="@color/nh_text_secondary"
                                         android:textSize="10sp" />
 
-                                    <LinearLayout
-                                        android:id="@+id/detailWalkabilityCard"
+                                    <TextView
+                                        android:id="@+id/detailEstimatedMonthlyValue"
                                         android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
                                         android:layout_marginTop="8dp"
-                                        android:background="@drawable/bg_rating_walk"
-                                        android:gravity="center_vertical"
-                                        android:orientation="horizontal"
-                                        android:padding="10dp">
-
-                                        <ImageView
-                                            android:layout_width="18dp"
-                                            android:layout_height="18dp"
-                                            android:contentDescription="@string/detail_walkability_label"
-                                            android:src="@drawable/ic_walkability_24" />
-
-                                        <LinearLayout
-                                            android:layout_width="match_parent"
-                                            android:layout_height="wrap_content"
-                                            android:layout_marginStart="8dp"
-                                            android:orientation="vertical">
-
-                                            <TextView
-                                                android:layout_width="match_parent"
-                                                android:layout_height="wrap_content"
-                                                android:text="@string/detail_walkability_label"
-                                                android:textColor="@color/nh_text_primary"
-                                                android:textSize="11sp"
-                                                android:textStyle="bold" />
-
-                                            <TextView
-                                                android:id="@+id/detailWalkabilityValue"
-                                                android:layout_width="match_parent"
-                                                android:layout_height="wrap_content"
-                                                android:layout_marginTop="2dp"
-                                                android:textColor="@color/nh_text_secondary"
-                                                android:textSize="10sp" />
-                                        </LinearLayout>
-                                    </LinearLayout>
-
-                                    <LinearLayout
-                                        android:id="@+id/detailAirQualityCard"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginTop="8dp"
-                                        android:background="@drawable/bg_rating_air"
-                                        android:gravity="center_vertical"
-                                        android:orientation="horizontal"
-                                        android:padding="10dp">
-
-                                        <ImageView
-                                            android:layout_width="18dp"
-                                            android:layout_height="18dp"
-                                            android:contentDescription="@string/detail_air_quality_label"
-                                            android:src="@drawable/ic_air_quality_24" />
-
-                                        <LinearLayout
-                                            android:layout_width="match_parent"
-                                            android:layout_height="wrap_content"
-                                            android:layout_marginStart="8dp"
-                                            android:orientation="vertical">
-
-                                            <TextView
-                                                android:layout_width="match_parent"
-                                                android:layout_height="wrap_content"
-                                                android:text="@string/detail_air_quality_label"
-                                                android:textColor="@color/nh_text_primary"
-                                                android:textSize="11sp"
-                                                android:textStyle="bold" />
-
-                                            <TextView
-                                                android:id="@+id/detailAirQualityValue"
-                                                android:layout_width="match_parent"
-                                                android:layout_height="wrap_content"
-                                                android:layout_marginTop="2dp"
-                                                android:textColor="@color/nh_text_secondary"
-                                                android:textSize="10sp" />
-                                        </LinearLayout>
-                                    </LinearLayout>
+                                        android:textColor="@color/nh_text_primary"
+                                        android:textSize="14sp"
+                                        android:textStyle="bold" />
 
                                     <TextView
                                         android:layout_width="match_parent"
@@ -608,6 +585,102 @@
                                             android:textColor="@color/nh_success_fg"
                                             android:textSize="10sp" />
                                     </LinearLayout>
+                                </LinearLayout>
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:background="@drawable/bg_soft_card"
+                            android:orientation="vertical"
+                            android:padding="12dp">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/detail_complex_ratings_label"
+                                android:textColor="@color/nh_text_secondary"
+                                android:textSize="10sp" />
+
+                            <LinearLayout
+                                android:id="@+id/detailWalkabilityCard"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:background="@drawable/bg_rating_walk"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:padding="10dp">
+
+                                <ImageView
+                                    android:layout_width="18dp"
+                                    android:layout_height="18dp"
+                                    android:contentDescription="@string/detail_walkability_label"
+                                    android:src="@drawable/ic_walkability_24" />
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/detail_walkability_label"
+                                        android:textColor="@color/nh_text_primary"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/detailWalkabilityValue"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="2dp"
+                                        android:textColor="@color/nh_text_secondary"
+                                        android:textSize="10sp" />
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/detailAirQualityCard"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:background="@drawable/bg_rating_air"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:padding="10dp">
+
+                                <ImageView
+                                    android:layout_width="18dp"
+                                    android:layout_height="18dp"
+                                    android:contentDescription="@string/detail_air_quality_label"
+                                    android:src="@drawable/ic_air_quality_24" />
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/detail_air_quality_label"
+                                        android:textColor="@color/nh_text_primary"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/detailAirQualityValue"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="2dp"
+                                        android:textColor="@color/nh_text_secondary"
+                                        android:textSize="10sp" />
                                 </LinearLayout>
                             </LinearLayout>
                         </LinearLayout>
@@ -671,6 +744,7 @@
                                 android:insetBottom="0dp"
                                 android:minHeight="40dp"
                                 android:minWidth="0dp"
+                                android:visibility="gone"
                                 android:text="🤍"
                                 android:textAllCaps="false"
                                 android:textSize="18sp"

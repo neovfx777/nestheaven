@@ -15,10 +15,20 @@ class HomeListingAdapter(
 ) : RecyclerView.Adapter<HomeListingAdapter.HomeListingViewHolder>() {
 
     private val items = mutableListOf<ApartmentCardModel>()
+    private val blockedIds = mutableSetOf<String>()
 
     fun submitList(newItems: List<ApartmentCardModel>) {
         items.clear()
-        items.addAll(newItems)
+        items.addAll(newItems.filterNot { blockedIds.contains(it.id) })
+        notifyDataSetChanged()
+    }
+
+    fun setBlockedIds(ids: Set<String>) {
+        blockedIds.clear()
+        blockedIds.addAll(ids)
+        if (blockedIds.isNotEmpty()) {
+            items.removeAll { blockedIds.contains(it.id) }
+        }
         notifyDataSetChanged()
     }
 

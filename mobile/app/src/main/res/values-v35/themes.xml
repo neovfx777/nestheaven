@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!--
+      Android 15+ (API 35+) enables edge-to-edge enforcement for apps targeting
+      modern SDKs. This app uses classic layouts that expect content to start
+      below system bars, so opt out to avoid overlapping the status bar.
+    -->
+    <style name="Theme.NestHeaven" parent="Theme.NestHeaven.Base">
+        <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:targetApi="35">true</item>
+    </style>
+
+    <style name="Theme.NestHeaven.Splash" parent="Theme.NestHeaven.Splash.Base">
+        <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:targetApi="35">true</item>
+    </style>
+
+    <style name="Theme.NestHeaven.Auth" parent="Theme.NestHeaven.Auth.Base">
+        <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:targetApi="35">true</item>
+    </style>
+
+    <style name="Theme.NestHeaven.Register" parent="Theme.NestHeaven.Register.Base">
+        <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:targetApi="35">true</item>
+    </style>
+</resources>

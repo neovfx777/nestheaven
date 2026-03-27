@@ -47,7 +47,10 @@ app.use(express.json({ limit: env.BODY_LIMIT }));
 app.use(express.urlencoded({ extended: true, limit: env.BODY_LIMIT }));
 
 // Static files (served both with and without /api prefix for reverse proxies)
-const uploadsStatic = express.static(path.join(process.cwd(), env.UPLOAD_DIR), {
+// Use a path relative to the backend project root, not process.cwd(),
+// so starting the server from a different working directory doesn't break uploads.
+const uploadsRoot = path.resolve(__dirname, '..', env.UPLOAD_DIR);
+const uploadsStatic = express.static(uploadsRoot, {
   dotfiles: 'deny',
   index: false,
   maxAge: '1d',

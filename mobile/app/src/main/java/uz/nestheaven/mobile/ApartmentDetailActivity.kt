@@ -3,6 +3,7 @@ package uz.nestheaven.mobile
 import android.os.Bundle
 import android.content.Intent
 import android.view.View
+import android.widget.ScrollView
 import android.widget.ImageView
 import android.widget.ImageButton
 import android.widget.ProgressBar
@@ -18,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.launch
 import uz.nestheaven.mobile.core.ApiClient
 import uz.nestheaven.mobile.core.ApartmentDetailModel
+import uz.nestheaven.mobile.core.BlockedListings
 import uz.nestheaven.mobile.core.ImageLoading
 import uz.nestheaven.mobile.core.JsonParsers
 import uz.nestheaven.mobile.core.SessionManager
@@ -28,8 +30,7 @@ import java.util.Locale
 class ApartmentDetailActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
-    private val favoriteOnEmoji = "❤️"
-    private val favoriteOffEmoji = "🤍"
+    private var currentModel: ApartmentDetailModel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,12 +49,19 @@ class ApartmentDetailActivity : AppCompatActivity() {
             finish()
             return
         }
+        if (BlockedListings.isApartmentBlocked(this, apartmentId)) {
+            finish()
+            return
+        }
 
+        val scroll = findViewById<ScrollView>(R.id.detailScroll)
         val image = findViewById<ImageView>(R.id.detailImage)
         val prevImageButton = findViewById<ImageButton>(R.id.detailImagePrevButton)
         val nextImageButton = findViewById<ImageButton>(R.id.detailImageNextButton)
+        val actionFavorite = findViewById<ImageButton>(R.id.detailActionFavorite)
+        val actionShare = findViewById<ImageButton>(R.id.detailActionShare)
+        val actionBlock = findViewById<ImageButton>(R.id.detailActionBlock)
         val title = findViewById<TextView>(R.id.detailTitle)
-        val locationInline = findViewById<TextView>(R.id.detailLocationInline)
         val city = findViewById<TextView>(R.id.detailCity)
         val price = findViewById<TextView>(R.id.detailPrice)
         val rooms = findViewById<TextView>(R.id.detailRoomsValue)
@@ -63,7 +71,6 @@ class ApartmentDetailActivity : AppCompatActivity() {
         val status = findViewById<TextView>(R.id.detailStatus)
         val description = findViewById<TextView>(R.id.detailDescription)
         val progress = findViewById<ProgressBar>(R.id.detailProgress)
-        val favoriteButton = findViewById<MaterialButton>(R.id.detailFavoriteButton)
         val chatButton = findViewById<MaterialButton>(R.id.detailChatButton)
         val locationCard = findViewById<View>(R.id.detailLocationCard)
         val locationText = findViewById<TextView>(R.id.detailLocationText)
@@ -76,6 +83,7 @@ class ApartmentDetailActivity : AppCompatActivity() {
         val mortgageCard = findViewById<View>(R.id.detailMortgageCard)
         val mortgageLoanValue = findViewById<TextView>(R.id.detailMortgageLoanValue)
         val mortgageMonthlyValue = findViewById<TextView>(R.id.detailMortgageMonthlyValue)
+        val estimatedMonthlyValue = findViewById<TextView>(R.id.detailEstimatedMonthlyValue)
         val pricePerM2Value = findViewById<TextView>(R.id.detailPricePerM2Value)
         val conditionValue = findViewById<TextView>(R.id.detailConditionValue)
         val yearBuiltValue = findViewById<TextView>(R.id.detailYearBuiltValue)
@@ -97,10 +105,19 @@ class ApartmentDetailActivity : AppCompatActivity() {
         similarRecycler.adapter = similarAdapter
         similarRecycler.isNestedScrollingEnabled = false
 
-        favoriteButton.isVisible = sessionManager.isLoggedIn()
+        similarAdapter.setBlockedIds(BlockedListings.getBlockedApartmentIds(this))
+
+        actionFavorite.isVisible = sessionManager.isLoggedIn()
         chatButton.isVisible = sessionManager.isLoggedIn()
         prevImageButton.setOnClickListener { }
         nextImageButton.setOnClickListener { }
+
+        price.setOnClickListener {
+            scroll.post { scroll.smoothScrollTo(0, mortgageCard.top) }
+        }
+        estimatedMonthlyValue.setOnClickListener {
+            scroll.post { scroll.smoothScrollTo(0, mortgageCard.top) }
+        }
 
         chatButton.setOnClickListener {
             startActivity(
@@ -110,7 +127,28 @@ class ApartmentDetailActivity : AppCompatActivity() {
             )
         }
 
-        favoriteButton.setOnClickListener {
+        actionBlock.setOnClickListener {
+            BlockedListings.blockApartment(this, apartmentId)
+            Snackbar.make(title, getString(R.string.block_listing), Snackbar.LENGTH_SHORT).show()
+            finish()
+        }
+
+        actionShare.setOnClickListener {
+            val model = currentModel
+            val shareText = if (model != null) {
+                "${model.title}\n${model.priceText}\n${model.city}"
+            } else {
+                getString(R.string.app_name)
+            }
+            startActivity(
+                Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, shareText)
+                },
+            )
+        }
+
+        actionFavorite.setOnClickListener {
             if (!sessionManager.isLoggedIn()) {
                 Snackbar.make(it, getString(R.string.login_required), Snackbar.LENGTH_SHORT).show()
                 return@setOnClickListener
@@ -132,8 +170,12 @@ class ApartmentDetailActivity : AppCompatActivity() {
                     }
 
                     if (response.isSuccessful) {
-                        renderFavoriteButton(favoriteButton, isFavoriteNow = !isFavorite)
+                        renderFavoriteAction(actionFavorite, isFavoriteNow = !isFavorite)
+                    } else {
+                        Snackbar.make(title, getString(R.string.favorite_failed), Snackbar.LENGTH_SHORT).show()
                     }
+                }.onFailure {
+                    Snackbar.make(title, it.message ?: getString(R.string.favorite_failed), Snackbar.LENGTH_SHORT).show()
                 }
             }
         }
@@ -145,10 +187,9 @@ class ApartmentDetailActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val model = JsonParsers.parseApartmentDetail(response.body())
                     if (model != null) {
-                        supportActionBar?.title = model.title
+                        currentModel = model
                         title.text = model.title
                         city.text = model.city
-                        locationInline.text = model.locationText ?: model.city
                         price.text = model.priceText
                         rooms.text = model.roomsValue?.toString() ?: "-"
                         area.text = model.areaValue?.toInt()?.toString() ?: "-"
@@ -166,6 +207,8 @@ class ApartmentDetailActivity : AppCompatActivity() {
                         airQualityValue.text = model.airQualityText?.let {
                             getString(R.string.detail_score_format, it)
                         } ?: getString(R.string.detail_metric_missing, getString(R.string.detail_air_quality_label))
+                        estimatedMonthlyValue.text = computeEstimatedMonthly(model)?.let { formatCurrency(it) }
+                            ?: getString(R.string.detail_value_unknown)
                         bindAmenityChip(amenityOne, model.amenitiesText.getOrNull(0))
                         bindAmenityChip(amenityTwo, model.amenitiesText.getOrNull(1))
                         bindAmenityChip(amenityThree, model.amenitiesText.getOrNull(2))
@@ -202,7 +245,7 @@ class ApartmentDetailActivity : AppCompatActivity() {
                         ?.get("isFavorite")
                         ?.asBoolean
                         ?: false
-                    renderFavoriteButton(favoriteButton, isFavoriteNow = isFavorite)
+                    renderFavoriteAction(actionFavorite, isFavoriteNow = isFavorite)
                 }
             } catch (e: Exception) {
                 Snackbar.make(title, e.message ?: getString(R.string.error_load_details), Snackbar.LENGTH_LONG).show()
@@ -212,8 +255,8 @@ class ApartmentDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun renderFavoriteButton(button: MaterialButton, isFavoriteNow: Boolean) {
-        button.text = if (isFavoriteNow) favoriteOnEmoji else favoriteOffEmoji
+    private fun renderFavoriteAction(button: ImageButton, isFavoriteNow: Boolean) {
+        button.setImageResource(if (isFavoriteNow) R.drawable.ic_nav_favorites_24 else R.drawable.ic_heart_outline_24)
         button.contentDescription = if (isFavoriteNow) {
             getString(R.string.favorite_remove)
         } else {
@@ -265,18 +308,29 @@ class ApartmentDetailActivity : AppCompatActivity() {
         if (price == null || price <= 0) return
 
         val loanAmount = price * 0.70
+        val monthlyPayment = computeMonthlyPayment(loanAmount)
+
+        mortgageLoanValue.text = formatCurrency(loanAmount)
+        mortgageMonthlyValue.text = formatCurrency(monthlyPayment)
+    }
+
+    private fun computeEstimatedMonthly(model: ApartmentDetailModel): Double? {
+        val price = model.priceValue ?: return null
+        if (price <= 0) return null
+        val loanAmount = price * 0.70
+        return computeMonthlyPayment(loanAmount)
+    }
+
+    private fun computeMonthlyPayment(loanAmount: Double): Double {
         val annualRate = 0.045
         val months = 30 * 12
         val monthlyRate = annualRate / 12
-        val monthlyPayment = if (monthlyRate == 0.0) {
+        return if (monthlyRate == 0.0) {
             loanAmount / months
         } else {
             val factor = (1 + monthlyRate).pow(months.toDouble())
             loanAmount * monthlyRate * factor / (factor - 1)
         }
-
-        mortgageLoanValue.text = formatCurrency(loanAmount)
-        mortgageMonthlyValue.text = formatCurrency(monthlyPayment)
     }
 
     private suspend fun loadSimilarListings(

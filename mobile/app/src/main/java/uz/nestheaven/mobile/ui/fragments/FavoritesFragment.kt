@@ -16,6 +16,7 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import uz.nestheaven.mobile.R
 import uz.nestheaven.mobile.core.ApiClient
+import uz.nestheaven.mobile.core.BlockedListings
 import uz.nestheaven.mobile.core.JsonParsers
 import uz.nestheaven.mobile.core.SessionManager
 import uz.nestheaven.mobile.ui.adapters.ApartmentAdapter
@@ -55,6 +56,7 @@ class FavoritesFragment : Fragment(R.layout.fragment_favorites) {
             onItemClick = { host?.openApartmentDetail(it.id) },
             onFavoriteClick = { removeFavorite(it.id, view) },
         )
+        adapter.setBlockedIds(BlockedListings.getBlockedApartmentIds(requireContext()))
 
         recycler.layoutManager = LinearLayoutManager(requireContext())
         recycler.adapter = adapter
@@ -104,6 +106,7 @@ class FavoritesFragment : Fragment(R.layout.fragment_favorites) {
                 val response = ApiClient.service.getFavorites(page = 1, limit = 100)
                 if (response.isSuccessful) {
                     val items = JsonParsers.parseFavorites(response.body())
+                    adapter.setBlockedIds(BlockedListings.getBlockedApartmentIds(requireContext()))
                     adapter.submitList(items)
                     adapter.setFavoriteIds(items.map { it.id }.toSet())
                     empty.isVisible = items.isEmpty()

@@ -2,7 +2,10 @@ package uz.nestheaven.mobile
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import uz.nestheaven.mobile.core.ApiClient
 import uz.nestheaven.mobile.core.SessionManager
@@ -29,6 +32,7 @@ class MainActivity : AppCompatActivity(),
 
     private lateinit var sessionManager: SessionManager
     private lateinit var bottomNav: BottomNavigationView
+    private lateinit var bottomNavCard: View
     private var pendingSearchTab: Int = SearchFragment.MODE_EXPLORE
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,6 +54,8 @@ class MainActivity : AppCompatActivity(),
         setContentView(R.layout.activity_main)
 
         bottomNav = findViewById(R.id.bottomNav)
+        bottomNavCard = findViewById(R.id.bottomNavCard)
+        hideBottomNavWhenKeyboardVisible()
 
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
@@ -81,6 +87,16 @@ class MainActivity : AppCompatActivity(),
         if (savedInstanceState == null) {
             bottomNav.selectedItemId = R.id.nav_home
         }
+    }
+
+    private fun hideBottomNavWhenKeyboardVisible() {
+        val content = findViewById<View>(android.R.id.content)
+        ViewCompat.setOnApplyWindowInsetsListener(content) { _, insets ->
+            val keyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            bottomNavCard.visibility = if (keyboardVisible) View.GONE else View.VISIBLE
+            insets
+        }
+        ViewCompat.requestApplyInsets(content)
     }
 
     override fun onResume() {
