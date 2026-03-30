@@ -221,4 +221,6 @@
     <string name="detail_amenities_label">Amenities</string>
     <string name="detail_score_format">%1$s</string>
     <string name="detail_metric_missing">%1$s: unavailable</string>
+    <string name="detail_description_more">More</string>
+    <string name="detail_description_less">Less</string>
 </resources>

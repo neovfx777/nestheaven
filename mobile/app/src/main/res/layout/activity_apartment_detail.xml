@@ -404,8 +404,23 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
+                            android:ellipsize="end"
+                            android:maxLines="4"
                             android:textColor="@color/nh_text_secondary"
                             android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/detailDescriptionToggle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:text="@string/detail_description_more"
+                            android:textColor="@color/nh_warning"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
 
                         <TextView
                             android:layout_width="match_parent"

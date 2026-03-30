@@ -9,6 +9,8 @@ import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import android.text.StaticLayout
+import android.text.TextUtils
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
@@ -32,6 +34,7 @@ class ApartmentDetailActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
     private var currentModel: ApartmentDetailModel? = null
+    private var isDescriptionExpanded: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,6 +79,7 @@ class ApartmentDetailActivity : AppCompatActivity() {
         val totalFloors = findViewById<TextView>(R.id.detailTotalFloorsValue)
         val status = findViewById<TextView>(R.id.detailStatus)
         val description = findViewById<TextView>(R.id.detailDescription)
+        val descriptionToggle = findViewById<TextView>(R.id.detailDescriptionToggle)
         val progress = findViewById<ProgressBar>(R.id.detailProgress)
         val chatButton = findViewById<MaterialButton>(R.id.detailChatButton)
         val locationCard = findViewById<View>(R.id.detailLocationCard)
@@ -223,7 +227,11 @@ class ApartmentDetailActivity : AppCompatActivity() {
                         floor.text = model.floorValue?.toString() ?: "-"
                         totalFloors.text = model.totalFloorsValue?.toString() ?: "-"
                         status.isVisible = false
-                        description.text = model.description
+                        bindExpandableDescription(
+                            descriptionView = description,
+                            toggleView = descriptionToggle,
+                            text = model.description,
+                        )
                         complexName.text = model.complexTitle ?: getString(R.string.detail_value_unknown)
                         pricePerM2Value.text = buildPricePerM2(model)
                         conditionValue.text = model.conditionText ?: getString(R.string.detail_value_unknown)
@@ -279,6 +287,51 @@ class ApartmentDetailActivity : AppCompatActivity() {
             } finally {
                 progress.isVisible = false
             }
+        }
+    }
+
+    private fun bindExpandableDescription(
+        descriptionView: TextView,
+        toggleView: TextView,
+        text: String?,
+    ) {
+        val value = text?.trim().orEmpty()
+        descriptionView.text = value
+
+        // Reset per-listing state
+        isDescriptionExpanded = false
+        applyDescriptionState(descriptionView, toggleView)
+
+        descriptionView.post {
+            val width = (descriptionView.width - descriptionView.paddingLeft - descriptionView.paddingRight)
+                .coerceAtLeast(0)
+            if (value.isBlank() || width <= 0) {
+                toggleView.isVisible = false
+                return@post
+            }
+
+            val layout = StaticLayout.Builder
+                .obtain(value, 0, value.length, descriptionView.paint, width)
+                .build()
+            toggleView.isVisible = layout.lineCount > 4
+            applyDescriptionState(descriptionView, toggleView)
+        }
+
+        toggleView.setOnClickListener {
+            isDescriptionExpanded = !isDescriptionExpanded
+            applyDescriptionState(descriptionView, toggleView)
+        }
+    }
+
+    private fun applyDescriptionState(descriptionView: TextView, toggleView: TextView) {
+        if (isDescriptionExpanded) {
+            descriptionView.maxLines = Int.MAX_VALUE
+            descriptionView.ellipsize = null
+            toggleView.setText(R.string.detail_description_less)
+        } else {
+            descriptionView.maxLines = 4
+            descriptionView.ellipsize = TextUtils.TruncateAt.END
+            toggleView.setText(R.string.detail_description_more)
         }
     }
 

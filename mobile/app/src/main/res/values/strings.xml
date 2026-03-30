@@ -245,4 +245,6 @@
     <string name="detail_amenities_label">Qulayliklar</string>
     <string name="detail_score_format">%1$s</string>
     <string name="detail_metric_missing">%1$s: mavjud emas</string>
+    <string name="detail_description_more">Ko\'proq</string>
+    <string name="detail_description_less">Kamroq</string>
 </resources>
