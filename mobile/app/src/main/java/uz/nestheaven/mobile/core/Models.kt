@@ -168,3 +168,45 @@ data class SendMessageRequest(
 data class SendToConversationRequest(
     val text: String,
 )
+
+data class AssistantHistoryItem(
+    val role: String,
+    val content: String,
+)
+
+data class ApartmentAssistantRequest(
+    val message: String,
+    val history: List<AssistantHistoryItem> = emptyList(),
+    val language: String = "uz",
+    val limit: Int = 5,
+)
+
+data class ApartmentAssistantEnvelope(
+    val success: Boolean,
+    val data: ApartmentAssistantPayload,
+)
+
+data class ApartmentAssistantPayload(
+    val reply: String,
+    val matches: List<ApartmentAssistantMatch> = emptyList(),
+    val appliedFilters: Map<String, String> = emptyMap(),
+    val source: String? = null,
+    val totalCandidatesChecked: Int? = null,
+)
+
+data class ApartmentAssistantMatch(
+    val id: String,
+    val title: String,
+    val price: Double? = null,
+    val rooms: Int? = null,
+    val area: Double? = null,
+    val floor: Int? = null,
+    val status: String? = null,
+    val coverImage: String? = null,
+    val complexName: String? = null,
+    val city: String? = null,
+    val locationText: String? = null,
+    val metroDistanceMeters: Int? = null,
+    val score: Double? = null,
+    val url: String? = null,
+)

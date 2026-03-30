@@ -50,14 +50,21 @@ app.use(express.urlencoded({ extended: true, limit: env.BODY_LIMIT }));
 // Use a path relative to the backend project root, not process.cwd(),
 // so starting the server from a different working directory doesn't break uploads.
 const uploadsRoot = path.resolve(__dirname, '..', env.UPLOAD_DIR);
-const uploadsStatic = express.static(uploadsRoot, {
+const seedImagesRoot = path.resolve(__dirname, '..', '..', 'public', 'images');
+const staticOptions = {
   dotfiles: 'deny',
   index: false,
   maxAge: '1d',
   setHeaders(res) {
     res.setHeader('X-Content-Type-Options', 'nosniff');
   },
+};
+const seedImagesStatic = express.static(seedImagesRoot, staticOptions);
+const uploadsStatic = express.static(uploadsRoot, {
+  ...staticOptions,
 });
+app.use('/uploads/seed', seedImagesStatic);
+app.use('/api/uploads/seed', seedImagesStatic);
 app.use('/uploads', uploadsStatic);
 app.use('/api/uploads', uploadsStatic);
 

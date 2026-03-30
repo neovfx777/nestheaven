@@ -91,11 +91,12 @@ class LoginActivity : AppCompatActivity() {
                     if (response.isSuccessful && response.body() != null) {
                         val body = response.body()!!
                         sessionManager.saveSession(body.token, body.user)
-                        sessionManager.markVerificationPending(SessionManager.VERIFICATION_FLOW_LOGIN, emailValue)
-                        openVerification(emailValue)
+                        sessionManager.clearVerificationPending()
+                        openMain()
                     } else {
                         val (errorCode, message) = extractApiError(response)
                         if (errorCode == "EMAIL_NOT_VERIFIED") {
+                            sessionManager.markVerificationPending(SessionManager.VERIFICATION_FLOW_LOGIN, emailValue)
                             startActivity(
                                 Intent(this@LoginActivity, LoginVerificationActivity::class.java)
                                     .putExtra(LoginVerificationActivity.EXTRA_EMAIL, emailValue),

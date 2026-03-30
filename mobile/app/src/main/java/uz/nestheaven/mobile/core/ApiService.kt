@@ -90,4 +90,9 @@ interface ApiService {
         @Path("id") id: String,
         @Body body: SendToConversationRequest,
     ): Response<JsonObject>
+
+    @POST("chat/apartments-assistant")
+    suspend fun apartmentsAssistant(
+        @Body body: ApartmentAssistantRequest,
+    ): Response<ApartmentAssistantEnvelope>
 }
