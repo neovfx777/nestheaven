@@ -221,4 +221,6 @@
     <string name="detail_amenities_label">Удобства</string>
     <string name="detail_score_format">%1$s</string>
     <string name="detail_metric_missing">%1$s: недоступно</string>
+    <string name="detail_description_more">Подробнее</string>
+    <string name="detail_description_less">Скрыть</string>
 </resources>
