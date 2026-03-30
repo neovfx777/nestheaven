@@ -53,21 +53,27 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
       return;
     }
 
+    const nextIsFavorite = !isFavorite;
     setIsLoading(true);
+    setIsFavorite(nextIsFavorite);
     try {
-      if (isFavorite) {
+      if (!nextIsFavorite) {
         await usersApi.removeFavorite(apartmentId);
-        setIsFavorite(false);
         toast.success('Removed from favorites');
         onToggle?.(false);
       } else {
         await usersApi.addFavorite(apartmentId);
-        setIsFavorite(true);
         toast.success('Added to favorites');
         onToggle?.(true);
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update favorites');
+      setIsFavorite(!nextIsFavorite);
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        'Failed to update favorites';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -89,7 +95,12 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
     <Button
       variant="ghost"
       size="sm"
-      onClick={handleToggleFavorite}
+      type="button"
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void handleToggleFavorite();
+      }}
       disabled={isLoading}
       className={`${sizeClasses[size]} ${isFavorite ? 'text-red-500 hover:text-red-600' : 'text-gray-500 hover:text-gray-700'} ${className}`}
     >

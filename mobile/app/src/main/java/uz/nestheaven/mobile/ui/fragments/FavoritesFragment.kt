@@ -111,6 +111,11 @@ class FavoritesFragment : Fragment(R.layout.fragment_favorites) {
                     adapter.setFavoriteIds(items.map { it.id }.toSet())
                     empty.isVisible = items.isEmpty()
                     empty.text = getString(R.string.empty_favorites)
+                } else if (response.code() == 401) {
+                    sessionManager.clear()
+                    empty.isVisible = true
+                    empty.text = getString(R.string.login_required_favorites)
+                    loginButton.isVisible = true
                 } else {
                     empty.isVisible = true
                     empty.text = getString(R.string.error_load_favorites)
@@ -138,6 +143,10 @@ class FavoritesFragment : Fragment(R.layout.fragment_favorites) {
                         val loginButton = it.findViewById<MaterialButton>(R.id.favoritesLoginButton)
                         loadFavorites(progress, empty, swipe, loginButton)
                     }
+                } else if (response.code() == 401) {
+                    sessionManager.clear()
+                    Snackbar.make(rootView, getString(R.string.login_required), Snackbar.LENGTH_SHORT).show()
+                    host?.requestLogin()
                 } else {
                     Snackbar.make(rootView, getString(R.string.favorite_failed), Snackbar.LENGTH_SHORT).show()
                 }

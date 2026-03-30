@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
@@ -50,6 +51,11 @@ class ApartmentDetailActivity : AppCompatActivity() {
             return
         }
         if (BlockedListings.isApartmentBlocked(this, apartmentId)) {
+            Toast.makeText(
+                this,
+                getString(R.string.blocked_listing_system_message),
+                Toast.LENGTH_LONG,
+            ).show()
             finish()
             return
         }
@@ -128,8 +134,19 @@ class ApartmentDetailActivity : AppCompatActivity() {
         }
 
         actionBlock.setOnClickListener {
-            BlockedListings.blockApartment(this, apartmentId)
-            Snackbar.make(title, getString(R.string.block_listing), Snackbar.LENGTH_SHORT).show()
+            val model = currentModel
+            BlockedListings.blockApartment(
+                context = this,
+                apartmentId = apartmentId,
+                title = model?.title,
+                city = model?.city,
+                priceText = model?.priceText,
+            )
+            Toast.makeText(
+                this,
+                getString(R.string.blocked_listing_system_message),
+                Toast.LENGTH_LONG,
+            ).show()
             finish()
         }
 
@@ -157,6 +174,12 @@ class ApartmentDetailActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 runCatching {
                     val statusResp = ApiClient.service.getFavoriteStatus(apartmentId)
+                    if (statusResp.code() == 401) {
+                        sessionManager.clear()
+                        Snackbar.make(title, getString(R.string.login_required), Snackbar.LENGTH_SHORT).show()
+                        startActivity(Intent(this@ApartmentDetailActivity, LoginActivity::class.java))
+                        return@runCatching
+                    }
                     val isFavorite = statusResp.body()
                         ?.getAsJsonObject("data")
                         ?.get("isFavorite")
@@ -171,6 +194,10 @@ class ApartmentDetailActivity : AppCompatActivity() {
 
                     if (response.isSuccessful) {
                         renderFavoriteAction(actionFavorite, isFavoriteNow = !isFavorite)
+                    } else if (response.code() == 401) {
+                        sessionManager.clear()
+                        Snackbar.make(title, getString(R.string.login_required), Snackbar.LENGTH_SHORT).show()
+                        startActivity(Intent(this@ApartmentDetailActivity, LoginActivity::class.java))
                     } else {
                         Snackbar.make(title, getString(R.string.favorite_failed), Snackbar.LENGTH_SHORT).show()
                     }
@@ -294,6 +321,27 @@ class ApartmentDetailActivity : AppCompatActivity() {
             getString(R.string.detail_location_coordinates, model.latitude, model.longitude)
         } else {
             getString(R.string.detail_location_map_soon)
+        }
+
+        val hasCoords = model.latitude != null && model.longitude != null
+        locationCard.isClickable = hasCoords
+        locationCard.isFocusable = hasCoords
+        coordinatesText.isClickable = hasCoords
+        coordinatesText.isFocusable = hasCoords
+
+        if (hasCoords) {
+            val openMap = View.OnClickListener {
+                val intent = android.content.Intent(this@ApartmentDetailActivity, YandexMapActivity::class.java)
+                intent.putExtra(YandexMapActivity.EXTRA_LAT, model.latitude!!)
+                intent.putExtra(YandexMapActivity.EXTRA_LNG, model.longitude!!)
+                intent.putExtra(YandexMapActivity.EXTRA_TITLE, model.locationText ?: model.city)
+                startActivity(intent)
+            }
+            locationCard.setOnClickListener(openMap)
+            coordinatesText.setOnClickListener(openMap)
+        } else {
+            locationCard.setOnClickListener(null)
+            coordinatesText.setOnClickListener(null)
         }
     }
 

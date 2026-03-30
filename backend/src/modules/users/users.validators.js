@@ -36,9 +36,10 @@ function validateUpdateProfile(req, res, next) {
 }
 
 function validateFavorite(req, res, next) {
+  const body = req.body && typeof req.body === 'object' ? req.body : {};
   const result = favoriteSchema.safeParse({ 
     params: { apartmentId: req.params.apartmentId || req.params.id },
-    body: req.body
+    body
   });
   if (!result.success) {
     return res.status(400).json({ error: 'Validation failed', details: result.error.errors });

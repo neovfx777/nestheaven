@@ -315,6 +315,12 @@ class ApartmentsFragment : Fragment(R.layout.fragment_apartments) {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val statusResponse = ApiClient.service.getFavoriteStatus(apartmentId)
+                if (statusResponse.code() == 401) {
+                    sessionManager.clear()
+                    Snackbar.make(rootView, getString(R.string.login_required), Snackbar.LENGTH_SHORT).show()
+                    host?.requestLogin()
+                    return@launch
+                }
                 val isFavorite = statusResponse.body()
                     ?.getAsJsonObject("data")
                     ?.get("isFavorite")
@@ -334,6 +340,10 @@ class ApartmentsFragment : Fragment(R.layout.fragment_apartments) {
                         if (isFavorite) getString(R.string.favorite_removed) else getString(R.string.favorite_added),
                         Snackbar.LENGTH_SHORT,
                     ).show()
+                } else if (response.code() == 401) {
+                    sessionManager.clear()
+                    Snackbar.make(rootView, getString(R.string.login_required), Snackbar.LENGTH_SHORT).show()
+                    host?.requestLogin()
                 } else {
                     Snackbar.make(rootView, getString(R.string.favorite_failed), Snackbar.LENGTH_SHORT).show()
                 }

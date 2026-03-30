@@ -65,6 +65,8 @@ data class ApartmentCardModel(
     val areaValue: Double? = null,
     val floorValue: Int? = null,
     val createdAt: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
 )
 
 data class ComplexCardModel(
@@ -74,6 +76,13 @@ data class ComplexCardModel(
     val blocksText: String,
     val ratingText: String,
     val imageUrl: String?,
+)
+
+data class ComplexMapMarkerModel(
+    val id: String,
+    val title: String,
+    val lat: Double,
+    val lng: Double,
 )
 
 data class BroadcastModel(

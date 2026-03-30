@@ -27,6 +27,8 @@ export interface Apartment {
     coverImage: string | null;
     title?: string;
     locationText?: string;
+    locationLat?: number | null;
+    locationLng?: number | null;
     walkabilityRating?: number | null;
     airQualityRating?: number | null;
   } | null;
@@ -158,6 +160,10 @@ export interface FilterParams {
   search?: string;
   sortBy?: 'price' | 'area' | 'rooms' | 'createdAt' | 'updatedAt';
   sortOrder?: 'asc' | 'desc';
+  lat?: number;
+  lng?: number;
+  radius?: number; // km
+  purpose?: string;
 }
 
 export interface Complex {

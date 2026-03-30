@@ -10,6 +10,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import HomePage from './pages/HomePage';
 import ApartmentsPage from './pages/apartments/ApartmentsPage';
 import ApartmentDetailPage from './pages/apartments/ApartmentDetailPage';
+import ApartmentsMapPage from './pages/apartments/ApartmentsMapPage';
 import ComplexesPage from './pages/ComplexesPage';
 import ComplexDetailPage from './pages/ComplexDetailPage';
 
@@ -67,8 +68,10 @@ function App() {
         {/* Public routes with Layout */}
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
+          <Route path="map" element={<ApartmentsMapPage />} />
           <Route path="apartments">
             <Route index element={<ApartmentsPage />} />
+            <Route path="map" element={<ApartmentsMapPage />} />
             <Route path=":id" element={<ApartmentDetailPage />} />
           </Route>
           <Route path="complexes">

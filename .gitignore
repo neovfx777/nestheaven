@@ -37,4 +37,12 @@ logs
 .DS_Store
 Thumbs.db
 
+# Android / Gradle
+mobile/local.properties
+mobile/**/build/
+*.jks
+*.keystore
+keystore.properties
+**/keystore.properties
+
 piece-ofshit.html

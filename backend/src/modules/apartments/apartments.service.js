@@ -1,6 +1,7 @@
 const { prisma } = require('../../config/db');
 const { ROLES } = require('../../utils/roles');
 const { completeI18n, hasAnyContent } = require('../../utils/autoTranslateI18n');
+const env = require('../../config/env');
 const isDev = process.env.NODE_ENV !== 'production';
 
 function debugLog(...args) {
@@ -28,7 +29,18 @@ function parseJsonMaybe(val, fallback) {
   return val;
 }
 
-function formatComplexSummary(complex) {
+function shouldProxyImage(url) {
+  return typeof url === 'string' && url.startsWith('https://picsum.photos/');
+}
+
+function maybeProxyImageUrl(url, baseUrl) {
+  if (env.NODE_ENV === 'production') return url;
+  if (!baseUrl) return url;
+  if (!shouldProxyImage(url)) return url;
+  return `${baseUrl}/api/proxy/image?url=${encodeURIComponent(url)}`;
+}
+
+function formatComplexSummary(complex, baseUrl) {
   if (!complex) return null;
 
   const name = parseJsonMaybe(complex.name, { uz: '', ru: '', en: '' });
@@ -44,7 +56,7 @@ function formatComplexSummary(complex) {
       ? address
       : address?.en || address?.uz || address?.ru || '');
 
-  const firstImageUrl = complex.images?.[0]?.url || null;
+  const firstImageUrl = maybeProxyImageUrl(complex.images?.[0]?.url || null, baseUrl);
 
   // Parse nearbyPlaces if it's a JSON string
   let nearbyPlaces = null;
@@ -68,6 +80,9 @@ function formatComplexSummary(complex) {
     locationLng: complex.locationLng ?? null,
     nearbyPlaces,
     nearbyNote: complex.nearbyNote ?? null,
+    images: Array.isArray(complex.images)
+      ? complex.images.map((img) => ({ ...img, url: maybeProxyImageUrl(img.url, baseUrl) }))
+      : complex.images,
     coverImage: firstImageUrl,
   };
 }
@@ -101,12 +116,44 @@ async function ensureActiveRealtor(realtorId) {
   return realtor.id;
 }
 
+function toRad(deg) {
+  return (deg * Math.PI) / 180;
+}
+
+function distanceKm(lat1, lng1, lat2, lng2) {
+  const R = 6371; // Earth radius km
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function buildBoundingBox(lat, lng, radiusKm) {
+  // Approx bounding box for initial DB filter
+  const latDelta = radiusKm / 111.32;
+  const lngDelta = radiusKm / (111.32 * Math.cos(toRad(lat)) || 1);
+
+  return {
+    minLat: lat - latDelta,
+    maxLat: lat + latDelta,
+    minLng: lng - lngDelta,
+    maxLng: lng + lngDelta,
+  };
+}
+
 // LIST funksiyasini soddalashtiramiz (500 xatosini bartaraf qilish uchun)
-async function list(data, reqUser) {
+async function list(data, reqUser, baseUrl) {
   try {
     const {
       page = 1,
       limit = 20,
+      lat,
+      lng,
+      radius,
+      purpose, // reserved for future listing-type support
       complexId,
       minPrice,
       maxPrice,
@@ -233,34 +280,97 @@ async function list(data, reqUser) {
 
     debugLog('Where clause:', JSON.stringify(where, null, 2));
 
-    const total = await prisma.apartment.count({ where });
-    debugLog('Total apartments:', total);
+    const hasGeoFilter =
+      Number.isFinite(lat) &&
+      Number.isFinite(lng) &&
+      Number.isFinite(radius) &&
+      Number(radius) > 0 &&
+      Number(radius) <= 250;
 
-    const items = await prisma.apartment.findMany({
-      where,
-      skip,
-      take: limitNum,
-      orderBy: { [safeSortBy]: safeSortOrder },
-      include: {
-        complex: {
-          include: {
-            images: { orderBy: { order: 'asc' }, take: 1 },
-          }
+    if (hasGeoFilter) {
+      const box = buildBoundingBox(Number(lat), Number(lng), Number(radius));
+      where.complex = {
+        is: {
+          locationLat: { gte: box.minLat, lte: box.maxLat },
+          locationLng: { gte: box.minLng, lte: box.maxLng },
         },
-        images: {
-          orderBy: { order: 'asc' },
-          take: 1
+      };
+    }
+
+    // NOTE: "purpose" is currently not stored on apartments. Kept for API forward-compatibility.
+    void purpose;
+
+    let total = 0;
+    let items = [];
+
+    if (hasGeoFilter) {
+      // Fetch a wider set within bbox and then apply exact circle filter in-memory.
+      const raw = await prisma.apartment.findMany({
+        where,
+        orderBy: { [safeSortBy]: safeSortOrder },
+        take: 2000,
+        include: {
+          complex: {
+            include: {
+              images: { orderBy: { order: 'asc' }, take: 1 },
+            },
+          },
+          images: {
+            orderBy: { order: 'asc' },
+            take: 1,
+          },
+          seller: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
         },
-        seller: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true
-          }
+      });
+
+      const filtered = raw.filter((apartment) => {
+        const cLat = apartment.complex?.locationLat;
+        const cLng = apartment.complex?.locationLng;
+        if (!Number.isFinite(cLat) || !Number.isFinite(cLng)) return false;
+        const d = distanceKm(Number(lat), Number(lng), Number(cLat), Number(cLng));
+        return d <= Number(radius);
+      });
+
+      total = filtered.length;
+      const start = (pageNum - 1) * limitNum;
+      items = filtered.slice(start, start + limitNum);
+    } else {
+      total = await prisma.apartment.count({ where });
+      debugLog('Total apartments:', total);
+
+      items = await prisma.apartment.findMany({
+        where,
+        skip,
+        take: limitNum,
+        orderBy: { [safeSortBy]: safeSortOrder },
+        include: {
+          complex: {
+            include: {
+              images: { orderBy: { order: 'asc' }, take: 1 },
+            },
+          },
+          images: {
+            orderBy: { order: 'asc' },
+            take: 1,
+          },
+          seller: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
         },
-      },
-    });
+      });
+    }
 
     debugLog('Found apartments:', items.length);
 
@@ -274,7 +384,7 @@ async function list(data, reqUser) {
           ? JSON.parse(apartment.description)
           : apartment.description;
 
-        const complexSummary = formatComplexSummary(apartment.complex);
+        const complexSummary = formatComplexSummary(apartment.complex, baseUrl);
 
         return {
           ...apartment,
@@ -282,7 +392,10 @@ async function list(data, reqUser) {
           description,
           address: getAddressText(complexSummary),
           complex: complexSummary,
-          coverImage: apartment.images?.[0]?.url || null,
+          images: Array.isArray(apartment.images)
+            ? apartment.images.map((img) => ({ ...img, url: maybeProxyImageUrl(img.url, baseUrl) }))
+            : apartment.images,
+          coverImage: maybeProxyImageUrl(apartment.images?.[0]?.url || null, baseUrl),
           titleUz: title.uz,
           titleRu: title.ru,
           titleEn: title.en,
@@ -315,7 +428,7 @@ async function list(data, reqUser) {
 }
 
 // GET BY ID funksiyasini soddalashtiramiz
-async function getById(id, reqUser) {
+async function getById(id, reqUser, baseUrl) {
   try {
     debugLog('Getting apartment by ID:', id);
 
@@ -380,7 +493,7 @@ async function getById(id, reqUser) {
       ? JSON.parse(apartment.infrastructureNote)
       : apartment.infrastructureNote;
 
-    const complexSummary = formatComplexSummary(apartment.complex);
+    const complexSummary = formatComplexSummary(apartment.complex, baseUrl);
 
     return {
       ...apartment,
@@ -389,6 +502,9 @@ async function getById(id, reqUser) {
       materials,
       infrastructureNote,
       complex: complexSummary,
+      images: Array.isArray(apartment.images)
+        ? apartment.images.map((img) => ({ ...img, url: maybeProxyImageUrl(img.url, baseUrl) }))
+        : apartment.images,
       titleUz: title.uz,
       titleRu: title.ru,
       titleEn: title.en,

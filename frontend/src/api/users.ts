@@ -85,9 +85,10 @@ export interface UpdateUserData {
 export const usersApi = {
   // Add apartment to favorites
   addFavorite: async (apartmentId: string) => {
-    const response = await apiClient.post<{ success: boolean; data: UserFavorite }>('/users/favorites', {
-      apartmentId,
-    });
+    // Prefer ID in path (backend supports both body and params).
+    const response = await apiClient.post<{ success: boolean; data: UserFavorite }>(
+      `/users/favorites/${apartmentId}`
+    );
     return response.data;
   },
 

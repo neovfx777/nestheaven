@@ -16,12 +16,15 @@ function parseBoolEnv(name, fallback = false) {
   return TRUE_VALUES.has(raw.toLowerCase());
 }
 
+const nodeEnv = process.env.NODE_ENV || 'development';
+
 const env = {
-  NODE_ENV: process.env.NODE_ENV || 'development',
+  NODE_ENV: nodeEnv,
   HOST: process.env.HOST || '0.0.0.0',
   PORT: parseIntEnv('PORT', 3000),
   DATABASE_URL: process.env.DATABASE_URL,
   JWT_SECRET: process.env.JWT_SECRET || 'default-secret-change-me',
+  ALLOW_JWT_EMAIL_FALLBACK: parseBoolEnv('ALLOW_JWT_EMAIL_FALLBACK', nodeEnv !== 'production'),
   UPLOAD_DIR: process.env.UPLOAD_DIR || 'uploads',
   MAX_FILE_SIZE_MB: parseIntEnv('MAX_FILE_SIZE_MB', 10),
   CORS_ORIGINS: process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173',

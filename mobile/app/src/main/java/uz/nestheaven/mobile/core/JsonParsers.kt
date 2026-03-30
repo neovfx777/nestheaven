@@ -32,6 +32,9 @@ object JsonParsers {
                 ?: complex?.optString("coverImage")
                 ?: complex?.optArray("images")?.firstObject()?.optString("url")
 
+            val latitude = complex?.optNumber("locationLat") ?: complex?.optNumber("latitude") ?: obj.optNumber("lat")
+            val longitude = complex?.optNumber("locationLng") ?: complex?.optNumber("longitude") ?: obj.optNumber("lng")
+
             ApartmentCardModel(
                 id = id,
                 title = title.ifBlank { apartmentFallback() },
@@ -46,6 +49,8 @@ object JsonParsers {
                 areaValue = areaValue,
                 floorValue = floorValue,
                 createdAt = obj.optString("createdAt"),
+                latitude = latitude,
+                longitude = longitude,
             )
         }
     }
@@ -82,6 +87,32 @@ object JsonParsers {
         }
     }
 
+    fun parseComplexMapMarkers(root: JsonObject?): List<ComplexMapMarkerModel> {
+        val complexes = root.optArray("data")
+            ?: root.optObject("data").optArray("items")
+            ?: return emptyList()
+
+        return complexes.mapNotNull { element ->
+            val obj = element.optObject() ?: return@mapNotNull null
+            val id = obj.optString("id") ?: return@mapNotNull null
+            val title = localized(obj.get("title")).ifBlank { localized(obj.get("name")) }.ifBlank {
+                complexFallback()
+            }
+
+            val location = obj.optObject("location")
+            val lat = location.optNumber("lat") ?: obj.optNumber("locationLat") ?: obj.optNumber("lat")
+            val lng = location.optNumber("lng") ?: obj.optNumber("locationLng") ?: obj.optNumber("lng")
+            if (lat == null || lng == null) return@mapNotNull null
+
+            ComplexMapMarkerModel(
+                id = id,
+                title = title,
+                lat = lat,
+                lng = lng,
+            )
+        }
+    }
+
     fun parseFavoriteApartmentIds(root: JsonObject?): Set<String> {
         val apartments = root.optObject("data").optArray("apartments") ?: return emptySet()
         return apartments.mapNotNull { it.optObject()?.optString("id") }.toSet()
@@ -106,6 +137,9 @@ object JsonParsers {
             val coverImage = obj.optString("coverImage")
                 ?: obj.optArray("images")?.firstObject()?.optString("url")
 
+            val latitude = complex?.optNumber("locationLat") ?: complex?.optNumber("latitude") ?: obj.optNumber("lat")
+            val longitude = complex?.optNumber("locationLng") ?: complex?.optNumber("longitude") ?: obj.optNumber("lng")
+
             ApartmentCardModel(
                 id = id,
                 title = title.ifBlank { apartmentFallback() },
@@ -120,6 +154,8 @@ object JsonParsers {
                 areaValue = areaValue,
                 floorValue = floorValue,
                 createdAt = obj.optString("createdAt"),
+                latitude = latitude,
+                longitude = longitude,
             )
         }
     }
