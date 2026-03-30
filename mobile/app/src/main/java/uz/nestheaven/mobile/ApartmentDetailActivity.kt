@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
@@ -50,6 +51,11 @@ class ApartmentDetailActivity : AppCompatActivity() {
             return
         }
         if (BlockedListings.isApartmentBlocked(this, apartmentId)) {
+            Toast.makeText(
+                this,
+                getString(R.string.blocked_listing_system_message),
+                Toast.LENGTH_LONG,
+            ).show()
             finish()
             return
         }
@@ -128,8 +134,19 @@ class ApartmentDetailActivity : AppCompatActivity() {
         }
 
         actionBlock.setOnClickListener {
-            BlockedListings.blockApartment(this, apartmentId)
-            Snackbar.make(title, getString(R.string.block_listing), Snackbar.LENGTH_SHORT).show()
+            val model = currentModel
+            BlockedListings.blockApartment(
+                context = this,
+                apartmentId = apartmentId,
+                title = model?.title,
+                city = model?.city,
+                priceText = model?.priceText,
+            )
+            Toast.makeText(
+                this,
+                getString(R.string.blocked_listing_system_message),
+                Toast.LENGTH_LONG,
+            ).show()
             finish()
         }
 

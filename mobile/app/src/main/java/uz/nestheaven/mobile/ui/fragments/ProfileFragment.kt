@@ -33,6 +33,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         fun requestLogin()
         fun openFavorites()
         fun openMessages()
+        fun openBlockedListings()
     }
 
     private var host: ProfileHost? = null
@@ -57,6 +58,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         val phoneText = view.findViewById<TextView>(R.id.profilePhone)
         val favoritesItem = view.findViewById<View>(R.id.profileFavoritesItem)
         val messagesItem = view.findViewById<View>(R.id.profileMessagesItem)
+        val blockedItem = view.findViewById<View>(R.id.profileBlockedListingsItem)
         val infoItem = view.findViewById<View>(R.id.profileInfoItem)
         val languageItem = view.findViewById<View>(R.id.profileLanguageItem)
         val languageValue = view.findViewById<TextView>(R.id.profileLanguageValue)
@@ -83,6 +85,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         messagesItem.setOnClickListener {
             requireLoginOr { host?.openMessages() }
+        }
+
+        blockedItem.setOnClickListener {
+            host?.openBlockedListings()
         }
 
         infoItem.setOnClickListener {

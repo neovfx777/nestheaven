@@ -20,6 +20,7 @@ import uz.nestheaven.mobile.ui.fragments.SearchFragment
 import uz.nestheaven.mobile.ui.fragments.SearchExploreFragment
 import uz.nestheaven.mobile.ui.fragments.AiAssistantFragment
 import uz.nestheaven.mobile.ui.fragments.MapFragment
+import uz.nestheaven.mobile.ui.fragments.BlockedListingsFragment
 
 class MainActivity : AppCompatActivity(),
     AuthFragment.AuthHost,
@@ -157,6 +158,10 @@ class MainActivity : AppCompatActivity(),
 
     override fun openMessages() {
         openFragment(MessagesFragment())
+    }
+
+    override fun openBlockedListings() {
+        openFragment(BlockedListingsFragment())
     }
 
     override fun openApartmentsTab() {

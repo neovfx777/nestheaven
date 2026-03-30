@@ -32,6 +32,9 @@ object JsonParsers {
                 ?: complex?.optString("coverImage")
                 ?: complex?.optArray("images")?.firstObject()?.optString("url")
 
+            val latitude = complex?.optNumber("locationLat") ?: complex?.optNumber("latitude") ?: obj.optNumber("lat")
+            val longitude = complex?.optNumber("locationLng") ?: complex?.optNumber("longitude") ?: obj.optNumber("lng")
+
             ApartmentCardModel(
                 id = id,
                 title = title.ifBlank { apartmentFallback() },
@@ -46,6 +49,8 @@ object JsonParsers {
                 areaValue = areaValue,
                 floorValue = floorValue,
                 createdAt = obj.optString("createdAt"),
+                latitude = latitude,
+                longitude = longitude,
             )
         }
     }
@@ -132,6 +137,9 @@ object JsonParsers {
             val coverImage = obj.optString("coverImage")
                 ?: obj.optArray("images")?.firstObject()?.optString("url")
 
+            val latitude = complex?.optNumber("locationLat") ?: complex?.optNumber("latitude") ?: obj.optNumber("lat")
+            val longitude = complex?.optNumber("locationLng") ?: complex?.optNumber("longitude") ?: obj.optNumber("lng")
+
             ApartmentCardModel(
                 id = id,
                 title = title.ifBlank { apartmentFallback() },
@@ -146,6 +154,8 @@ object JsonParsers {
                 areaValue = areaValue,
                 floorValue = floorValue,
                 createdAt = obj.optString("createdAt"),
+                latitude = latitude,
+                longitude = longitude,
             )
         }
     }

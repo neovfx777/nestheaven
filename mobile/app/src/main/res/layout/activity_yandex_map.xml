@@ -16,11 +16,10 @@
         app:navigationIconTint="@color/nh_text_primary"
         app:layout_scrollFlags="scroll|enterAlways" />
 
-    <com.yandex.mapkit.mapview.MapView
-        android:id="@+id/yandexMapView"
+    <FrameLayout
+        android:id="@+id/yandexMapContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
-

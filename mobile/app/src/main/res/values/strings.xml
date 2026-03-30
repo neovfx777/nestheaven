@@ -205,6 +205,15 @@
     <string name="chat_open_button">Chat</string>
     <string name="share">Ulashish</string>
     <string name="block_listing">Bloklash</string>
+    <string name="blocked_listings_title">Bloklangan e\'lonlar</string>
+    <string name="blocked_listings_empty">Hozircha bloklangan e\'lonlar yo\'q</string>
+    <string name="blocked_listing_system_message">Bu e\'lon sizga ortiq tavsiya etilmaydi</string>
+    <string name="blocked_listing_unblock">Blokdan chiqarish</string>
+    <string name="blocked_listing_unknown_title">Bloklangan e\'lon</string>
+    <string name="blocked_listing_unknown_city">Manzil noma\'lum</string>
+    <string name="blocked_listing_unknown_price">Narx noma\'lum</string>
+
+    <string name="map_api_key_missing">Xarita ishlashi uchun Yandex MapKit API key sozlanmagan</string>
     <string name="detail_location_title">Joylashuv</string>
     <string name="detail_location_developer">Quruvchi: %1$s</string>
     <string name="detail_location_blocks">Bloklar soni: %1$s</string>

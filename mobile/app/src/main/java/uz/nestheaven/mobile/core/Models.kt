@@ -65,6 +65,8 @@ data class ApartmentCardModel(
     val areaValue: Double? = null,
     val floorValue: Int? = null,
     val createdAt: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
 )
 
 data class ComplexCardModel(

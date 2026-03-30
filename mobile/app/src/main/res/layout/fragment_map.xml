@@ -5,8 +5,8 @@
     android:layout_height="match_parent"
     android:background="@color/nh_surface">
 
-    <com.yandex.mapkit.mapview.MapView
-        android:id="@+id/mapView"
+    <FrameLayout
+        android:id="@+id/mapContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
@@ -70,4 +70,3 @@
         android:visibility="gone"
         android:text="@string/home_load_failed" />
 </FrameLayout>
-
