@@ -229,16 +229,17 @@ function mergeIntent(baseIntent, aiIntent) {
   return sanitizeIntent(merged, merged.freeText || '');
 }
 
-async function resolveIntentWithOpenRouter({ message, history, language }) {
+async function callOpenRouter({
+  messages,
+  responseFormat,
+  temperature = 0.2,
+  maxTokens = 300,
+  timeoutMs = 8000,
+}) {
   if (!env.OPENROUTER_API_KEY) return null;
 
-  const conversationContext = (history || [])
-    .slice(-8)
-    .map((item) => `${item.role}: ${item.content}`)
-    .join('\n');
-
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   let response;
   try {
@@ -253,33 +254,10 @@ async function resolveIntentWithOpenRouter({ message, history, language }) {
       },
       body: JSON.stringify({
         model: env.OPENROUTER_MODEL || 'openai/gpt-4o-mini',
-        response_format: { type: 'json_object' },
-        temperature: 0.1,
-        max_tokens: 300,
-        messages: [
-          {
-            role: 'system',
-            content: [
-              'You are an intent parser for apartment search.',
-              'Return ONLY a JSON object.',
-              'Extract these fields:',
-              'minPrice, maxPrice, minRooms, maxRooms, minArea, maxArea, city, complexName, nearMetro, nearbyKeyword, status, freeText.',
-              'nearbyKeyword should be one short term like school, kindergarten, hospital, park, mall.',
-              'status can be active or sold or null.',
-              'If a field is missing, set it to null.',
-            ].join(' '),
-          },
-          {
-            role: 'user',
-            content: [
-              `Language: ${language || 'uz'}`,
-              conversationContext ? `Conversation:\n${conversationContext}` : '',
-              `Latest message: ${message}`,
-            ]
-              .filter(Boolean)
-              .join('\n\n'),
-          },
-        ],
+        temperature,
+        max_tokens: maxTokens,
+        ...(responseFormat ? { response_format: responseFormat } : {}),
+        messages,
       }),
     });
   } finally {
@@ -287,10 +265,50 @@ async function resolveIntentWithOpenRouter({ message, history, language }) {
   }
 
   if (!response.ok) {
-    throw new Error(`OpenRouter intent parse failed (${response.status})`);
+    throw new Error(`OpenRouter request failed (${response.status})`);
   }
 
-  const payload = await response.json();
+  return response.json();
+}
+
+async function resolveIntentWithOpenRouter({ message, history, language }) {
+  if (!env.OPENROUTER_API_KEY) return null;
+
+  const conversationContext = (history || [])
+    .slice(-8)
+    .map((item) => `${item.role}: ${item.content}`)
+    .join('\n');
+
+  const payload = await callOpenRouter({
+    responseFormat: { type: 'json_object' },
+    temperature: 0.1,
+    maxTokens: 300,
+    timeoutMs: 8000,
+    messages: [
+      {
+        role: 'system',
+        content: [
+          'You are an intent parser for apartment search.',
+          'Return ONLY a JSON object.',
+          'Extract these fields:',
+          'minPrice, maxPrice, minRooms, maxRooms, minArea, maxArea, city, complexName, nearMetro, nearbyKeyword, status, freeText.',
+          'nearbyKeyword should be one short term like school, kindergarten, hospital, park, mall.',
+          'status can be active or sold or null.',
+          'If a field is missing, set it to null.',
+        ].join(' '),
+      },
+      {
+        role: 'user',
+        content: [
+          `Language: ${language || 'uz'}`,
+          conversationContext ? `Conversation:\n${conversationContext}` : '',
+          `Latest message: ${message}`,
+        ]
+          .filter(Boolean)
+          .join('\n\n'),
+      },
+    ],
+  });
   const content = payload?.choices?.[0]?.message?.content;
   const parsed = safeJsonParseFromContent(content);
 
@@ -323,12 +341,25 @@ function getNearbyMatches(nearbyPlaces, keyword) {
   });
 }
 
-function formatUsd(value) {
+function translate(language, uz, ru, en) {
+  if (language === 'ru') return ru;
+  if (language === 'en') return en;
+  return uz;
+}
+
+function formatPrice(value) {
   return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
     maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
   }).format(value || 0);
+}
+
+function formatArea(value) {
+  if (value == null) return null;
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+  }).format(value);
 }
 
 function buildSearchBlob(apartment) {
@@ -375,31 +406,139 @@ function buildApartmentView(apartment, score = 0) {
   };
 }
 
-function composeAssistantReply(matches, intent) {
+function composeAssistantReply(matches, intent, language = 'uz') {
   if (!matches.length) {
     return [
-      "Siz so'ragan shartlarga mos e'lon topilmadi.",
-      "Shartlarni biroz yumshatib ko'ring (masalan narx oralig'ini kengaytirish yoki xonani kamaytirish).",
+      translate(
+        language,
+        "Siz so'ragan shartlarga mos e'lon topilmadi.",
+        'По вашим условиям подходящих вариантов не найдено.',
+        'No listings matched your request.',
+      ),
+      translate(
+        language,
+        "Shartlarni biroz yumshatib ko'ring (masalan narx oralig'ini kengaytirish yoki xonani kamaytirish).",
+        'Попробуйте немного смягчить фильтры, например расширить бюджет или уменьшить число комнат.',
+        'Try relaxing the filters a bit, for example widen the budget or reduce the room count.',
+      ),
     ].join(' ');
   }
 
-  const lines = [`Topildi: ${matches.length} ta mos variant.`];
+  const lines = [
+    translate(
+      language,
+      `Topildi: ${matches.length} ta mos variant.`,
+      `Найдено подходящих вариантов: ${matches.length}.`,
+      `Found ${matches.length} matching homes.`,
+    ),
+  ];
   matches.forEach((item, index) => {
-    const location = item.locationText || item.city || "Joylashuv ko'rsatilmagan";
+    const location =
+      item.locationText ||
+      item.city ||
+      translate(language, "Joylashuv ko'rsatilmagan", 'Локация не указана', 'Location not specified');
     const metroPart =
       item.metroDistanceMeters != null
-        ? `, metro ~${item.metroDistanceMeters}m`
+        ? translate(
+            language,
+            `, metro ~${item.metroDistanceMeters}m`,
+            `, метро ~${item.metroDistanceMeters}м`,
+            `, metro ~${item.metroDistanceMeters}m`,
+          )
         : intent.nearMetro
-        ? ', metro masofasi ko`rsatilmagan'
+        ? translate(
+            language,
+            ', metro masofasi ko`rsatilmagan',
+            ', расстояние до метро не указано',
+            ', metro distance not specified',
+          )
         : '';
 
     lines.push(
-      `${index + 1}) ${item.title} - ${formatUsd(item.price)}, ${item.rooms} xona, ${item.area}m2, ${location}${metroPart}`
+      `${index + 1}) ${item.title} - ${formatPrice(item.price)} UZS, ${item.rooms} ${translate(language, 'xona', 'комн.', 'rooms')}, ${formatArea(item.area)}m2, ${location}${metroPart}`
     );
   });
 
-  lines.push("Xohlasangiz, filtrlarga qo'llab beraman yoki budjet/xona bo'yicha toraytiraman.");
+  lines.push(
+    translate(
+      language,
+      "Xohlasangiz, filtrlarga qo'llab beraman yoki budjet/xona bo'yicha toraytiraman.",
+      'Если хотите, я могу сузить подборку по бюджету, комнатам или локации.',
+      'If you want, I can narrow this down further by budget, rooms, or location.',
+    ),
+  );
   return lines.join('\n');
+}
+
+function buildAiListingSummary(matches) {
+  return matches.map((item, index) => ({
+    rank: index + 1,
+    id: item.id,
+    title: item.title,
+    price: item.price,
+    priceText: `${formatPrice(item.price)} UZS`,
+    rooms: item.rooms,
+    area: item.area,
+    complexName: item.complexName,
+    city: item.city,
+    locationText: item.locationText,
+    metroDistanceMeters: item.metroDistanceMeters,
+    url: item.url,
+  }));
+}
+
+async function composeAssistantReplyWithOpenRouter({
+  message,
+  history,
+  language,
+  intent,
+  matches,
+}) {
+  if (!env.OPENROUTER_API_KEY || !matches.length) return null;
+
+  const recentConversation = (history || [])
+    .slice(-6)
+    .map((item) => `${item.role}: ${item.content}`)
+    .join('\n');
+
+  const payload = await callOpenRouter({
+    temperature: 0.25,
+    maxTokens: 420,
+    timeoutMs: 9000,
+    messages: [
+      {
+        role: 'system',
+        content: [
+          'You are a real-estate assistant for NestHeaven.',
+          'Answer ONLY using the apartments supplied to you.',
+          'Do not invent listings, prices, metro distances, or locations.',
+          'Keep the answer concise, helpful, and natural.',
+          'Mention 2-5 best options and highlight why they fit.',
+          'If the user language is uz, answer in Uzbek. If ru, answer in Russian. If en, answer in English.',
+          'If there are no matches, briefly explain and suggest how to relax the filters.',
+        ].join(' '),
+      },
+      {
+        role: 'user',
+        content: [
+          `Language: ${language || 'uz'}`,
+          `Latest request: ${message}`,
+          recentConversation ? `Recent conversation:\n${recentConversation}` : '',
+          `Resolved search intent:\n${JSON.stringify(intent, null, 2)}`,
+          `Retrieved apartments:\n${JSON.stringify(buildAiListingSummary(matches), null, 2)}`,
+        ]
+          .filter(Boolean)
+          .join('\n\n'),
+      },
+    ],
+  });
+
+  const content = payload?.choices?.[0]?.message?.content?.trim();
+  if (!content) {
+    throw new Error('OpenRouter returned empty assistant reply');
+  }
+
+  return content;
 }
 
 function buildFilterPatch(intent) {
@@ -530,10 +669,12 @@ async function apartmentsAssistant(data) {
   const fallback = fallbackIntent(message, history);
 
   let intent = fallback;
+  let usedAiForIntent = false;
   try {
     const aiIntent = await resolveIntentWithOpenRouter({ message, history, language });
     if (aiIntent) {
       intent = mergeIntent(fallback, aiIntent);
+      usedAiForIntent = true;
     }
   } catch (error) {
     console.error('Chat intent parsing fallback used:', error.message);
@@ -550,13 +691,33 @@ async function apartmentsAssistant(data) {
     .slice(0, safeLimit)
     .map((item) => buildApartmentView(item.apartment, item.score));
 
-  const reply = composeAssistantReply(ranked, intent);
+  let reply = composeAssistantReply(ranked, intent, language);
+  let usedAiForReply = false;
+  try {
+    const aiReply = await composeAssistantReplyWithOpenRouter({
+      message,
+      history,
+      language,
+      intent,
+      matches: ranked,
+    });
+    if (aiReply) {
+      reply = aiReply;
+      usedAiForReply = true;
+    }
+  } catch (error) {
+    console.error('Chat response fallback used:', error.message);
+  }
 
   return {
     reply,
     matches: ranked,
     appliedFilters: buildFilterPatch(intent),
-    source: 'database_only',
+    source: usedAiForReply
+      ? 'database_rag_openrouter'
+      : usedAiForIntent
+      ? 'database_retrieval_openrouter_intent'
+      : 'database_retrieval_only',
     totalCandidatesChecked: candidates.length,
   };
 }

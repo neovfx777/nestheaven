@@ -29,7 +29,8 @@ class MainActivity : AppCompatActivity(),
     ComplexesFragment.ComplexesHost,
     FavoritesFragment.FavoritesHost,
     ProfileFragment.ProfileHost,
-    SearchExploreFragment.SearchExploreHost {
+    SearchExploreFragment.SearchExploreHost,
+    AiAssistantFragment.AiAssistantHost {
 
     private lateinit var sessionManager: SessionManager
     private lateinit var bottomNav: BottomNavigationView

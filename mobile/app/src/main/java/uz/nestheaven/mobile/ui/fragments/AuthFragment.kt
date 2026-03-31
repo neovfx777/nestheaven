@@ -206,14 +206,12 @@ class AuthFragment : Fragment(R.layout.fragment_auth) {
                     if (response.isSuccessful && response.body() != null) {
                         val body = response.body()!!
                         sessionManager.saveSession(body.token, body.user)
-                        sessionManager.markVerificationPending(SessionManager.VERIFICATION_FLOW_LOGIN, email)
-                        startActivity(
-                            android.content.Intent(requireContext(), LoginVerificationActivity::class.java)
-                                .putExtra(LoginVerificationActivity.EXTRA_EMAIL, email),
-                        )
+                        sessionManager.clearVerificationPending()
+                        authHost?.onAuthenticated()
                     } else {
                         val (errorCode, message) = extractApiError(response)
                         if (errorCode == "EMAIL_NOT_VERIFIED") {
+                            sessionManager.markVerificationPending(SessionManager.VERIFICATION_FLOW_LOGIN, email)
                             startActivity(
                                 android.content.Intent(requireContext(), LoginVerificationActivity::class.java)
                                     .putExtra(LoginVerificationActivity.EXTRA_EMAIL, email),
@@ -268,12 +266,13 @@ class AuthFragment : Fragment(R.layout.fragment_auth) {
                         val user = body.user
                         if (!token.isNullOrBlank() && user != null) {
                             sessionManager.saveSession(token, user)
-                            sessionManager.markVerificationPending(SessionManager.VERIFICATION_FLOW_REGISTER, email)
-                            startActivity(
-                                android.content.Intent(requireContext(), RegisterVerificationActivity::class.java)
-                                    .putExtra(RegisterVerificationActivity.EXTRA_EMAIL, email),
-                            )
+                            sessionManager.clearVerificationPending()
+                            authHost?.onAuthenticated()
                         } else if (body.requiresEmailVerification == true) {
+                            sessionManager.markVerificationPending(
+                                SessionManager.VERIFICATION_FLOW_REGISTER,
+                                body.email ?: email,
+                            )
                             startActivity(
                                 android.content.Intent(requireContext(), RegisterVerificationActivity::class.java)
                                     .putExtra(RegisterVerificationActivity.EXTRA_EMAIL, body.email ?: email),

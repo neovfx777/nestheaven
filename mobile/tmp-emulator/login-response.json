@@ -1,0 +1,15 @@
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbW5jeTd6YTkwMDAwZHA1b3UxcTJwMHdyIiwiZW1haWwiOiJvd25lckBnb29kaG9tZS51eiIsInJvbGUiOiJPV05FUl9BRE1JTiIsImlhdCI6MTc3NDg3ODI0NSwiZXhwIjoxNzc1NDgzMDQ1fQ.jsTWkVkvoErpCrOkHdcOfqamjfODe2pmAVRwvSV5A0g",
+  "user": {
+    "id": "cmncy7za90000dp5ou1q2p0wr",
+    "email": "owner@goodhome.uz",
+    "role": "OWNER_ADMIN",
+    "isActive": true,
+    "emailVerified": true,
+    "firstName": "Owner",
+    "lastName": "Admin",
+    "fullName": "Owner Admin",
+    "phone": "+998905555555",
+    "createdAt": "2026-03-30T08:51:17.217Z"
+  }
+}

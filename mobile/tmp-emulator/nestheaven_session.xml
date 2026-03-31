@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <boolean name="get_started_seen" value="true" />
+    <boolean name="verification_pending" value="false" />
+    <string name="user">{&quot;id&quot;:&quot;cmncy7za90000dp5ou1q2p0wr&quot;,&quot;email&quot;:&quot;owner@goodhome.uz&quot;,&quot;role&quot;:&quot;OWNER_ADMIN&quot;,&quot;isActive&quot;:true,&quot;emailVerified&quot;:true,&quot;firstName&quot;:&quot;Owner&quot;,&quot;lastName&quot;:&quot;Admin&quot;,&quot;fullName&quot;:&quot;Owner Admin&quot;,&quot;phone&quot;:&quot;+998905555555&quot;,&quot;createdAt&quot;:&quot;2026-03-30T08:51:17.217Z&quot;}</string>
+    <string name="token">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbW5jeTd6YTkwMDAwZHA1b3UxcTJwMHdyIiwiZW1haWwiOiJvd25lckBnb29kaG9tZS51eiIsInJvbGUiOiJPV05FUl9BRE1JTiIsImlhdCI6MTc3NDg3ODI0NSwiZXhwIjoxNzc1NDgzMDQ1fQ.jsTWkVkvoErpCrOkHdcOfqamjfODe2pmAVRwvSV5A0g</string>
+</map>
