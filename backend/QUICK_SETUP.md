@@ -8,27 +8,18 @@
 docker-compose up -d
 ```
 
-## Option 2: Manual PostgreSQL Setup
+## Option 2: Local (SQLite - default)
 
-1. Install PostgreSQL on your system
-2. Create a database:
-```sql
-CREATE DATABASE good_home;
+1. Copy the env template:
+```bash
+cp .env.example .env
 ```
 
-3. Update the .env file with your PostgreSQL credentials:
-```env
-DATABASE_URL="postgresql://your_username:your_password@localhost:5432/good_home?schema=public"
-```
+2. Update the `JWT_SECRET` in `.env`.
 
-## Option 3: Use Neon (Cloud PostgreSQL - Free)
-
-1. Go to https://neon.tech
-2. Create a free account and database
-3. Copy the connection string
-4. Update your .env file:
+3. (Optional) SQLite location:
 ```env
-DATABASE_URL="your_neon_connection_string"
+DATABASE_URL="file:./prisma/dev.db"
 ```
 
 ## After Database Setup
@@ -45,7 +36,8 @@ npx prisma generate
 
 3. Run migrations:
 ```bash
-npx prisma migrate dev --name init
+npx prisma db push
+# or: npx prisma migrate dev
 ```
 
 4. Seed the database:

@@ -1,5 +1,5 @@
 import { FormEvent, useMemo, useRef, useState } from 'react';
-import { Bot, Loader2, MessageCircle, Send, Sparkles, X } from 'lucide-react';
+import { Bot, ChevronDown, ChevronUp, Loader2, MessageCircle, Send, Sparkles, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { AssistantFilterPatch, ChatApartmentMatch, chatApi } from '../../api/chat';
@@ -31,8 +31,12 @@ const ApartmentAssistantWidget = ({ onApplyFilters }: ApartmentAssistantWidgetPr
   const [isSending, setIsSending] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatUiMessage[]>([initialMessage]);
+  const [latestMatches, setLatestMatches] = useState<ChatApartmentMatch[]>([]);
+  const [latestAppliedFilters, setLatestAppliedFilters] = useState<AssistantFilterPatch | null>(null);
+  const [isResultsOpen, setIsResultsOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const resultsRef = useRef<HTMLDivElement | null>(null);
 
   const history = useMemo(
     () =>
@@ -65,6 +69,14 @@ const ApartmentAssistantWidget = ({ onApplyFilters }: ApartmentAssistantWidgetPr
     window.open(url, '_self');
   };
 
+  const openResults = () => {
+    if (!latestMatches.length) return;
+    setIsResultsOpen(true);
+    setTimeout(() => {
+      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
+  };
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (isSending) return;
@@ -87,6 +99,10 @@ const ApartmentAssistantWidget = ({ onApplyFilters }: ApartmentAssistantWidgetPr
         language: 'uz',
         limit: 5,
       });
+
+      setLatestMatches(response.matches || []);
+      setLatestAppliedFilters(response.appliedFilters || null);
+      setIsResultsOpen(false);
 
       pushMessage({
         id: `assistant-${Date.now()}`,
@@ -135,7 +151,79 @@ const ApartmentAssistantWidget = ({ onApplyFilters }: ApartmentAssistantWidgetPr
               </button>
             </div>
 
-            <div ref={scrollRef} className="max-h-[420px] space-y-3 overflow-y-auto bg-slate-50 p-3">
+            {isResultsOpen && latestMatches.length > 0 && (
+              <div ref={resultsRef} className="border-b border-slate-200 bg-white p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-slate-900">Topilgan e&apos;lonlar</div>
+                    <div className="text-[11px] text-slate-500">{latestMatches.length} ta natija</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {latestAppliedFilters && onApplyFilters && (
+                      <button
+                        onClick={() => onApplyFilters(latestAppliedFilters)}
+                        className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700 hover:bg-blue-100"
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        Filtrga qo&apos;llash
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setIsResultsOpen(false)}
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-100"
+                    >
+                      <ChevronUp className="h-3 w-3" />
+                      Yashirish
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-2 max-h-52 space-y-2 overflow-y-auto">
+                  {latestMatches.map((match) => (
+                    <div
+                      key={match.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openMatch(match.url)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          openMatch(match.url);
+                        }
+                      }}
+                      className="cursor-pointer rounded-xl border border-slate-200 bg-white p-2.5 hover:border-blue-200 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <div className="flex gap-2.5">
+                        <div className="h-12 w-14 shrink-0 overflow-hidden rounded-md bg-slate-100">
+                          {match.coverImage ? (
+                            <img
+                              src={getAssetUrl(match.coverImage) || ''}
+                              alt={match.title}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : null}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-slate-900">{match.title}</p>
+                          <p className="text-xs text-slate-600">
+                            ${match.price.toLocaleString()} | {match.rooms} xona | {match.area}m2
+                          </p>
+                          <p className="truncate text-xs text-slate-500">
+                            {match.locationText || match.city || "Manzil ko'rsatilmagan"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div
+              ref={scrollRef}
+              className={`space-y-3 overflow-y-auto bg-slate-50 p-3 ${isResultsOpen ? 'max-h-[260px]' : 'max-h-[420px]'}`}
+            >
               {messages.map((message) => (
                 <div key={message.id} className={message.role === 'user' ? 'text-right' : 'text-left'}>
                   <div
@@ -149,77 +237,43 @@ const ApartmentAssistantWidget = ({ onApplyFilters }: ApartmentAssistantWidgetPr
                   >
                     {message.content}
                   </div>
-
-                  {message.matches && message.matches.length > 0 && (
-                    <div className="mt-2 space-y-2 text-left">
-                      {message.matches.map((match) => (
-                        <div
-                          key={match.id}
-                          role="button"
-                          tabIndex={0}
-                          onClick={() => openMatch(match.url)}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Enter' || event.key === ' ') {
-                              event.preventDefault();
-                              openMatch(match.url);
-                            }
-                          }}
-                          className="cursor-pointer rounded-xl border border-slate-200 bg-white p-2.5 hover:border-blue-200 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <div className="flex gap-2.5">
-                            <div className="h-14 w-16 overflow-hidden rounded-md bg-slate-100">
-                              {match.coverImage ? (
-                                <img
-                                  src={getAssetUrl(match.coverImage) || ''}
-                                  alt={match.title}
-                                  className="h-full w-full object-cover"
-                                />
-                              ) : null}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-semibold text-slate-900">{match.title}</p>
-                              <p className="text-xs text-slate-600">
-                                ${match.price.toLocaleString()} | {match.rooms} xona | {match.area}m2
-                              </p>
-                              <p className="truncate text-xs text-slate-500">
-                                {match.locationText || match.city || "Manzil ko'rsatilmagan"}
-                              </p>
-                              {match.metroDistanceMeters != null && (
-                                <p className="text-[11px] text-blue-700">Metro: ~{match.metroDistanceMeters}m</p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="mt-2 flex items-center justify-between">
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                openMatch(match.url);
-                              }}
-                              className="text-xs font-semibold text-blue-700 hover:text-blue-800"
-                            >
-                              E&apos;lonni ochish
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-
-                      {message.appliedFilters && onApplyFilters && (
-                        <button
-                          onClick={() => onApplyFilters(message.appliedFilters || {})}
-                          className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700 hover:bg-blue-100"
-                        >
-                          <Sparkles className="h-3 w-3" />
-                          Filtrga qo&apos;llash
-                        </button>
-                      )}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
 
-            <form onSubmit={handleSubmit} className="border-t border-slate-200 bg-white p-3">
+            {latestMatches.length > 0 && (
+              <div className="border-t border-slate-200 bg-white px-3 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-xs text-slate-600">
+                    {isResultsOpen ? `${latestMatches.length} ta natija tepada ko'rsatilmoqda` : `${latestMatches.length} ta natija yashirildi`}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {latestAppliedFilters && onApplyFilters && (
+                      <button
+                        onClick={() => onApplyFilters(latestAppliedFilters)}
+                        className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700 hover:bg-blue-100"
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        Filtrga qo&apos;llash
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => (isResultsOpen ? setIsResultsOpen(false) : openResults())}
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100"
+                    >
+                      {isResultsOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                      {isResultsOpen ? 'Yashirish' : "Ko'rish"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <form
+              onSubmit={handleSubmit}
+              className={`${latestMatches.length > 0 ? '' : 'border-t border-slate-200 '}bg-white p-3`}
+            >
               <div className="flex items-end gap-2">
                 <textarea
                   value={input}

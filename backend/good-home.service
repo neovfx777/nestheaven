@@ -1,7 +1,7 @@
 [Unit]
 Description=Good Home Real Estate API
 Documentation=https://github.com/your-repo/good-home
-After=network.target postgresql.service
+After=network.target
 
 [Service]
 Type=simple

@@ -9,8 +9,8 @@ Create a `.env` file in the backend directory with the following content:
 NODE_ENV=development
 PORT=3000
 
-# Database (PostgreSQL)
-DATABASE_URL="postgresql://user:password@localhost:5432/good_home?schema=public"
+# Database (SQLite - default)
+DATABASE_URL="file:./prisma/dev.db"
 
 # JWT
 JWT_SECRET=nestheaven-super-secret-jwt-key-change-in-production-2024
@@ -35,11 +35,14 @@ SELLER_PASSWORD=
 
 ## 2. Database Setup
 
-1. Install PostgreSQL and create a database named `good_home`
-2. Update the `DATABASE_URL` in your `.env` file with your PostgreSQL credentials
-3. Run database migrations:
+1. Generate Prisma client:
    ```bash
-   npx prisma migrate dev
+   npx prisma generate
+   ```
+2. Create/update DB schema:
+   ```bash
+   npx prisma db push
+   # or: npx prisma migrate dev
    ```
 
 ## 3. Install Dependencies
@@ -100,9 +103,8 @@ The frontend should now be able to connect to the backend at `http://localhost:3
 - Check that JWT_SECRET is set in .env
 
 ### Database Connection Issues
-- Verify PostgreSQL is running
-- Check the DATABASE_URL format
-- Ensure the database `good_home` exists
+- Check the `DATABASE_URL` format
+- Delete `backend/prisma/dev.db` and re-run `npx prisma db push` if schema changes
 
 ### Frontend-Backend Connection
 - Backend: http://localhost:3000
