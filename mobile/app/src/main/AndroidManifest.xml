@@ -26,6 +26,12 @@
             android:name=".ComplexDetailActivity"
             android:exported="false" />
         <activity
+            android:name=".RoleDashboardActivity"
+            android:exported="false" />
+        <activity
+            android:name=".WebDashboardActivity"
+            android:exported="false" />
+        <activity
             android:name=".ApartmentDetailActivity"
             android:exported="false" />
         <activity

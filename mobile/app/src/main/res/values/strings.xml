@@ -213,6 +213,17 @@
     <string name="blocked_listing_unknown_title">Bloklangan e\'lon</string>
     <string name="blocked_listing_unknown_city">Manzil noma\'lum</string>
     <string name="blocked_listing_unknown_price">Narx noma\'lum</string>
+    <string name="profile_dashboard">Dashboard</string>
+    <string name="role_dashboard_role_label">Role</string>
+    <string name="role_dashboard_open_home">Dashboard (Home)</string>
+    <string name="role_dashboard_open_user">User dashboard</string>
+    <string name="role_dashboard_open_seller">Seller dashboard</string>
+    <string name="role_dashboard_open_realtor">Realtor dashboard</string>
+    <string name="role_dashboard_open_admin">Admin dashboard</string>
+    <string name="role_dashboard_open_manager">Manager dashboard</string>
+    <string name="role_dashboard_open_owner">Owner dashboard</string>
+    <string name="role_dashboard_open_favorites">Favorites (Web)</string>
+    <string name="role_dashboard_open_messages">Messages (Web)</string>
 
     <string name="map_api_key_missing">Xarita ishlashi uchun Yandex MapKit API key sozlanmagan</string>
     <string name="detail_location_title">Joylashuv</string>
