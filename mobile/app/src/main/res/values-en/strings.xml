@@ -53,6 +53,7 @@
     <string name="error_load_complexes">Failed to load complexes</string>
     <string name="error_load_favorites">Failed to load favorites</string>
     <string name="error_load_details">Failed to load details</string>
+    <string name="error_open_link">Failed to open link</string>
 
     <string name="auth_title">NestHeaven Mobile</string>
     <string name="auth_subtitle">This native Android app works directly with the backend API.</string>
@@ -223,4 +224,14 @@
     <string name="detail_metric_missing">%1$s: unavailable</string>
     <string name="detail_description_more">More</string>
     <string name="detail_description_less">Less</string>
+
+    <string name="complex_detail_description_title">Description</string>
+    <string name="complex_detail_apartment_count_label">Apartments</string>
+    <string name="complex_detail_nearby_title">Nearby places</string>
+    <string name="complex_detail_permissions_title">Permissions</string>
+    <string name="complex_detail_permission_1">Permission 1</string>
+    <string name="complex_detail_permission_2">Permission 2</string>
+    <string name="complex_detail_permission_3">Permission 3</string>
+    <string name="complex_detail_apartments_in_complex_title">Apartments in complex</string>
+    <string name="complex_detail_no_apartments">No apartments yet</string>
 </resources>

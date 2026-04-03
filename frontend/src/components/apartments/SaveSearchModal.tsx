@@ -39,7 +39,7 @@ export const SaveSearchModal: React.FC<SaveSearchModalProps> = ({
     setIsSaving(true);
     try {
       await usersApi.saveSearch(name.trim(), filters);
-      toast.success('Search saved successfully');
+      toast.success("Saqlanganlarga qo'shildi");
       onSaveSuccess?.();
       onClose();
       setName('');

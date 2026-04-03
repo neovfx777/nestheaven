@@ -53,6 +53,7 @@
     <string name="error_load_complexes">Не удалось загрузить комплексы</string>
     <string name="error_load_favorites">Не удалось загрузить избранное</string>
     <string name="error_load_details">Не удалось загрузить детали</string>
+    <string name="error_open_link">Не удалось открыть ссылку</string>
 
     <string name="auth_title">NestHeaven Mobile</string>
     <string name="auth_subtitle">Это нативное Android-приложение работает напрямую с backend API.</string>
@@ -223,4 +224,14 @@
     <string name="detail_metric_missing">%1$s: недоступно</string>
     <string name="detail_description_more">Подробнее</string>
     <string name="detail_description_less">Скрыть</string>
+
+    <string name="complex_detail_description_title">Описание</string>
+    <string name="complex_detail_apartment_count_label">Квартиры</string>
+    <string name="complex_detail_nearby_title">Рядом</string>
+    <string name="complex_detail_permissions_title">Разрешения</string>
+    <string name="complex_detail_permission_1">Разрешение 1</string>
+    <string name="complex_detail_permission_2">Разрешение 2</string>
+    <string name="complex_detail_permission_3">Разрешение 3</string>
+    <string name="complex_detail_apartments_in_complex_title">Квартиры в комплексе</string>
+    <string name="complex_detail_no_apartments">Пока нет квартир</string>
 </resources>

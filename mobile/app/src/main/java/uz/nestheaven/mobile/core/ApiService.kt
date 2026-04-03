@@ -33,6 +33,7 @@ interface ApiService {
     suspend fun getApartments(
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20,
+        @Query("complexId") complexId: String? = null,
         @Query("search") search: String? = null,
         @Query("minPrice") minPrice: Double? = null,
         @Query("maxPrice") maxPrice: Double? = null,
