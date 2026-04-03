@@ -255,7 +255,9 @@ object JsonParsers {
         val city = obj.optString("city").orEmpty()
         val blocks = obj.optNumber("blockCount")?.toInt() ?: 0
         val walkability = obj.optNumber("walkability")?.toInt()
+            ?: obj.optNumber("walkabilityRating")?.toInt()
         val airQuality = obj.optNumber("airQuality")?.toInt()
+            ?: obj.optNumber("airQualityRating")?.toInt()
         val ratingText = listOfNotNull(
             walkability?.let { "${walkabilityLongLabel()}: $it" },
             airQuality?.let { "${airQualityLongLabel()}: $it" },
@@ -263,20 +265,49 @@ object JsonParsers {
 
         val amenities = obj.optArray("amenities")
             ?.mapNotNull { it.optStringOrNull() }
-            ?.joinToString(", ")
-            ?.ifBlank { notSpecifiedLabel() }
-            ?: notSpecifiedLabel()
+            ?: emptyList()
 
-        val nearby = obj.optArray("nearby")
-            ?.mapNotNull { it.optObject()?.optString("name") }
-            ?.joinToString(", ")
-            ?.ifBlank { notSpecifiedLabel() }
-            ?: notSpecifiedLabel()
+        val nearbyPlaces = parseNearbyPlaces(
+            obj.optArray("nearbyPlaces") ?: obj.optArray("nearby"),
+        )
 
-        val banner = obj.optString("coverImage")
-            ?: obj.optArray("images")?.firstObject()?.optString("url")
+        val permissions = parseComplexPermissions(obj)
+
+        val images = obj.optArray("images")
+            ?.mapNotNull { element ->
+                val imageObj = element.optObject() ?: return@mapNotNull null
+                val url = resolveAssetUrl(imageObj.optString("url")) ?: return@mapNotNull null
+                ComplexImageModel(
+                    id = imageObj.optString("id") ?: url,
+                    url = url,
+                    order = imageObj.optNumber("order")?.toInt()
+                        ?: imageObj.optNumber("ord")?.toInt()
+                        ?: 0,
+                )
+            }
+            ?.sortedBy { it.order }
+            ?: emptyList()
+
+        val coverImage = obj.optString("coverImage")
+            ?: images.firstOrNull()?.url
             ?: obj.optString("bannerImage")
             ?: obj.optString("bannerImageUrl")
+
+        val address = localized(obj.get("locationText"))
+            .ifBlank { localized(obj.optObject("location")?.get("address")) }
+            .ifBlank { localized(obj.get("address")) }
+            .ifBlank { obj.optString("locationText").orEmpty() }
+            .ifBlank { obj.optString("address").orEmpty() }
+            .ifBlank { "" }
+            .ifBlank { null }
+
+        val location = obj.optObject("location")
+        val latitude = obj.optNumber("locationLat") ?: location.optNumber("lat") ?: obj.optNumber("latitude")
+        val longitude = obj.optNumber("locationLng") ?: location.optNumber("lng") ?: obj.optNumber("longitude")
+
+        val apartmentCount = obj.optObject("_count")?.optNumber("apartments")?.toInt()
+            ?: obj.optNumber("apartmentCount")?.toInt()
+            ?: obj.optNumber("apartmentsCount")?.toInt()
 
         return ComplexDetailModel(
             id = id,
@@ -285,9 +316,80 @@ object JsonParsers {
             city = city.ifBlank { unknownLabel() },
             blocksText = if (blocks > 0) formatBlockCount(blocks) else "-",
             ratingText = ratingText,
-            amenitiesText = amenities,
-            nearbyText = nearby,
-            imageUrl = resolveAssetUrl(banner),
+            address = address,
+            developer = obj.optString("developer")?.ifBlank { null },
+            blockCount = obj.optNumber("blockCount")?.toInt(),
+            apartmentCount = apartmentCount,
+            walkability = walkability,
+            airQuality = airQuality,
+            latitude = latitude,
+            longitude = longitude,
+            amenities = amenities,
+            nearbyPlaces = nearbyPlaces,
+            permissions = permissions,
+            images = images,
+            imageUrl = resolveAssetUrl(coverImage),
+        )
+    }
+
+    private fun parseNearbyPlaces(array: JsonArray?): List<ComplexNearbyPlaceModel> {
+        if (array == null) return emptyList()
+        return array.mapNotNull { element ->
+            val obj = element.optObject() ?: return@mapNotNull null
+            val name = obj.optString("name").orEmpty().trim()
+            if (name.isBlank()) return@mapNotNull null
+
+            val distanceMeters = obj.optNumber("distanceMeters")?.toInt()
+            val distanceKm = obj.optNumber("distanceKm")
+            val type = obj.optString("type")?.ifBlank { null }
+            val note = obj.optString("note")?.ifBlank { null }
+
+            ComplexNearbyPlaceModel(
+                name = name,
+                distanceMeters = distanceMeters,
+                distanceKm = distanceKm,
+                type = type,
+                note = note,
+            )
+        }
+    }
+
+    private fun parseComplexPermissions(obj: JsonObject): ComplexPermissionsModel? {
+        val direct1 = resolveAssetUrl(obj.optString("permission1Url")) ?: resolveAssetUrl(obj.optString("permission1"))
+        val direct2 = resolveAssetUrl(obj.optString("permission2Url")) ?: resolveAssetUrl(obj.optString("permission2"))
+        val direct3 = resolveAssetUrl(obj.optString("permission3Url")) ?: resolveAssetUrl(obj.optString("permission3"))
+
+        var parsed1: String? = null
+        var parsed2: String? = null
+        var parsed3: String? = null
+
+        val permissionsElement = obj.get("permissions")
+        val permissionsObj = when {
+            permissionsElement == null || permissionsElement.isJsonNull -> null
+            permissionsElement.isJsonObject -> permissionsElement.asJsonObject
+            permissionsElement.isJsonPrimitive -> {
+                val raw = runCatching { permissionsElement.asString }.getOrNull()
+                if (raw.isNullOrBlank()) null
+                else runCatching { JsonParser.parseString(raw) }.getOrNull()?.optObject()
+            }
+            else -> null
+        }
+
+        if (permissionsObj != null) {
+            parsed1 = resolveAssetUrl(permissionsObj.optString("permission1"))
+            parsed2 = resolveAssetUrl(permissionsObj.optString("permission2"))
+            parsed3 = resolveAssetUrl(permissionsObj.optString("permission3"))
+        }
+
+        val p1 = direct1 ?: parsed1
+        val p2 = direct2 ?: parsed2
+        val p3 = direct3 ?: parsed3
+
+        if (p1.isNullOrBlank() && p2.isNullOrBlank() && p3.isNullOrBlank()) return null
+        return ComplexPermissionsModel(
+            permission1Url = p1,
+            permission2Url = p2,
+            permission3Url = p3,
         )
     }
 

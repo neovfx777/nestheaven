@@ -159,6 +159,7 @@
     <string name="error_load_complexes">Komplekslarni yuklashda xato</string>
     <string name="error_load_favorites">Sevimlilarni yuklashda xato</string>
     <string name="error_load_details">Detal ma\'lumotni yuklashda xato</string>
+    <string name="error_open_link">Havolani ochib bo\'lmadi</string>
     <string name="register_success">Ro\'yxatdan o\'tish muvaffaqiyatli</string>
 
     <string name="login_required">Bu amal uchun avval tizimga kiring</string>
@@ -247,4 +248,14 @@
     <string name="detail_metric_missing">%1$s: mavjud emas</string>
     <string name="detail_description_more">Ko\'proq</string>
     <string name="detail_description_less">Kamroq</string>
+
+    <string name="complex_detail_description_title">Tavsif</string>
+    <string name="complex_detail_apartment_count_label">Kvartiralar</string>
+    <string name="complex_detail_nearby_title">Yaqin joylar</string>
+    <string name="complex_detail_permissions_title">Ruxsatnomalar</string>
+    <string name="complex_detail_permission_1">Ruxsatnoma 1</string>
+    <string name="complex_detail_permission_2">Ruxsatnoma 2</string>
+    <string name="complex_detail_permission_3">Ruxsatnoma 3</string>
+    <string name="complex_detail_apartments_in_complex_title">Kompleksdagi kvartiralar</string>
+    <string name="complex_detail_no_apartments">Hozircha kvartiralar yo\'q</string>
 </resources>

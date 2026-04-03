@@ -127,9 +127,39 @@ data class ComplexDetailModel(
     val city: String,
     val blocksText: String,
     val ratingText: String,
-    val amenitiesText: String,
-    val nearbyText: String,
+    val address: String? = null,
+    val developer: String? = null,
+    val blockCount: Int? = null,
+    val apartmentCount: Int? = null,
+    val walkability: Int? = null,
+    val airQuality: Int? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val amenities: List<String> = emptyList(),
+    val nearbyPlaces: List<ComplexNearbyPlaceModel> = emptyList(),
+    val permissions: ComplexPermissionsModel? = null,
+    val images: List<ComplexImageModel> = emptyList(),
     val imageUrl: String?,
+)
+
+data class ComplexImageModel(
+    val id: String,
+    val url: String,
+    val order: Int = 0,
+)
+
+data class ComplexNearbyPlaceModel(
+    val name: String,
+    val distanceMeters: Int? = null,
+    val distanceKm: Double? = null,
+    val type: String? = null,
+    val note: String? = null,
+)
+
+data class ComplexPermissionsModel(
+    val permission1Url: String? = null,
+    val permission2Url: String? = null,
+    val permission3Url: String? = null,
 )
 
 data class ConversationMessageModel(

@@ -39,12 +39,15 @@ class ComplexAdapter(
         private val textTitle: TextView = itemView.findViewById(R.id.textTitle)
         private val textMeta: TextView = itemView.findViewById(R.id.textMeta)
         private val textRating: TextView = itemView.findViewById(R.id.textRating)
+        private val textStatus: TextView = itemView.findViewById(R.id.textStatus)
 
         fun bind(item: ComplexCardModel) {
             textTitle.text = item.title
             textMeta.text = "${item.city} - ${item.blocksText}"
             textRating.text = item.ratingText
             textRating.visibility = if (item.ratingText.isBlank()) View.GONE else View.VISIBLE
+            textStatus.text = itemView.context.getString(R.string.tab_complexes)
+            textStatus.visibility = View.VISIBLE
 
             ImageLoading.load(imageCover, item.imageUrl, caller = "ComplexAdapter")
 
