@@ -192,6 +192,17 @@
     <string name="chat_failed_send">Не удалось отправить сообщение</string>
     <string name="chat_login_required">Войдите, чтобы пользоваться чатом</string>
     <string name="chat_open_button">Чат</string>
+    <string name="profile_dashboard">Dashboard</string>
+    <string name="role_dashboard_role_label">Роль</string>
+    <string name="role_dashboard_open_home">Dashboard (Home)</string>
+    <string name="role_dashboard_open_user">User dashboard</string>
+    <string name="role_dashboard_open_seller">Seller dashboard</string>
+    <string name="role_dashboard_open_realtor">Realtor dashboard</string>
+    <string name="role_dashboard_open_admin">Admin dashboard</string>
+    <string name="role_dashboard_open_manager">Manager dashboard</string>
+    <string name="role_dashboard_open_owner">Owner dashboard</string>
+    <string name="role_dashboard_open_favorites">Favorites (Web)</string>
+    <string name="role_dashboard_open_messages">Messages (Web)</string>
 
     <string name="detail_location_title">Локация</string>
     <string name="detail_location_developer">Застройщик: %1$s</string>

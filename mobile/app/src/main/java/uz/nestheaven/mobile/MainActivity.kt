@@ -165,6 +165,10 @@ class MainActivity : AppCompatActivity(),
         openFragment(BlockedListingsFragment())
     }
 
+    override fun openDashboard() {
+        startActivity(Intent(this, RoleDashboardActivity::class.java))
+    }
+
     override fun openApartmentsTab() {
         pendingSearchTab = SearchFragment.MODE_APARTMENTS
         bottomNav.selectedItemId = R.id.nav_search

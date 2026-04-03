@@ -31,6 +31,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     interface ProfileHost {
         fun onLogoutRequested()
         fun requestLogin()
+        fun openDashboard()
         fun openFavorites()
         fun openMessages()
         fun openBlockedListings()
@@ -56,6 +57,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         val progress = view.findViewById<ProgressBar>(R.id.profileProgress)
         val nameText = view.findViewById<TextView>(R.id.profileName)
         val phoneText = view.findViewById<TextView>(R.id.profilePhone)
+        val dashboardItem = view.findViewById<View>(R.id.profileDashboardItem)
         val favoritesItem = view.findViewById<View>(R.id.profileFavoritesItem)
         val messagesItem = view.findViewById<View>(R.id.profileMessagesItem)
         val blockedItem = view.findViewById<View>(R.id.profileBlockedListingsItem)
@@ -77,6 +79,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             }
 
             action()
+        }
+
+        dashboardItem.setOnClickListener {
+            requireLoginOr { host?.openDashboard() }
         }
 
         favoritesItem.setOnClickListener {
