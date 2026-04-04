@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.ProgressBar
@@ -20,6 +21,7 @@ class WebDashboardActivity : AppCompatActivity() {
 
     private val gson = Gson()
     private var injected = false
+    private var allowedDashboardPrefixes: Set<String> = emptySet()
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,6 +54,9 @@ class WebDashboardActivity : AppCompatActivity() {
         val entryUrl = webBase
         val targetUrl = joinUrl(webBase, path)
 
+        val role = user.role.trim().uppercase()
+        allowedDashboardPrefixes = allowedPrefixesForRole(role)
+
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
         webView.settings.cacheMode = WebSettings.LOAD_DEFAULT
@@ -60,6 +65,31 @@ class WebDashboardActivity : AppCompatActivity() {
 
         webView.webChromeClient = WebChromeClient()
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                val url = request.url?.toString().orEmpty()
+                val parsed = request.url ?: return false
+
+                val sameOrigin = parsed.host == android.net.Uri.parse(webBase).host
+                if (!sameOrigin) return false
+
+                val pathValue = parsed.path.orEmpty()
+                if (pathValue.startsWith("/dashboard")) {
+                    val allowed = allowedDashboardPrefixes.any { prefix ->
+                        pathValue == prefix || pathValue.startsWith("$prefix/")
+                    }
+                    if (!allowed) {
+                        android.widget.Toast.makeText(
+                            this@WebDashboardActivity,
+                            getString(R.string.role_dashboard_access_denied),
+                            android.widget.Toast.LENGTH_SHORT,
+                        ).show()
+                        return true
+                    }
+                }
+
+                return false
+            }
+
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
 
@@ -153,8 +183,59 @@ class WebDashboardActivity : AppCompatActivity() {
         return "$baseNormalized$pathNormalized"
     }
 
+    private fun allowedPrefixesForRole(role: String): Set<String> {
+        val base = mutableSetOf(
+            "/dashboard",
+            "/dashboard/user",
+            "/dashboard/favorites",
+            "/dashboard/messages",
+        )
+
+        when (role) {
+            "SELLER" -> {
+                base.add("/dashboard/seller")
+            }
+            "REALTOR" -> {
+                base.add("/dashboard/realtor")
+            }
+            "ADMIN" -> {
+                base.add("/dashboard/admin")
+                base.add("/dashboard/seller/apartments/new")
+            }
+            "MANAGER_ADMIN" -> {
+                base.add("/dashboard/admin")
+                base.add("/dashboard/manager")
+                base.add("/dashboard/manager/admins")
+                base.add("/dashboard/manager/logs")
+                base.add("/dashboard/admin/users")
+                base.add("/dashboard/admin/analytics")
+                base.add("/dashboard/admin/complexes")
+                base.add("/dashboard/seller/apartments/new")
+            }
+            "OWNER_ADMIN" -> {
+                base.add("/dashboard/admin")
+                base.add("/dashboard/manager")
+                base.add("/dashboard/realtor")
+                base.add("/dashboard/seller")
+                base.add("/dashboard/owner")
+                base.add("/dashboard/owner/settings")
+                base.add("/dashboard/owner/billing")
+                base.add("/dashboard/manager/admins")
+                base.add("/dashboard/manager/logs")
+                base.add("/dashboard/admin/users")
+                base.add("/dashboard/admin/analytics")
+                base.add("/dashboard/admin/complexes")
+                base.add("/dashboard/seller/apartments/new")
+            }
+            else -> {
+                // User-only
+            }
+        }
+
+        return base
+    }
+
     companion object {
         const val EXTRA_PATH = "extra_path"
     }
 }
-

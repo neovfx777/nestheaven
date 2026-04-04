@@ -203,6 +203,17 @@
     <string name="role_dashboard_open_owner">Owner dashboard</string>
     <string name="role_dashboard_open_favorites">Favorites (Web)</string>
     <string name="role_dashboard_open_messages">Messages (Web)</string>
+    <string name="role_dashboard_seller_listings">Seller: Listings</string>
+    <string name="role_dashboard_seller_new_apartment">Seller: New apartment</string>
+    <string name="role_dashboard_admin_users">Admin: Users</string>
+    <string name="role_dashboard_admin_analytics">Admin: Analytics</string>
+    <string name="role_dashboard_admin_complexes">Admin: Complexes</string>
+    <string name="role_dashboard_admin_new_complex">Admin: New complex</string>
+    <string name="role_dashboard_manager_admins">Manager: Admins</string>
+    <string name="role_dashboard_manager_logs">Manager: Logs</string>
+    <string name="role_dashboard_owner_settings">Owner: Settings</string>
+    <string name="role_dashboard_owner_billing">Owner: Billing</string>
+    <string name="role_dashboard_access_denied">Недоступно для вашей роли</string>
 
     <string name="detail_location_title">Локация</string>
     <string name="detail_location_developer">Застройщик: %1$s</string>

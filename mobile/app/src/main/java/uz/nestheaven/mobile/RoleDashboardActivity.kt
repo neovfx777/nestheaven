@@ -16,6 +16,7 @@ class RoleDashboardActivity : AppCompatActivity() {
     data class DashboardLink(
         val titleRes: Int,
         val path: String,
+        val requiredRoles: Set<String> = emptySet(),
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,28 +58,106 @@ class RoleDashboardActivity : AppCompatActivity() {
     }
 
     private fun buildLinksForRole(role: String): List<DashboardLink> {
-        val base = mutableListOf(
+        val normalizedRole = role.trim().uppercase()
+
+        val allLinks = listOf(
+            // Common
             DashboardLink(R.string.role_dashboard_open_home, "/dashboard"),
+            DashboardLink(R.string.role_dashboard_open_user, "/dashboard/user"),
             DashboardLink(R.string.role_dashboard_open_favorites, "/dashboard/favorites"),
             DashboardLink(R.string.role_dashboard_open_messages, "/dashboard/messages"),
+
+            // Seller
+            DashboardLink(
+                R.string.role_dashboard_open_seller,
+                "/dashboard/seller",
+                requiredRoles = setOf("SELLER", "OWNER_ADMIN"),
+            ),
+            DashboardLink(
+                R.string.role_dashboard_seller_listings,
+                "/dashboard/seller/listings",
+                requiredRoles = setOf("SELLER", "OWNER_ADMIN"),
+            ),
+            DashboardLink(
+                R.string.role_dashboard_seller_new_apartment,
+                "/dashboard/seller/apartments/new",
+                requiredRoles = setOf("SELLER", "ADMIN", "MANAGER_ADMIN", "OWNER_ADMIN"),
+            ),
+
+            // Realtor
+            DashboardLink(
+                R.string.role_dashboard_open_realtor,
+                "/dashboard/realtor",
+                requiredRoles = setOf("REALTOR", "OWNER_ADMIN"),
+            ),
+
+            // Admin
+            DashboardLink(
+                R.string.role_dashboard_open_admin,
+                "/dashboard/admin",
+                requiredRoles = setOf("ADMIN", "MANAGER_ADMIN", "OWNER_ADMIN"),
+            ),
+            DashboardLink(
+                R.string.role_dashboard_admin_users,
+                "/dashboard/admin/users",
+                requiredRoles = setOf("MANAGER_ADMIN", "OWNER_ADMIN"),
+            ),
+            DashboardLink(
+                R.string.role_dashboard_admin_analytics,
+                "/dashboard/admin/analytics",
+                requiredRoles = setOf("MANAGER_ADMIN", "OWNER_ADMIN"),
+            ),
+            DashboardLink(
+                R.string.role_dashboard_admin_complexes,
+                "/dashboard/admin/complexes",
+                requiredRoles = setOf("MANAGER_ADMIN", "OWNER_ADMIN"),
+            ),
+            DashboardLink(
+                R.string.role_dashboard_admin_new_complex,
+                "/dashboard/admin/complexes/new",
+                requiredRoles = setOf("MANAGER_ADMIN", "OWNER_ADMIN"),
+            ),
+
+            // Manager
+            DashboardLink(
+                R.string.role_dashboard_open_manager,
+                "/dashboard/manager",
+                requiredRoles = setOf("MANAGER_ADMIN", "OWNER_ADMIN"),
+            ),
+            DashboardLink(
+                R.string.role_dashboard_manager_admins,
+                "/dashboard/manager/admins",
+                requiredRoles = setOf("MANAGER_ADMIN", "OWNER_ADMIN"),
+            ),
+            DashboardLink(
+                R.string.role_dashboard_manager_logs,
+                "/dashboard/manager/logs",
+                requiredRoles = setOf("MANAGER_ADMIN", "OWNER_ADMIN"),
+            ),
+
+            // Owner
+            DashboardLink(
+                R.string.role_dashboard_open_owner,
+                "/dashboard/owner",
+                requiredRoles = setOf("OWNER_ADMIN"),
+            ),
+            DashboardLink(
+                R.string.role_dashboard_owner_settings,
+                "/dashboard/owner/settings",
+                requiredRoles = setOf("OWNER_ADMIN"),
+            ),
+            DashboardLink(
+                R.string.role_dashboard_owner_billing,
+                "/dashboard/owner/billing",
+                requiredRoles = setOf("OWNER_ADMIN"),
+            ),
         )
 
-        return when (role) {
-            "SELLER" -> base + DashboardLink(R.string.role_dashboard_open_seller, "/dashboard/seller")
-            "REALTOR" -> base + DashboardLink(R.string.role_dashboard_open_realtor, "/dashboard/realtor")
-            "ADMIN" -> base + DashboardLink(R.string.role_dashboard_open_admin, "/dashboard/admin")
-            "MANAGER_ADMIN" -> base + listOf(
-                DashboardLink(R.string.role_dashboard_open_manager, "/dashboard/manager"),
-                DashboardLink(R.string.role_dashboard_open_admin, "/dashboard/admin"),
-            )
-            "OWNER_ADMIN" -> base + listOf(
-                DashboardLink(R.string.role_dashboard_open_owner, "/dashboard/owner"),
-                DashboardLink(R.string.role_dashboard_open_manager, "/dashboard/manager"),
-                DashboardLink(R.string.role_dashboard_open_admin, "/dashboard/admin"),
-                DashboardLink(R.string.role_dashboard_open_realtor, "/dashboard/realtor"),
-            )
-            else -> base + DashboardLink(R.string.role_dashboard_open_user, "/dashboard/user")
+        val filtered = allLinks.filter { link ->
+            link.requiredRoles.isEmpty() || link.requiredRoles.contains(normalizedRole) || normalizedRole == "OWNER_ADMIN"
         }
+
+        // Keep stable order and avoid duplicates (e.g. OWNER might match multiple).
+        return filtered.distinctBy { it.path }
     }
 }
-
